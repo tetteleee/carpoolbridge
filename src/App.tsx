@@ -1,83 +1,125 @@
-import { useEffect, useState } from "react";
-import { signInAnonymously, onAuthStateChanged, type User } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
-import { auth, db } from "./firebase";
+import { useState } from "react";
 
-type Status = "loading" | "not-staff" | "staff" | "error";
+type EventItem = {
+  id: number;
+  date: string;
+  weekday: string;
+  title: string;
+  location: string;
+  status: string;
+  passengers: string;
+};
+
+const events: EventItem[] = [
+  {
+    id: 1,
+    date: "7/12",
+    weekday: "土",
+    title: "練習試合",
+    location: "○○小学校",
+    status: "配車未作成",
+    passengers: "18人",
+  },
+  {
+    id: 2,
+    date: "7/19",
+    weekday: "土",
+    title: "通常練習",
+    location: "△△スポーツセンター",
+    status: "配車作成済み",
+    passengers: "14人",
+  },
+  {
+    id: 3,
+    date: "7/26",
+    weekday: "日",
+    title: "公式戦",
+    location: "□□球場",
+    status: "確認待ち",
+    passengers: "22人",
+  },
+];
 
 function App() {
-  const [user, setUser] = useState<User | null>(null);
-  const [status, setStatus] = useState<Status>("loading");
-  const [errorMessage, setErrorMessage] = useState<string>("");
+  const [selectedEventId, setSelectedEventId] = useState(events[0].id);
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      if (!currentUser) {
-        // 初回アクセス時は匿名認証を行う
-        try {
-          await signInAnonymously(auth);
-        } catch (e) {
-          setStatus("error");
-          setErrorMessage(String(e));
-        }
-        return;
-      }
-
-      setUser(currentUser);
-
-      // staffUsers/{uid} の存在確認（Firestore Rulesにより、
-      // 自分自身のドキュメントのgetだけは常に許可されている）
-      try {
-        const snap = await getDoc(doc(db, "staffUsers", currentUser.uid));
-        setStatus(snap.exists() ? "staff" : "not-staff");
-      } catch (e) {
-        setStatus("error");
-        setErrorMessage(String(e));
-      }
-    });
-
-    return () => unsubscribe();
-  }, []);
+  const selectedEvent = events.find((event) => event.id === selectedEventId) ?? events[0];
 
   return (
-    <div style={{ fontFamily: "sans-serif", padding: "2rem", maxWidth: 480, margin: "0 auto" }}>
-      <h1>配車アシスタント（疎通確認）</h1>
-
-      {status === "loading" && <p>接続中...</p>}
-
-      {status === "error" && (
+    <div className="app-shell">
+      <header className="topbar">
         <div>
-          <p style={{ color: "red" }}>エラーが発生しました。</p>
-          <pre style={{ whiteSpace: "pre-wrap", fontSize: "0.8rem" }}>{errorMessage}</pre>
+          <p className="eyebrow">配車アシスタント</p>
+          <h1>ホーム</h1>
         </div>
-      )}
+        <button className="primary-button" type="button">
+          + イベント作成
+        </button>
+      </header>
 
-      {status === "not-staff" && user && (
-        <div>
-          <p>匿名認証には成功しましたが、まだ利用申請が承認されていません。</p>
-          <p>以下のUIDを管理者に伝え、staffUsersへの登録を依頼してください。</p>
-          <pre
-            style={{
-              background: "#f0f0f0",
-              padding: "0.5rem",
-              wordBreak: "break-all",
-              userSelect: "all",
-            }}
-          >
-            {user.uid}
-          </pre>
+      <section className="panel">
+        <div className="section-heading">
+          <h2>今後のイベント</h2>
+          <span>日付順</span>
         </div>
-      )}
 
-      {status === "staff" && (
-        <div>
-          <p style={{ color: "green" }}>
-            ✓ Firebase Hosting / Authentication / Firestore の疎通に成功しました。
+        <div className="event-list" role="list">
+          {events.map((event) => {
+            const isActive = event.id === selectedEvent.id;
+
+            return (
+              <button
+                key={event.id}
+                className={`event-card ${isActive ? "active" : ""}`}
+                type="button"
+                onClick={() => setSelectedEventId(event.id)}
+              >
+                <div className="event-date">
+                  <strong>{event.date}</strong>
+                  <span>({event.weekday})</span>
+                </div>
+                <div className="event-content">
+                  <h3>{event.title}</h3>
+                  <p>{event.location}</p>
+                </div>
+                <span className="event-status">{event.status}</span>
+              </button>
+            );
+          })}
+        </div>
+      </section>
+
+      <section className="detail-card">
+        <div className="detail-header">
+          <p className="detail-date">
+            {selectedEvent.date} ({selectedEvent.weekday})
           </p>
-          <p>UID: {user?.uid}</p>
-          <p>staffUsersに登録済みです。ここから画面実装を進めていきます。</p>
+          <span className="status-pill">{selectedEvent.status}</span>
         </div>
-      )}
+
+        <h3>{selectedEvent.title}</h3>
+        <p className="detail-location">{selectedEvent.location}</p>
+
+        <div className="detail-metrics">
+          <div>
+            <span className="metric-label">乗車人数</span>
+            <strong>{selectedEvent.passengers}</strong>
+          </div>
+          <div>
+            <span className="metric-label">備考</span>
+            <strong>集合場所確認中</strong>
+          </div>
+        </div>
+
+        <div className="detail-actions">
+          <button className="secondary-button" type="button">
+            編集
+          </button>
+          <button className="primary-button" type="button">
+            配車画面へ
+          </button>
+        </div>
+      </section>
     </div>
   );
 }
