@@ -8,6 +8,10 @@ export function getEvents(): Event[] {
   return events;
 }
 
+export function getEvent(id: string): Event | undefined {
+  return events.find((e) => e.id === id);
+}
+
 export function addEvent(event: Event): void {
   events = [...events, event];
 }

@@ -12,3 +12,35 @@ export interface Destination {
   id: string;
   name: string;
 }
+
+export interface Family {
+  id: string;
+  name: string;
+  vehicleCapacity: number;
+}
+
+export interface Child {
+  id: string;
+  familyId: string;
+  name: string;
+  grade: string;
+  pickupLocationId: string | null;
+}
+
+export interface ChildResponse {
+  childId: string;
+  isParticipating: boolean;
+  noOutwardRide: boolean;
+  noReturnRide: boolean;
+  remarks: string;
+}
+
+export interface Response {
+  familyId: string;
+  status: "未回答" | "回答済み";
+  driverOutward: boolean;
+  driverReturn: boolean;
+  capacityToday: number | null;
+  remarks: string;
+  children: ChildResponse[];
+}
