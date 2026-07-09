@@ -7,3 +7,8 @@ export interface Event {
   destinationName: string;
   status: EventStatus;
 }
+
+export interface Destination {
+  id: string;
+  name: string;
+}

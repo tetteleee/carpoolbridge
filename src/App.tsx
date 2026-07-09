@@ -1,5 +1,6 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import HomePage from "./pages/HomePage";
+import CreateEventPage from "./pages/CreateEventPage";
 import EventEditPage from "./pages/EventEditPage";
 import DispatchPage from "./pages/DispatchPage";
 import MasterPage from "./pages/MasterPage";
@@ -9,6 +10,7 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<HomePage />} />
+        <Route path="/events/new" element={<CreateEventPage />} />
         <Route path="/event/:id" element={<EventEditPage />} />
         <Route path="/event/:id/dispatch" element={<DispatchPage />} />
         <Route path="/master" element={<MasterPage />} />

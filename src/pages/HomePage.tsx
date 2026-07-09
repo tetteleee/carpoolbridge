@@ -1,11 +1,11 @@
 import { Link } from "react-router-dom";
-import { mockEvents } from "../mocks/events";
+import { getEvents } from "../mocks/eventStore";
 import { formatDateWithWeekday } from "../lib/date";
 import type { Event } from "../types";
 
-const sortedEvents: Event[] = [...mockEvents].sort((a, b) => a.date.localeCompare(b.date));
 
 function HomePage() {
+  const sortedEvents: Event[] = [...getEvents()].sort((a, b) => a.date.localeCompare(b.date));
   return (
     <div className="app-shell">
       <header className="topbar">
