@@ -33,6 +33,7 @@ button {
   margin: 0 auto;
   padding: 24px 16px 40px;
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 16px;
 }
 
@@ -83,6 +84,7 @@ h1 {
 .primary-button {
   background: #2563eb;
   color: white;
+  text-decoration: none;
   box-shadow: 0 8px 20px rgba(37, 99, 235, 0.16);
 }
 
@@ -107,6 +109,8 @@ h1 {
   border-radius: 20px;
   box-shadow: 0 18px 40px rgba(15, 23, 42, 0.06);
   padding: 16px;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .section-heading {
@@ -272,11 +276,13 @@ h1 {
 
 .create-event-form {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 20px;
 }
 
 .form-field {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 6px;
 }
 
@@ -290,6 +296,8 @@ h1 {
 .form-field input[type="date"],
 .form-field select {
   width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
   padding: 10px 12px;
   border: 1px solid #d1d9ef;
   border-radius: 10px;
@@ -305,6 +313,13 @@ h1 {
 .form-field select:focus {
   border-color: #2563eb;
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+/* iOS Safari: input[type="date"] は -webkit-appearance:none で幅の強制を解除 */
+.form-field input[type="date"] {
+  -webkit-appearance: none;
+  appearance: none;
+  min-width: 0;
 }
 
 .primary-button:disabled {
