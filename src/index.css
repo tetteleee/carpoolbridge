@@ -43,6 +43,13 @@ button {
   gap: 12px;
 }
 
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
 .eyebrow {
   margin: 0 0 4px;
   font-size: 0.8rem;
@@ -82,6 +89,9 @@ h1 {
 .secondary-button {
   background: #e8eefc;
   color: #2952b3;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
 }
 
 .primary-button:hover,
@@ -128,6 +138,8 @@ h1 {
   padding: 12px 14px;
   text-align: left;
   cursor: pointer;
+  text-decoration: none;
+  color: inherit;
 }
 
 .event-card.active {
