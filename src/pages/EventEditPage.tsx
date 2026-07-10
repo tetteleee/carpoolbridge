@@ -22,12 +22,32 @@ function EventEditPage() {
 
   if (!event) return <div className="app-shell">イベントが見つかりません</div>;
 
+  function isResponsePristine(r: Response): boolean {
+    if (r.driverOutward || r.driverReturn || r.capacityToday !== null || r.remarks !== "") return false;
+    for (const c of r.children) {
+      if (!c.isParticipating || c.noOutwardRide || c.noReturnRide || c.remarks !== "") return false;
+    }
+    return true;
+  }
+
   function handleFamilyUpdate(familyId: string, updater: (r: Response) => Response) {
     setResponses((prev) =>
       prev.map((r) => {
         if (r.familyId === familyId) {
           const updated = updater(r);
-          updated.status = "回答済み"; // Auto status update
+          
+          // バッジの手動クリックによる変更か判定
+          const isManualToggle = updated.status !== r.status;
+          
+          if (!isManualToggle) {
+            // フィールドの変更（チェック等）による場合、初期状態に戻ったなら未回答に戻す
+            if (isResponsePristine(updated)) {
+              updated.status = "未回答";
+            } else {
+              updated.status = "回答済み";
+            }
+          }
+          
           if (id) updateResponse(id, updated);
           return updated;
         }
@@ -40,7 +60,19 @@ function EventEditPage() {
     handleFamilyUpdate(familyId, (r) => {
       return {
         ...r,
-        children: r.children.map((cr) => (cr.childId === childId ? updater(cr) : cr)),
+        children: r.children.map((cr) => {
+          if (cr.childId === childId) {
+            const newCr = updater(cr);
+            // 参加のチェックを外した瞬間に、他の項目をクリアする
+            if (cr.isParticipating && !newCr.isParticipating) {
+              newCr.noOutwardRide = false;
+              newCr.noReturnRide = false;
+              newCr.remarks = "";
+            }
+            return newCr;
+          }
+          return cr;
+        }),
       };
     });
   }
@@ -133,18 +165,20 @@ function EventEditPage() {
                             />
                             参加
                           </label>
-                          <label className="checkbox-label">
+                          <label className={`checkbox-label ${!childResponse.isParticipating ? "disabled-label" : ""}`}>
                             <input 
                               type="checkbox" 
                               checked={childResponse.noOutwardRide}
+                              disabled={!childResponse.isParticipating}
                               onChange={(e) => handleChildUpdate(family.id, child.id, cr => ({ ...cr, noOutwardRide: e.target.checked }))}
                             />
                             行きの配車不要
                           </label>
-                          <label className="checkbox-label">
+                          <label className={`checkbox-label ${!childResponse.isParticipating ? "disabled-label" : ""}`}>
                             <input 
                               type="checkbox" 
                               checked={childResponse.noReturnRide}
+                              disabled={!childResponse.isParticipating}
                               onChange={(e) => handleChildUpdate(family.id, child.id, cr => ({ ...cr, noReturnRide: e.target.checked }))}
                             />
                             帰りの配車不要
@@ -154,6 +188,7 @@ function EventEditPage() {
                           type="text" 
                           placeholder="備考 (自由入力)" 
                           value={childResponse.remarks}
+                          disabled={!childResponse.isParticipating}
                           onChange={(e) => handleChildUpdate(family.id, child.id, cr => ({ ...cr, remarks: e.target.value }))}
                           className="child-remarks"
                         />

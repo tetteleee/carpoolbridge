@@ -29,7 +29,7 @@ export interface Child {
 
 export interface ChildResponse {
   childId: string;
-  isParticipating: boolean;
+  participationStatus: "未定" | "参加" | "欠席";
   noOutwardRide: boolean;
   noReturnRide: boolean;
   remarks: string;

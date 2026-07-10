@@ -457,8 +457,8 @@ h1 {
 
 .child-toggles {
   display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .child-remarks {
@@ -472,5 +472,16 @@ h1 {
 .child-remarks:focus {
   border-color: #2563eb;
   outline: none;
+}
+
+.disabled-label {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.child-remarks:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background-color: #f8fafc;
 }
 

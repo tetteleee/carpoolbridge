@@ -11,8 +11,8 @@ function App() {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/events/new" element={<CreateEventPage />} />
-        <Route path="/event/:id" element={<EventEditPage />} />
-        <Route path="/event/:id/dispatch" element={<DispatchPage />} />
+        <Route path="/events/:id/edit" element={<EventEditPage />} />
+        <Route path="/events/:id/carpool" element={<DispatchPage />} />
         <Route path="/master" element={<MasterPage />} />
       </Routes>
     </BrowserRouter>
