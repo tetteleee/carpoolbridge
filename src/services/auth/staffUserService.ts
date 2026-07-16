@@ -10,18 +10,14 @@ import { firestorePaths } from '../../constants';
  */
 export async function checkStaffUserRegistration(uid: string): Promise<boolean> {
   const docPath = firestorePaths.staffUserDocument(uid);
-  console.log("uid =", uid);
-  console.log("path =", docPath);
 
   try {
     const docRef = doc(db, docPath);
     const docSnap = await getDoc(docRef);
 
-    console.log("exists =", docSnap.exists());
-
     return docSnap.exists();
   } catch (e) {
-    console.error(e);
+    console.error("Failed to check staff user registration:", e);
     return false;
   }
 }
