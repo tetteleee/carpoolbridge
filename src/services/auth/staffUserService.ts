@@ -9,16 +9,19 @@ import { firestorePaths } from '../../constants';
  * @returns 登録されている場合はtrue、登録されていない場合（およびエラー発生時）はfalse
  */
 export async function checkStaffUserRegistration(uid: string): Promise<boolean> {
-  if (!uid) {
-    return false;
-  }
+  const docPath = firestorePaths.staffUserDocument(uid);
+  console.log("uid =", uid);
+  console.log("path =", docPath);
+
   try {
-    const docPath = firestorePaths.staffUserDocument(uid);
     const docRef = doc(db, docPath);
     const docSnap = await getDoc(docRef);
+
+    console.log("exists =", docSnap.exists());
+
     return docSnap.exists();
-  } catch (error) {
-    console.error('Error checking staff user registration:', error);
+  } catch (e) {
+    console.error(e);
     return false;
   }
 }
