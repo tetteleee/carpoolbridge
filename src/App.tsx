@@ -3,9 +3,28 @@ import reactLogo from './assets/react.svg'
 import viteLogo from './assets/vite.svg'
 import heroImg from './assets/hero.png'
 import './App.css'
+import { useAuth } from './firebase/auth'
 
 function App() {
   const [count, setCount] = useState(0)
+  const { uid, loading, error } = useAuth()
+
+  if (loading) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', flexDirection: 'column' }}>
+        <p>Loading...</p>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', flexDirection: 'column', color: 'red' }}>
+        <p>Authentication Error</p>
+        <pre>{error.message}</pre>
+      </div>
+    )
+  }
 
   return (
     <>
@@ -20,6 +39,10 @@ function App() {
           <p>
             Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
           </p>
+          <div style={{ margin: '15px 0', padding: '10px', background: '#222', borderRadius: '8px', border: '1px solid #444' }}>
+            <p style={{ margin: 0, fontSize: '0.9em', color: '#aaa' }}>Firebase Anonymous Auth UID</p>
+            <code style={{ fontSize: '1.1em', color: '#646cff', wordBreak: 'break-all' }}>{uid}</code>
+          </div>
         </div>
         <button
           type="button"
