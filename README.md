@@ -1,5 +1,7 @@
 # CarpoolBridge
 
+![GitHub Actions](https://github.com/tetteleee/carpoolbridge/actions/workflows/firebase-deploy.yml/badge.svg)
+
 ## 開発
 
 開発サーバー起動
