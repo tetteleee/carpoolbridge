@@ -26,7 +26,7 @@
 ## C. マスタデータ層（CRUD）
 
 - T09_PickupLocation_CRUD処理 / 05_データ設計.md#5, 03_ユースケース.md#UC-08 / T04 / done
-- T10_Destination_CRUD処理 / 05_データ設計.md#6, 03_ユースケース.md#UC-09 / T04 / not started
+- T10_Destination_CRUD処理 / 05_データ設計.md#6, 03_ユースケース.md#UC-09 / T04 / done
 - T11_Family_CRUD処理（isActive論理削除） / 05_データ設計.md#3, 03_ユースケース.md#UC-07, 05_データ設計.md#11 / T04 / not started
 - T12_Child_CRUD処理（家庭無効化時の連動無効化） / 05_データ設計.md#4, 03_ユースケース.md#UC-07, 05_データ設計.md#11 / T11 / not started
 
