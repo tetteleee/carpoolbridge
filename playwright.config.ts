@@ -38,12 +38,20 @@ export default defineConfig({
       // firebase-tools自身はSIGTERM/SIGINTを受けると子プロセスを含めて正しく終了する処理を
       // 持っているため、まずSIGTERMで猶予を与え、それでも終了しない場合のみSIGKILLする。
       gracefulShutdown: { signal: 'SIGTERM', timeout: 10_000 },
+      // firebase-toolsは通常ログ（起動失敗の理由を含む）をstdoutに出す。
+      // Playwrightはデフォルトでは（reporter: 'html'環境下では特に）webServerの
+      // stdoutをCIログへ転送しないため、起動失敗時に原因が完全に握りつぶされる。
+      // stdout: 'pipe'を明示することで、失敗時の実際のログをCI上で確認できるようにする。
+      stdout: 'pipe',
+      stderr: 'pipe',
     },
     {
       command: 'npm run dev -- --mode e2e',
       url: BASE_URL,
       reuseExistingServer: !process.env.CI,
       timeout: 60_000,
+      stdout: 'pipe',
+      stderr: 'pipe',
     },
   ],
 });
