@@ -1,26 +1,6 @@
 import { Routes, Route } from 'react-router-dom';
+import { HomePage } from '../pages/HomePage';
 import { MasterPage } from '../pages/MasterPage';
-
-/**
- * ホーム画面のプレースホルダー。
- * ホーム画面自体はT21で実装するため、それまでの仮表示とする。
- */
-function HomePlaceholder() {
-  return (
-    <div
-      id="home-placeholder"
-      style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        height: '100svh',
-        flexDirection: 'column',
-      }}
-    >
-      <p>ホーム画面</p>
-    </div>
-  );
-}
 
 /**
  * 登録済みユーザー向けのルート定義。
@@ -29,7 +9,7 @@ function HomePlaceholder() {
 export function AppRoutes() {
   return (
     <Routes>
-      <Route path="/" element={<HomePlaceholder />} />
+      <Route path="/" element={<HomePage />} />
       <Route path="/master" element={<MasterPage />} />
     </Routes>
   );
