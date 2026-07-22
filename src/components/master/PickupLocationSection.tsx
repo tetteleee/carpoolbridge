@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useImperativeHandle, useState } from 'react';
 import {
   createPickupLocation,
   getPickupLocations,
@@ -8,18 +8,33 @@ import type { PickupLocation } from '../../types/master';
 
 type EditableField = 'name' | 'latitude' | 'longitude';
 
+export interface PickupLocationSectionHandle {
+  /** 下書き内容をまとめてFirestoreへ反映する */
+  save: () => Promise<void>;
+}
+
+interface PickupLocationSectionProps {
+  ref?: React.Ref<PickupLocationSectionHandle>;
+}
+
 /**
  * マスタ管理画面「集合場所」セクション。
- * 登録済み集合場所の一覧表示・その場編集・新規追加を行う。
+ * 登録済み集合場所の一覧表示・下書き編集・新規追加を行う。
+ * Firestoreへの反映は画面共通の保存ボタン押下時にまとめて行う。
  */
-export function PickupLocationSection() {
+export function PickupLocationSection({ ref }: PickupLocationSectionProps) {
   const [locations, setLocations] = useState<PickupLocation[]>([]);
+  const [savedLocations, setSavedLocations] = useState<PickupLocation[]>([]);
+  const [newIds, setNewIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     getPickupLocations()
-      .then(setLocations)
+      .then((data) => {
+        setLocations(data);
+        setSavedLocations(data);
+      })
       .catch(() => setError('集合場所の取得に失敗しました'))
       .finally(() => setLoading(false));
   }, []);
@@ -41,29 +56,49 @@ export function PickupLocationSection() {
     );
   };
 
-  const handleFieldBlur = async (id: string) => {
-    const location = locations.find((l) => l.id === id);
-    if (!location) return;
-    try {
-      await updatePickupLocation(id, {
-        name: location.name,
-        latitude: location.latitude,
-        longitude: location.longitude,
-      });
-    } catch {
-      setError('集合場所の更新に失敗しました');
-    }
+  const handleAdd = () => {
+    const id = crypto.randomUUID();
+    setNewIds((prev) => new Set(prev).add(id));
+    setLocations((prev) => [...prev, { id, name: '', latitude: 0, longitude: 0 }]);
   };
 
-  const handleAdd = async () => {
-    const newLocation = { name: '', latitude: 0, longitude: 0 };
-    try {
-      const id = await createPickupLocation(newLocation);
-      setLocations((prev) => [...prev, { id, ...newLocation }]);
-    } catch {
-      setError('集合場所の追加に失敗しました');
-    }
-  };
+  useImperativeHandle(ref, () => ({
+    save: async () => {
+      try {
+        for (const location of locations) {
+          if (newIds.has(location.id)) {
+            await createPickupLocation({
+              name: location.name,
+              latitude: location.latitude,
+              longitude: location.longitude,
+            });
+            continue;
+          }
+          const original = savedLocations.find((l) => l.id === location.id);
+          if (
+            original &&
+            (original.name !== location.name ||
+              original.latitude !== location.latitude ||
+              original.longitude !== location.longitude)
+          ) {
+            await updatePickupLocation(location.id, {
+              name: location.name,
+              latitude: location.latitude,
+              longitude: location.longitude,
+            });
+          }
+        }
+        const refreshed = await getPickupLocations();
+        setLocations(refreshed);
+        setSavedLocations(refreshed);
+        setNewIds(new Set());
+        setError(null);
+      } catch {
+        setError('集合場所の保存に失敗しました');
+        throw new Error('pickup location save failed');
+      }
+    },
+  }));
 
   return (
     <section
@@ -132,7 +167,6 @@ export function PickupLocationSection() {
                   onChange={(e) =>
                     handleFieldChange(location.id, 'name', e.target.value)
                   }
-                  onBlur={() => handleFieldBlur(location.id)}
                   style={{
                     padding: '8px 10px',
                     borderRadius: '6px',
@@ -169,7 +203,6 @@ export function PickupLocationSection() {
                         e.target.value
                       )
                     }
-                    onBlur={() => handleFieldBlur(location.id)}
                     style={{
                       padding: '8px 10px',
                       borderRadius: '6px',
@@ -206,7 +239,6 @@ export function PickupLocationSection() {
                         e.target.value
                       )
                     }
-                    onBlur={() => handleFieldBlur(location.id)}
                     style={{
                       padding: '8px 10px',
                       borderRadius: '6px',

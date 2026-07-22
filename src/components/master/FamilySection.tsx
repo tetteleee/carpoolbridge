@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useImperativeHandle, useState } from 'react';
 import {
   createFamily,
   getFamilies,
@@ -9,13 +9,32 @@ import type { Family, PickupLocation } from '../../types/master';
 
 type EditableField = 'familyName' | 'coachName' | 'vehicleCapacity';
 
+type FamilyUpdatableFields = Partial<
+  Pick<
+    Family,
+    'familyName' | 'coachName' | 'vehicleCapacity' | 'pickupLocationId' | 'isActive'
+  >
+>;
+
+export interface FamilySectionHandle {
+  /** 下書き内容をまとめてFirestoreへ反映する */
+  save: () => Promise<void>;
+}
+
+interface FamilySectionProps {
+  ref?: React.Ref<FamilySectionHandle>;
+}
+
 /**
  * マスタ管理画面「家庭」セクション。
- * 登録済み家庭の一覧表示・その場編集・新規追加・在籍中トグルを行う。
+ * 登録済み家庭の一覧表示・下書き編集・新規追加・在籍中トグルを行う。
+ * Firestoreへの反映は画面共通の保存ボタン押下時にまとめて行う。
  * 子供の登録・編集UIはT16で実装するため対象外。
  */
-export function FamilySection() {
+export function FamilySection({ ref }: FamilySectionProps) {
   const [families, setFamilies] = useState<Family[]>([]);
+  const [savedFamilies, setSavedFamilies] = useState<Family[]>([]);
+  const [newIds, setNewIds] = useState<Set<string>>(new Set());
   const [pickupLocations, setPickupLocations] = useState<PickupLocation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -24,6 +43,7 @@ export function FamilySection() {
     Promise.all([getFamilies(), getPickupLocations()])
       .then(([familiesData, pickupLocationsData]) => {
         setFamilies(familiesData);
+        setSavedFamilies(familiesData);
         setPickupLocations(pickupLocationsData);
       })
       .catch(() => setError('家庭の取得に失敗しました'))
@@ -48,67 +68,91 @@ export function FamilySection() {
     );
   };
 
-  const handleFieldBlur = async (id: string) => {
-    const family = families.find((f) => f.id === id);
-    if (!family) return;
-    try {
-      await updateFamily(id, {
-        familyName: family.familyName,
-        coachName: family.coachName?.trim() ? family.coachName.trim() : null,
-        vehicleCapacity: family.vehicleCapacity,
-      });
-    } catch {
-      setError('家庭の更新に失敗しました');
-    }
-  };
-
-  const handlePickupLocationChange = async (
-    id: string,
-    pickupLocationId: string
-  ) => {
+  const handlePickupLocationChange = (id: string, pickupLocationId: string) => {
     setFamilies((prev) =>
       prev.map((family) =>
         family.id === id ? { ...family, pickupLocationId } : family
       )
     );
-    try {
-      await updateFamily(id, { pickupLocationId });
-    } catch {
-      setError('家庭の更新に失敗しました');
-    }
   };
 
-  const handleActiveToggle = async (id: string) => {
-    const family = families.find((f) => f.id === id);
-    if (!family) return;
-    const isActive = !family.isActive;
+  const handleActiveToggle = (id: string) => {
     setFamilies((prev) =>
-      prev.map((f) => (f.id === id ? { ...f, isActive } : f))
+      prev.map((family) =>
+        family.id === id ? { ...family, isActive: !family.isActive } : family
+      )
     );
-    try {
-      await updateFamily(id, { isActive });
-    } catch {
-      setError('家庭の更新に失敗しました');
-    }
   };
 
-  const handleAdd = async () => {
-    const newFamily = {
-      familyName: '',
-      coachName: null as string | null,
-      vehicleCapacity: 0,
-      pickupLocationId: pickupLocations[0]?.id ?? '',
-    };
-    try {
-      const id = await createFamily(newFamily);
-      setFamilies((prev) => [
-        ...prev,
-        { id, ...newFamily, isActive: true } as Family,
-      ]);
-    } catch {
-      setError('家庭の追加に失敗しました');
-    }
+  const handleAdd = () => {
+    const id = crypto.randomUUID();
+    setNewIds((prev) => new Set(prev).add(id));
+    setFamilies((prev) => [
+      ...prev,
+      {
+        id,
+        familyName: '',
+        coachName: null,
+        vehicleCapacity: 0,
+        pickupLocationId: pickupLocations[0]?.id ?? '',
+        isActive: true,
+      } as Family,
+    ]);
   };
+
+  useImperativeHandle(ref, () => ({
+    save: async () => {
+      try {
+        for (const family of families) {
+          const coachName = family.coachName?.trim()
+            ? family.coachName.trim()
+            : null;
+
+          if (newIds.has(family.id)) {
+            await createFamily({
+              familyName: family.familyName,
+              coachName,
+              vehicleCapacity: family.vehicleCapacity,
+              pickupLocationId: family.pickupLocationId,
+            });
+            continue;
+          }
+
+          const original = savedFamilies.find((f) => f.id === family.id);
+          if (!original) continue;
+
+          const changes: FamilyUpdatableFields = {};
+          if (original.familyName !== family.familyName) {
+            changes.familyName = family.familyName;
+          }
+          if (original.coachName !== coachName) {
+            changes.coachName = coachName;
+          }
+          if (original.vehicleCapacity !== family.vehicleCapacity) {
+            changes.vehicleCapacity = family.vehicleCapacity;
+          }
+          if (original.pickupLocationId !== family.pickupLocationId) {
+            changes.pickupLocationId = family.pickupLocationId;
+          }
+          if (original.isActive !== family.isActive) {
+            changes.isActive = family.isActive;
+          }
+
+          if (Object.keys(changes).length > 0) {
+            await updateFamily(family.id, changes);
+          }
+        }
+        const refreshed = await getFamilies();
+        setFamilies(refreshed);
+        setSavedFamilies(refreshed);
+        setNewIds(new Set());
+        setError(null);
+      } catch {
+        setError('家庭の保存に失敗しました');
+        throw new Error('family save failed');
+      }
+    },
+  }));
 
   return (
     <section
@@ -177,7 +221,6 @@ export function FamilySection() {
                   onChange={(e) =>
                     handleFieldChange(family.id, 'familyName', e.target.value)
                   }
-                  onBlur={() => handleFieldBlur(family.id)}
                   style={{
                     padding: '8px 10px',
                     borderRadius: '6px',
@@ -207,7 +250,6 @@ export function FamilySection() {
                   onChange={(e) =>
                     handleFieldChange(family.id, 'coachName', e.target.value)
                   }
-                  onBlur={() => handleFieldBlur(family.id)}
                   placeholder="コーチなしの場合は空欄"
                   style={{
                     padding: '8px 10px',
@@ -243,7 +285,6 @@ export function FamilySection() {
                       e.target.value
                     )
                   }
-                  onBlur={() => handleFieldBlur(family.id)}
                   style={{
                     padding: '8px 10px',
                     borderRadius: '6px',

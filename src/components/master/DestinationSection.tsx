@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useImperativeHandle, useState } from 'react';
 import {
   createDestination,
   getDestinations,
@@ -8,18 +8,33 @@ import type { Destination } from '../../types/master';
 
 type EditableField = 'name' | 'latitude' | 'longitude';
 
+export interface DestinationSectionHandle {
+  /** 下書き内容をまとめてFirestoreへ反映する */
+  save: () => Promise<void>;
+}
+
+interface DestinationSectionProps {
+  ref?: React.Ref<DestinationSectionHandle>;
+}
+
 /**
  * マスタ管理画面「目的地」セクション。
- * 登録済み目的地の一覧表示・その場編集・新規追加を行う。
+ * 登録済み目的地の一覧表示・下書き編集・新規追加を行う。
+ * Firestoreへの反映は画面共通の保存ボタン押下時にまとめて行う。
  */
-export function DestinationSection() {
+export function DestinationSection({ ref }: DestinationSectionProps) {
   const [destinations, setDestinations] = useState<Destination[]>([]);
+  const [savedDestinations, setSavedDestinations] = useState<Destination[]>([]);
+  const [newIds, setNewIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     getDestinations()
-      .then(setDestinations)
+      .then((data) => {
+        setDestinations(data);
+        setSavedDestinations(data);
+      })
       .catch(() => setError('目的地の取得に失敗しました'))
       .finally(() => setLoading(false));
   }, []);
@@ -41,29 +56,54 @@ export function DestinationSection() {
     );
   };
 
-  const handleFieldBlur = async (id: string) => {
-    const destination = destinations.find((d) => d.id === id);
-    if (!destination) return;
-    try {
-      await updateDestination(id, {
-        name: destination.name,
-        latitude: destination.latitude,
-        longitude: destination.longitude,
-      });
-    } catch {
-      setError('目的地の更新に失敗しました');
-    }
+  const handleAdd = () => {
+    const id = crypto.randomUUID();
+    setNewIds((prev) => new Set(prev).add(id));
+    setDestinations((prev) => [
+      ...prev,
+      { id, name: '', latitude: 0, longitude: 0 },
+    ]);
   };
 
-  const handleAdd = async () => {
-    const newDestination = { name: '', latitude: 0, longitude: 0 };
-    try {
-      const id = await createDestination(newDestination);
-      setDestinations((prev) => [...prev, { id, ...newDestination }]);
-    } catch {
-      setError('目的地の追加に失敗しました');
-    }
-  };
+  useImperativeHandle(ref, () => ({
+    save: async () => {
+      try {
+        for (const destination of destinations) {
+          if (newIds.has(destination.id)) {
+            await createDestination({
+              name: destination.name,
+              latitude: destination.latitude,
+              longitude: destination.longitude,
+            });
+            continue;
+          }
+          const original = savedDestinations.find(
+            (d) => d.id === destination.id
+          );
+          if (
+            original &&
+            (original.name !== destination.name ||
+              original.latitude !== destination.latitude ||
+              original.longitude !== destination.longitude)
+          ) {
+            await updateDestination(destination.id, {
+              name: destination.name,
+              latitude: destination.latitude,
+              longitude: destination.longitude,
+            });
+          }
+        }
+        const refreshed = await getDestinations();
+        setDestinations(refreshed);
+        setSavedDestinations(refreshed);
+        setNewIds(new Set());
+        setError(null);
+      } catch {
+        setError('目的地の保存に失敗しました');
+        throw new Error('destination save failed');
+      }
+    },
+  }));
 
   return (
     <section
@@ -132,7 +172,6 @@ export function DestinationSection() {
                   onChange={(e) =>
                     handleFieldChange(destination.id, 'name', e.target.value)
                   }
-                  onBlur={() => handleFieldBlur(destination.id)}
                   style={{
                     padding: '8px 10px',
                     borderRadius: '6px',
@@ -169,7 +208,6 @@ export function DestinationSection() {
                         e.target.value
                       )
                     }
-                    onBlur={() => handleFieldBlur(destination.id)}
                     style={{
                       padding: '8px 10px',
                       borderRadius: '6px',
@@ -206,7 +244,6 @@ export function DestinationSection() {
                         e.target.value
                       )
                     }
-                    onBlur={() => handleFieldBlur(destination.id)}
                     style={{
                       padding: '8px 10px',
                       borderRadius: '6px',
