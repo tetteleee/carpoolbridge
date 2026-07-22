@@ -4,8 +4,15 @@ import {
   getFamilies,
   updateFamily,
 } from '../../services/master/familyService';
+import {
+  createChild,
+  getChildrenByFamilyId,
+  updateChild,
+} from '../../services/master/childService';
 import { getPickupLocations } from '../../services/master/pickupLocationService';
-import type { Family, PickupLocation } from '../../types/master';
+import type { Child, Family, PickupLocation } from '../../types/master';
+import { ChildSection } from './ChildSection';
+import { getSchoolEntryYearOptions } from '../../utils/schoolGrade';
 
 type EditableField = 'familyName' | 'coachName' | 'vehicleCapacity';
 
@@ -14,6 +21,10 @@ type FamilyUpdatableFields = Partial<
     Family,
     'familyName' | 'coachName' | 'vehicleCapacity' | 'pickupLocationId' | 'isActive'
   >
+>;
+
+type ChildUpdatableFields = Partial<
+  Pick<Child, 'name' | 'schoolEntryYear' | 'pickupLocationOverride' | 'isActive'>
 >;
 
 export interface FamilySectionHandle {
@@ -28,23 +39,34 @@ interface FamilySectionProps {
 /**
  * マスタ管理画面「家庭」セクション。
  * 登録済み家庭の一覧表示・下書き編集・新規追加・在籍中トグルを行う。
+ * 家庭カード内には子供セクション（ChildSection）を組み込み、
+ * 子供の一覧表示・下書き編集・新規追加・在籍中トグルも行う。
  * Firestoreへの反映は画面共通の保存ボタン押下時にまとめて行う。
- * 子供の登録・編集UIはT16で実装するため対象外。
  */
 export function FamilySection({ ref }: FamilySectionProps) {
   const [families, setFamilies] = useState<Family[]>([]);
   const [savedFamilies, setSavedFamilies] = useState<Family[]>([]);
   const [newIds, setNewIds] = useState<Set<string>>(new Set());
+  const [children, setChildren] = useState<Child[]>([]);
+  const [savedChildren, setSavedChildren] = useState<Child[]>([]);
+  const [newChildIds, setNewChildIds] = useState<Set<string>>(new Set());
   const [pickupLocations, setPickupLocations] = useState<PickupLocation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     Promise.all([getFamilies(), getPickupLocations()])
-      .then(([familiesData, pickupLocationsData]) => {
+      .then(async ([familiesData, pickupLocationsData]) => {
         setFamilies(familiesData);
         setSavedFamilies(familiesData);
         setPickupLocations(pickupLocationsData);
+
+        const childrenByFamily = await Promise.all(
+          familiesData.map((family) => getChildrenByFamilyId(family.id))
+        );
+        const childrenData = childrenByFamily.flat();
+        setChildren(childrenData);
+        setSavedChildren(childrenData);
       })
       .catch(() => setError('家庭の取得に失敗しました'))
       .finally(() => setLoading(false));
@@ -100,6 +122,58 @@ export function FamilySection({ ref }: FamilySectionProps) {
     ]);
   };
 
+  const handleChildNameChange = (childId: string, name: string) => {
+    setChildren((prev) =>
+      prev.map((child) => (child.id === childId ? { ...child, name } : child))
+    );
+  };
+
+  const handleChildSchoolEntryYearChange = (
+    childId: string,
+    schoolEntryYear: number
+  ) => {
+    setChildren((prev) =>
+      prev.map((child) =>
+        child.id === childId ? { ...child, schoolEntryYear } : child
+      )
+    );
+  };
+
+  const handleChildPickupLocationOverrideChange = (
+    childId: string,
+    pickupLocationOverride: string | null
+  ) => {
+    setChildren((prev) =>
+      prev.map((child) =>
+        child.id === childId ? { ...child, pickupLocationOverride } : child
+      )
+    );
+  };
+
+  const handleChildActiveToggle = (childId: string) => {
+    setChildren((prev) =>
+      prev.map((child) =>
+        child.id === childId ? { ...child, isActive: !child.isActive } : child
+      )
+    );
+  };
+
+  const handleChildAdd = (familyId: string) => {
+    const id = crypto.randomUUID();
+    setNewChildIds((prev) => new Set(prev).add(id));
+    setChildren((prev) => [
+      ...prev,
+      {
+        id,
+        familyId,
+        name: '',
+        schoolEntryYear: getSchoolEntryYearOptions()[0],
+        pickupLocationOverride: null,
+        isActive: true,
+      } as Child,
+    ]);
+  };
+
   useImperativeHandle(ref, () => ({
     save: async () => {
       try {
@@ -108,47 +182,99 @@ export function FamilySection({ ref }: FamilySectionProps) {
             ? family.coachName.trim()
             : null;
 
+          let familyId = family.id;
+
           if (newIds.has(family.id)) {
-            await createFamily({
+            familyId = await createFamily({
               familyName: family.familyName,
               coachName,
               vehicleCapacity: family.vehicleCapacity,
               pickupLocationId: family.pickupLocationId,
             });
-            continue;
+          } else {
+            const original = savedFamilies.find((f) => f.id === family.id);
+            if (!original) continue;
+
+            const changes: FamilyUpdatableFields = {};
+            if (original.familyName !== family.familyName) {
+              changes.familyName = family.familyName;
+            }
+            if (original.coachName !== coachName) {
+              changes.coachName = coachName;
+            }
+            if (original.vehicleCapacity !== family.vehicleCapacity) {
+              changes.vehicleCapacity = family.vehicleCapacity;
+            }
+            if (original.pickupLocationId !== family.pickupLocationId) {
+              changes.pickupLocationId = family.pickupLocationId;
+            }
+            if (original.isActive !== family.isActive) {
+              changes.isActive = family.isActive;
+            }
+
+            if (Object.keys(changes).length > 0) {
+              await updateFamily(family.id, changes);
+            }
           }
 
-          const original = savedFamilies.find((f) => f.id === family.id);
-          if (!original) continue;
+          const familyChildren = children.filter(
+            (child) => child.familyId === family.id
+          );
 
-          const changes: FamilyUpdatableFields = {};
-          if (original.familyName !== family.familyName) {
-            changes.familyName = family.familyName;
-          }
-          if (original.coachName !== coachName) {
-            changes.coachName = coachName;
-          }
-          if (original.vehicleCapacity !== family.vehicleCapacity) {
-            changes.vehicleCapacity = family.vehicleCapacity;
-          }
-          if (original.pickupLocationId !== family.pickupLocationId) {
-            changes.pickupLocationId = family.pickupLocationId;
-          }
-          if (original.isActive !== family.isActive) {
-            changes.isActive = family.isActive;
-          }
+          for (const child of familyChildren) {
+            if (newChildIds.has(child.id)) {
+              await createChild({
+                familyId,
+                name: child.name,
+                schoolEntryYear: child.schoolEntryYear,
+                pickupLocationOverride: child.pickupLocationOverride,
+              });
+              continue;
+            }
 
-          if (Object.keys(changes).length > 0) {
-            await updateFamily(family.id, changes);
+            const originalChild = savedChildren.find((c) => c.id === child.id);
+            if (!originalChild) continue;
+
+            const childChanges: ChildUpdatableFields = {};
+            if (originalChild.name !== child.name) {
+              childChanges.name = child.name;
+            }
+            if (originalChild.schoolEntryYear !== child.schoolEntryYear) {
+              childChanges.schoolEntryYear = child.schoolEntryYear;
+            }
+            if (
+              originalChild.pickupLocationOverride !==
+              child.pickupLocationOverride
+            ) {
+              childChanges.pickupLocationOverride =
+                child.pickupLocationOverride;
+            }
+            if (originalChild.isActive !== child.isActive) {
+              childChanges.isActive = child.isActive;
+            }
+
+            if (Object.keys(childChanges).length > 0) {
+              await updateChild(child.id, childChanges);
+            }
           }
         }
-        const refreshed = await getFamilies();
-        setFamilies(refreshed);
-        setSavedFamilies(refreshed);
+
+        const refreshedFamilies = await getFamilies();
+        setFamilies(refreshedFamilies);
+        setSavedFamilies(refreshedFamilies);
         setNewIds(new Set());
+
+        const refreshedChildrenByFamily = await Promise.all(
+          refreshedFamilies.map((family) => getChildrenByFamilyId(family.id))
+        );
+        const refreshedChildren = refreshedChildrenByFamily.flat();
+        setChildren(refreshedChildren);
+        setSavedChildren(refreshedChildren);
+        setNewChildIds(new Set());
+
         setError(null);
       } catch {
-        setError('家庭の保存に失敗しました');
+        setError('家庭・子供の保存に失敗しました');
         throw new Error('family save failed');
       }
     },
@@ -370,6 +496,20 @@ export function FamilySection({ ref }: FamilySectionProps) {
                   {family.isActive ? 'ON' : 'OFF'}
                 </button>
               </div>
+
+              <ChildSection
+                childList={children.filter(
+                  (child) => child.familyId === family.id
+                )}
+                pickupLocations={pickupLocations}
+                onNameChange={handleChildNameChange}
+                onSchoolEntryYearChange={handleChildSchoolEntryYearChange}
+                onPickupLocationOverrideChange={
+                  handleChildPickupLocationOverrideChange
+                }
+                onActiveToggle={handleChildActiveToggle}
+                onAdd={() => handleChildAdd(family.id)}
+              />
             </div>
           ))}
         </div>
