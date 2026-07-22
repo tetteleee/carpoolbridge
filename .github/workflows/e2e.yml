@@ -25,6 +25,14 @@ jobs:
         with:
           node-version: 22
 
+      # firebase-toolsはFirestore Emulator（Java）にJava 21以上を要求するが、
+      # ubuntu-24.04ランナーのデフォルトjavaはJava 17のため、明示的にセットアップする。
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
       - name: Install dependencies
         run: npm ci
 
