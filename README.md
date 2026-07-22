@@ -17,6 +17,20 @@ npm run dev
 npm run build
 ```
 
+## E2Eテスト
+
+Firebase Emulator Suite（Auth・Firestore）とVite開発サーバーを自動起動してテストを実行します。
+
+```bash
+npm run test:e2e
+```
+
+初回実行時はPlaywrightのブラウザバイナリのダウンロードが必要です。
+
+```bash
+npx playwright install chromium
+```
+
 ## デプロイ
 
 ```bash
