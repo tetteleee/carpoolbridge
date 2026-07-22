@@ -1,6 +1,6 @@
-import * as admin from 'firebase-admin';
-
-const EMULATOR_PROJECT_ID = 'demo-carpoolbridge-e2e';
+import { getApps, initializeApp } from 'firebase-admin/app';
+import { getFirestore } from 'firebase-admin/firestore';
+import { EMULATOR_PROJECT_ID } from './constants';
 
 /**
  * Firestore Emulatorへ直接書き込むためのAdmin SDKインスタンスを取得する。
@@ -12,8 +12,8 @@ export function getEmulatorFirestore() {
   process.env.FIRESTORE_EMULATOR_HOST = '127.0.0.1:8080';
 
   const app =
-    admin.apps.find((a) => a?.name === 'e2e') ??
-    admin.initializeApp({ projectId: EMULATOR_PROJECT_ID }, 'e2e');
+    getApps().find((a) => a.name === 'e2e') ??
+    initializeApp({ projectId: EMULATOR_PROJECT_ID }, 'e2e');
 
-  return app.firestore();
+  return getFirestore(app);
 }
