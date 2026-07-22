@@ -27,7 +27,7 @@ export default defineConfig({
   ],
   webServer: [
     {
-      command: `firebase emulators:start --only auth,firestore --project ${EMULATOR_PROJECT_ID}`,
+      command: `npx firebase emulators:start --only auth,firestore --project ${EMULATOR_PROJECT_ID}`,
       port: 8080,
       reuseExistingServer: !process.env.CI,
       timeout: 60_000,
