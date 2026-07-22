@@ -85,6 +85,7 @@ export function EventList({ events, destinationNameById }: EventListProps) {
                 fontSize: '15px',
                 fontWeight: isToday ? 700 : 400,
                 color: isToday ? 'var(--accent)' : 'var(--text-h)',
+                textAlign: 'left',
               }}
             >
               {event.name}
