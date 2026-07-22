@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
+import { BrowserRouter } from 'react-router-dom';
 import './App.css';
 import { useAuth } from './firebase/auth';
 import { checkStaffUserRegistration } from './services/auth/staffUserService';
 import { AuthGuard } from './routes/AuthGuard';
+import { AppRoutes } from './router';
 
 function App() {
   const { uid, loading: authLoading, error: authError } = useAuth();
@@ -76,21 +78,11 @@ function App() {
   }
 
   return (
-    <AuthGuard uid={uid} isRegistered={isRegistered ?? false}>
-      {/* 登録済みユーザー向けのホーム画面（今後実装） */}
-      <div
-        id="home-placeholder"
-        style={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          height: '100svh',
-          flexDirection: 'column',
-        }}
-      >
-        <p>ホーム画面</p>
-      </div>
-    </AuthGuard>
+    <BrowserRouter>
+      <AuthGuard uid={uid} isRegistered={isRegistered ?? false}>
+        <AppRoutes />
+      </AuthGuard>
+    </BrowserRouter>
   );
 }
 
