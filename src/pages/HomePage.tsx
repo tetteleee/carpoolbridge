@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { EventList } from '../components/EventList';
+import { SettingsIcon } from '../components/icons';
 import { getEvents } from '../services/event/eventService';
 import { getDestinations } from '../services/master/destinationService';
 import type { Event } from '../types/event';
@@ -64,6 +65,9 @@ export function HomePage() {
           type="button"
           onClick={() => navigate('/master')}
           style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px',
             padding: '8px 12px',
             borderRadius: '6px',
             border: '1px solid var(--border)',
@@ -74,7 +78,8 @@ export function HomePage() {
             cursor: 'pointer',
           }}
         >
-          ⚙️ マスタ管理
+          <SettingsIcon size={16} />
+          マスタ管理
         </button>
       </div>
 

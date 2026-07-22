@@ -3,6 +3,7 @@ import {
   formatSchoolEntryYearLabel,
   getSchoolEntryYearOptions,
 } from '../../utils/schoolGrade';
+import { UserIcon } from '../icons';
 
 interface ChildSectionProps {
   childList: Child[];
@@ -73,7 +74,8 @@ export function ChildSection({
           color: 'var(--text-h)',
         }}
       >
-        🧒 子供
+        <UserIcon size={15} />
+        子供
       </h3>
 
       <div

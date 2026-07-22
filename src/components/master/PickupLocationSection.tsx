@@ -1,4 +1,5 @@
 import { useEffect, useImperativeHandle, useState } from 'react';
+import { MapPinIcon } from '../icons';
 import {
   createPickupLocation,
   getPickupLocations,
@@ -120,7 +121,8 @@ export function PickupLocationSection({ ref }: PickupLocationSectionProps) {
           gap: '6px',
         }}
       >
-        📍 集合場所
+        <MapPinIcon size={18} />
+        集合場所
       </h2>
 
       {error && (

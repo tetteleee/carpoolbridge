@@ -1,4 +1,5 @@
 import { useEffect, useImperativeHandle, useState } from 'react';
+import { FlagIcon } from '../icons';
 import {
   createDestination,
   getDestinations,
@@ -125,7 +126,8 @@ export function DestinationSection({ ref }: DestinationSectionProps) {
           gap: '6px',
         }}
       >
-        🏁 目的地
+        <FlagIcon size={18} />
+        目的地
       </h2>
 
       {error && (

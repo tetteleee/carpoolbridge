@@ -13,6 +13,7 @@ import { getPickupLocations } from '../../services/master/pickupLocationService'
 import type { Child, Family, PickupLocation } from '../../types/master';
 import { ChildSection } from './ChildSection';
 import { getSchoolEntryYearOptions } from '../../utils/schoolGrade';
+import { HomeIcon } from '../icons';
 
 type EditableField = 'familyName' | 'coachName' | 'vehicleCapacity';
 
@@ -300,7 +301,8 @@ export function FamilySection({ ref }: FamilySectionProps) {
           gap: '6px',
         }}
       >
-        🏠 家庭
+        <HomeIcon size={18} />
+        家庭
       </h2>
 
       {error && (

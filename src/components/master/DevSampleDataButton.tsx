@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { seedSampleData } from '../../services/dev/seedSampleData';
+import { CodeIcon } from '../icons';
 
 interface DevSampleDataButtonProps {
   /** サンプルデータ投入完了後に呼び出される（画面表示の再取得に使用） */
@@ -71,7 +72,8 @@ export function DevSampleDataButton({ onSeeded }: DevSampleDataButtonProps) {
           gap: '6px',
         }}
       >
-        🛠️ 開発用機能
+        <CodeIcon size={15} />
+        開発用機能
       </h2>
 
       {message && (
