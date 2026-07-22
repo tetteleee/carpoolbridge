@@ -21,6 +21,10 @@ dist-ssr/
 # Firebase
 .firebase/
 
+# Firebaseサービスアカウントキー（npm run seed用。誤コミット防止）
+*serviceAccountKey*.json
+*service-account*.json
+
 # Playwright
 /playwright-report/
 /test-results/

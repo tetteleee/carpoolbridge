@@ -8,7 +8,8 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "seed": "tsx scripts/seed/seed.ts"
   },
   "dependencies": {
     "firebase": "^12.16.0",
@@ -29,6 +30,7 @@
     "firebase-admin": "^14.2.0",
     "firebase-tools": "^15.24.0",
     "globals": "^17.7.0",
+    "tsx": "^4.23.1",
     "typescript": "~6.0.2",
     "typescript-eslint": "^8.62.0",
     "vite": "^8.1.1"
