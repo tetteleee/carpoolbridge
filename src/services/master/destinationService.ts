@@ -54,14 +54,14 @@ export async function getDestination(
 }
 
 /**
- * 目的地の name・address・latitude・longitude を更新します。
+ * 目的地の name・latitude・longitude を更新します。
  *
  * @param destinationId 更新対象のドキュメントID
  * @param data 更新するフィールド（部分更新可）
  */
 export async function updateDestination(
   destinationId: string,
-  data: Partial<Pick<Destination, 'name' | 'address' | 'latitude' | 'longitude'>>
+  data: Partial<Pick<Destination, 'name' | 'latitude' | 'longitude'>>
 ): Promise<void> {
   const docRef = doc(db, firestorePaths.destinationDocument(destinationId));
   await updateDoc(docRef, data);

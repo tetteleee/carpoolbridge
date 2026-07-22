@@ -54,14 +54,14 @@ export async function getPickupLocation(
 }
 
 /**
- * 集合場所の name・address・latitude・longitude を更新します。
+ * 集合場所の name・latitude・longitude を更新します。
  *
  * @param locationId 更新対象のドキュメントID
  * @param data 更新するフィールド（部分更新可）
  */
 export async function updatePickupLocation(
   locationId: string,
-  data: Partial<Pick<PickupLocation, 'name' | 'address' | 'latitude' | 'longitude'>>
+  data: Partial<Pick<PickupLocation, 'name' | 'latitude' | 'longitude'>>
 ): Promise<void> {
   const docRef = doc(db, firestorePaths.pickupLocationDocument(locationId));
   await updateDoc(docRef, data);

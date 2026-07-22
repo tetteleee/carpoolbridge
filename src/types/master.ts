@@ -44,7 +44,6 @@ export interface Child {
 export interface PickupLocation {
   id: string;
   name: string;
-  address: string;
   latitude: number;
   longitude: number;
 }
@@ -55,8 +54,6 @@ export interface PickupLocation {
 export interface Destination {
   id: string;
   name: string;
-  /** 住所（任意項目） */
-  address?: string;
   latitude: number;
   longitude: number;
 }
