@@ -169,3 +169,31 @@ Markdown形式を維持する。
 - 実装可能か
 
 細かな文章表現よりも設計品質を優先する。
+
+# 開発用コマンド
+
+## ビルド
+
+```bash
+npm run build
+```
+
+## デプロイ
+
+```bash
+firebase deploy
+```
+
+または Hostingのみ
+
+```bash
+firebase deploy --only hosting
+```
+
+## Firestore Security Rules変更時
+
+Rulesを変更した場合はデプロイが必要です。
+
+```bash
+firebase deploy --only firestore:rules
+```
