@@ -46,7 +46,11 @@ export default defineConfig({
       stderr: 'pipe',
     },
     {
-      command: 'npm run dev -- --mode e2e',
+      // --hostを明示しないとVite開発サーバーは"localhost"にバインドする。
+      // 環境によっては"localhost"がIPv6（::1）に解決されIPv4（127.0.0.1）で
+      // 待ち受けないことがあり、BASE_URL（127.0.0.1）への疎通確認が永久に失敗する。
+      // そのためIPv4アドレスを明示的に指定する。
+      command: 'npm run dev -- --mode e2e --host 127.0.0.1',
       url: BASE_URL,
       reuseExistingServer: !process.env.CI,
       timeout: 60_000,
