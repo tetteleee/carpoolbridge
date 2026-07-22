@@ -11,6 +11,7 @@ import {
   FamilySection,
   type FamilySectionHandle,
 } from '../components/master/FamilySection';
+import { DevSampleDataButton } from '../components/master/DevSampleDataButton';
 
 /**
  * マスタ管理画面。
@@ -24,6 +25,7 @@ export function MasterPage() {
   const familyRef = useRef<FamilySectionHandle>(null);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [dataVersion, setDataVersion] = useState(0);
 
   const handleSave = async () => {
     setSaving(true);
@@ -62,15 +64,15 @@ export function MasterPage() {
         マスタ管理
       </h1>
 
-      <PickupLocationSection ref={pickupLocationRef} />
+      <PickupLocationSection key={`pickup-${dataVersion}`} ref={pickupLocationRef} />
       <hr
         style={{ border: 'none', borderTop: '1px solid var(--border)', margin: 0 }}
       />
-      <DestinationSection ref={destinationRef} />
+      <DestinationSection key={`destination-${dataVersion}`} ref={destinationRef} />
       <hr
         style={{ border: 'none', borderTop: '1px solid var(--border)', margin: 0 }}
       />
-      <FamilySection ref={familyRef} />
+      <FamilySection key={`family-${dataVersion}`} ref={familyRef} />
 
       <div
         style={{
@@ -105,6 +107,11 @@ export function MasterPage() {
           {saving ? '保存中...' : '保存'}
         </button>
       </div>
+
+      <hr
+        style={{ border: 'none', borderTop: '1px solid var(--border)', margin: 0 }}
+      />
+      <DevSampleDataButton onSeeded={() => setDataVersion((v) => v + 1)} />
     </div>
   );
 }
