@@ -9,7 +9,6 @@ import { AppRoutes } from './router';
 function App() {
   const { uid, loading: authLoading, error: authError } = useAuth();
   const [isRegistered, setIsRegistered] = useState<boolean | null>(null);
-  const [staffCheckLoading, setStaffCheckLoading] = useState(false);
   const [staffCheckError, setStaffCheckError] = useState<Error | null>(null);
 
   useEffect(() => {
@@ -18,23 +17,18 @@ function App() {
     }
 
     // staffUsers 登録確認（通常データは読み込まない）
-    setStaffCheckLoading(true);
-    setStaffCheckError(null);
-
     checkStaffUserRegistration(uid)
       .then((registered) => {
+        setStaffCheckError(null);
         setIsRegistered(registered);
       })
       .catch((err) => {
         setStaffCheckError(err instanceof Error ? err : new Error(String(err)));
         setIsRegistered(false);
-      })
-      .finally(() => {
-        setStaffCheckLoading(false);
       });
   }, [uid]);
 
-  const loading = authLoading || staffCheckLoading || (uid !== null && isRegistered === null);
+  const loading = authLoading || (uid !== null && isRegistered === null);
 
   if (loading) {
     return (
