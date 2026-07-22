@@ -41,8 +41,8 @@
 
 ## E. イベント関連データ層
 
-- T18_Event_CRUD処理 / 05_データ設計.md#7, 03_ユースケース.md#UC-01 / T04,T10 / not started
-- T19_Response読み書き処理（family単位ドキュメント・未回答判定） / 05_データ設計.md#8, 03_ユースケース.md#UC-02,03 / T18,T11,T12 / not started
+- T18_Event_CRUD処理 / 05_データ設計.md#7, 03_ユースケース.md#UC-01 / T04,T10 / done
+- T19_Response読み書き処理（family単位ドキュメント・未回答判定） / 05_データ設計.md#8, 03_ユースケース.md#UC-02,03 / T18,T11,T12 / done
 - T20_Carpool読み書き処理（車ごとレコード・direction別） / 05_データ設計.md#9 / T18 / not started
 
 ## F. ホーム画面
