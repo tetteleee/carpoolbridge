@@ -76,16 +76,6 @@ export function EventCreatePage() {
           boxSizing: 'border-box',
         }}
       >
-        <h1
-          style={{
-            margin: 0,
-            fontSize: '18px',
-            fontWeight: 700,
-            color: 'var(--text-h)',
-          }}
-        >
-          イベント作成
-        </h1>
         <button
           type="button"
           onClick={() => navigate('/')}
@@ -102,6 +92,17 @@ export function EventCreatePage() {
         >
           ← 戻る
         </button>
+        <h1
+          style={{
+            margin: 0,
+            fontSize: '18px',
+            fontWeight: 700,
+            color: 'var(--text-h)',
+          }}
+        >
+          イベント作成
+        </h1>
+        <span style={{ width: '72px' }} />
       </div>
 
       <div
