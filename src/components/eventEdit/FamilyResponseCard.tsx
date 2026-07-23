@@ -20,7 +20,27 @@ interface FamilyResponseCardProps {
 const dividerStyle: CSSProperties = {
   border: 'none',
   borderTop: '1px solid var(--border)',
-  margin: 0,
+  margin: '4px 0',
+};
+
+const memberNameStyle: CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: '6px',
+  fontSize: '14px',
+  fontWeight: 600,
+  color: 'var(--text-h)',
+};
+
+/** 子供・コーチ1人ごとの回答をまとめる内側ボックス（家カードの黒背景より一段明るいグレー） */
+const memberBoxStyle: CSSProperties = {
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '6px',
+  padding: '16px',
+  borderRadius: '8px',
+  background: 'var(--code-bg)',
+  boxSizing: 'border-box',
 };
 
 /**
@@ -83,77 +103,39 @@ export function FamilyResponseCard({
 
       <div
         id={`family-response-card-members-${family.id}`}
-        style={{ display: 'flex', flexDirection: 'column' }}
+        style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}
       >
-        {childList.map((child, index) => (
-          <div key={child.id}>
-            {index > 0 && <hr style={dividerStyle} />}
-            <div
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '6px',
-                padding: '8px 0',
-              }}
-            >
-              <span
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  fontSize: '14px',
-                  fontWeight: 600,
-                  color: 'var(--text-h)',
-                }}
-              >
-                <UserIcon size={14} />
-                {child.name}
-                <span style={{ fontSize: '12px', fontWeight: 400 }}>
-                  {formatGradeLabel(child.schoolEntryYear)}
-                </span>
+        {childList.map((child) => (
+          <div key={child.id} style={memberBoxStyle}>
+            <span style={memberNameStyle}>
+              <UserIcon size={14} />
+              {child.name}
+              <span style={{ fontSize: '12px', fontWeight: 400 }}>
+                {formatGradeLabel(child.schoolEntryYear)}
               </span>
-              <ChildResponseRow
-                childId={child.id}
-                initialResponseChild={response?.children.find(
-                  (responseChild) => responseChild.childId === child.id
-                )}
-              />
-            </div>
+            </span>
+            <ChildResponseRow
+              childId={child.id}
+              initialResponseChild={response?.children.find(
+                (responseChild) => responseChild.childId === child.id
+              )}
+            />
           </div>
         ))}
 
         {hasCoach && (
-          <div>
-            {childList.length > 0 && <hr style={dividerStyle} />}
-            <div
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '6px',
-                padding: '8px 0',
-              }}
-            >
-              <span
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  fontSize: '14px',
-                  fontWeight: 600,
-                  color: 'var(--text-h)',
-                }}
-              >
-                <UserIcon size={14} />
-                {family.coachName}
-                <span style={{ fontSize: '12px', fontWeight: 400 }}>
-                  コーチ
-                </span>
+          <div style={memberBoxStyle}>
+            <span style={memberNameStyle}>
+              <UserIcon size={14} />
+              {family.coachName}
+              <span style={{ fontSize: '12px', fontWeight: 400 }}>
+                コーチ
               </span>
-              <CoachResponseRow
-                familyId={family.id}
-                initialCoachParticipating={response?.coachParticipating}
-              />
-            </div>
+            </span>
+            <CoachResponseRow
+              familyId={family.id}
+              initialCoachParticipating={response?.coachParticipating}
+            />
           </div>
         )}
       </div>
