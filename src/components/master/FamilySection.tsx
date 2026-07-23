@@ -25,7 +25,7 @@ type FamilyUpdatableFields = Partial<
 >;
 
 type ChildUpdatableFields = Partial<
-  Pick<Child, 'name' | 'schoolEntryYear' | 'pickupLocationOverride' | 'isActive'>
+  Pick<Child, 'name' | 'schoolEntryYear' | 'isActive'>
 >;
 
 export interface FamilySectionHandle {
@@ -140,17 +140,6 @@ export function FamilySection({ ref }: FamilySectionProps) {
     );
   };
 
-  const handleChildPickupLocationOverrideChange = (
-    childId: string,
-    pickupLocationOverride: string | null
-  ) => {
-    setChildren((prev) =>
-      prev.map((child) =>
-        child.id === childId ? { ...child, pickupLocationOverride } : child
-      )
-    );
-  };
-
   const handleChildActiveToggle = (childId: string) => {
     setChildren((prev) =>
       prev.map((child) =>
@@ -169,7 +158,6 @@ export function FamilySection({ ref }: FamilySectionProps) {
         familyId,
         name: '',
         schoolEntryYear: getSchoolEntryYearOptions()[0],
-        pickupLocationOverride: null,
         isActive: true,
       } as Child,
     ]);
@@ -228,7 +216,6 @@ export function FamilySection({ ref }: FamilySectionProps) {
                 familyId,
                 name: child.name,
                 schoolEntryYear: child.schoolEntryYear,
-                pickupLocationOverride: child.pickupLocationOverride,
               });
               continue;
             }
@@ -242,13 +229,6 @@ export function FamilySection({ ref }: FamilySectionProps) {
             }
             if (originalChild.schoolEntryYear !== child.schoolEntryYear) {
               childChanges.schoolEntryYear = child.schoolEntryYear;
-            }
-            if (
-              originalChild.pickupLocationOverride !==
-              child.pickupLocationOverride
-            ) {
-              childChanges.pickupLocationOverride =
-                child.pickupLocationOverride;
             }
             if (originalChild.isActive !== child.isActive) {
               childChanges.isActive = child.isActive;
@@ -437,7 +417,7 @@ export function FamilySection({ ref }: FamilySectionProps) {
                   color: 'var(--text)',
                 }}
               >
-                基本集合場所
+                集合場所
                 <select
                   value={family.pickupLocationId}
                   onChange={(e) =>
@@ -504,12 +484,8 @@ export function FamilySection({ ref }: FamilySectionProps) {
                 childList={children.filter(
                   (child) => child.familyId === family.id
                 )}
-                pickupLocations={pickupLocations}
                 onNameChange={handleChildNameChange}
                 onSchoolEntryYearChange={handleChildSchoolEntryYearChange}
-                onPickupLocationOverrideChange={
-                  handleChildPickupLocationOverrideChange
-                }
                 onActiveToggle={handleChildActiveToggle}
                 onAdd={() => handleChildAdd(family.id)}
               />

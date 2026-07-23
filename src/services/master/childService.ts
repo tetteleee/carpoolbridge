@@ -47,7 +47,7 @@ export async function getChildrenByFamilyId(familyId: string): Promise<Child[]> 
 }
 
 /**
- * 子供の name・schoolEntryYear・pickupLocationOverride・isActive を更新します。
+ * 子供の name・schoolEntryYear・isActive を更新します。
  * 更新時に updatedAt をサーバー時刻で更新します。
  *
  * @param childId 更新対象のドキュメントID
@@ -55,9 +55,7 @@ export async function getChildrenByFamilyId(familyId: string): Promise<Child[]> 
  */
 export async function updateChild(
   childId: string,
-  data: Partial<
-    Pick<Child, 'name' | 'schoolEntryYear' | 'pickupLocationOverride' | 'isActive'>
-  >
+  data: Partial<Pick<Child, 'name' | 'schoolEntryYear' | 'isActive'>>
 ): Promise<void> {
   const docRef = doc(db, firestorePaths.childDocument(childId));
   await updateDoc(docRef, {

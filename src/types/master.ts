@@ -13,7 +13,7 @@ export interface Family {
   coachName: string | null;
   /** 車の総定員（運転者本人を含む。車を持たない場合は0） */
   vehicleCapacity: number;
-  /** 家庭の基本集合場所（子供のpickupLocationOverrideがnullの場合に使用） */
+  /** 家庭の集合場所（家庭に属する子供・コーチは全員この集合場所から乗車する） */
   pickupLocationId: string;
   /** 在籍中（falseで卒団・非表示扱い） */
   isActive: boolean;
@@ -30,8 +30,6 @@ export interface Child {
   name: string;
   /** 小学校の入学年度（例：2026）。学年はこの値から自動計算する */
   schoolEntryYear: number;
-  /** 集合場所を家庭の基本集合場所（Family.pickupLocationId）と別にする場合のみ設定。nullなら家庭の基本集合場所を使用 */
-  pickupLocationOverride: string | null;
   /** 在籍中（falseで卒団・非表示扱い） */
   isActive: boolean;
   createdAt: Timestamp;

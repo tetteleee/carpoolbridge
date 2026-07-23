@@ -1,4 +1,4 @@
-import type { Child, PickupLocation } from '../../types/master';
+import type { Child } from '../../types/master';
 import {
   formatSchoolEntryYearLabel,
   getSchoolEntryYearOptions,
@@ -7,13 +7,8 @@ import { UserIcon } from '../icons';
 
 interface ChildSectionProps {
   childList: Child[];
-  pickupLocations: PickupLocation[];
   onNameChange: (childId: string, name: string) => void;
   onSchoolEntryYearChange: (childId: string, schoolEntryYear: number) => void;
-  onPickupLocationOverrideChange: (
-    childId: string,
-    pickupLocationOverride: string | null
-  ) => void;
   onActiveToggle: (childId: string) => void;
   onAdd: () => void;
 }
@@ -44,10 +39,8 @@ const inputStyle = {
  */
 export function ChildSection({
   childList,
-  pickupLocations,
   onNameChange,
   onSchoolEntryYearChange,
-  onPickupLocationOverrideChange,
   onActiveToggle,
   onAdd,
 }: ChildSectionProps) {
@@ -123,27 +116,6 @@ export function ChildSection({
                 {schoolEntryYearOptions.map((year) => (
                   <option key={year} value={year}>
                     {formatSchoolEntryYearLabel(year)}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <label style={fieldLabelStyle}>
-              集合場所
-              <select
-                value={child.pickupLocationOverride ?? ''}
-                onChange={(e) =>
-                  onPickupLocationOverrideChange(
-                    child.id,
-                    e.target.value === '' ? null : e.target.value
-                  )
-                }
-                style={inputStyle}
-              >
-                <option value="">基本集合場所</option>
-                {pickupLocations.map((location) => (
-                  <option key={location.id} value={location.id}>
-                    {location.name}
                   </option>
                 ))}
               </select>

@@ -14,6 +14,8 @@ import type { Location } from './scoring';
 export interface Vehicle {
   /** 運転者の所属家庭ID */
   driverFamilyId: string;
+  /** 運転者の表示名（優先割り当て超過エラー等での表示用） */
+  driverName: string;
   /** ドライバーの集合場所ID（永続化・同値比較用） */
   driverPickupLocationId: string;
   /** ドライバーの集合場所（アルゴリズム用座標オブジェクト） */
@@ -33,6 +35,8 @@ export interface Vehicle {
 export interface DrivingCandidate {
   /** 家庭ID */
   familyId: string;
+  /** 運転者の表示名（優先割り当て超過エラー等での表示用） */
+  driverName: string;
   /** 車の総定員（運転者本人を含む） */
   vehicleCapacity: number;
   /** ドライバーの集合場所ID */
@@ -43,6 +47,38 @@ export interface DrivingCandidate {
   driverOutward: boolean | null;
   /** 帰り車出し可否。未回答はnull */
   driverReturn: boolean | null;
+}
+
+/**
+ * 家族グループ形成対象となる乗客1人分の情報
+ * ref: docs/07_配車アルゴリズム.md#2.2 家族グループ（Family Group）の形成
+ */
+export interface Passenger {
+  /** 所属家庭ID */
+  familyId: string;
+  /** 所属家庭の集合場所ID（永続化・同値比較用） */
+  pickupLocationId: string;
+  /** 所属家庭の集合場所（アルゴリズム用座標オブジェクト） */
+  pickupLocation: Location;
+  /** 乗車メンバー情報（子供またはコーチ） */
+  member: CarpoolMember;
+}
+
+/**
+ * 家庭（familyId）単位に統合された乗客グループ
+ * ref: docs/07_配車アルゴリズム.md#2.2 家族グループ（Family Group）の形成
+ */
+export interface Group {
+  /** 所属家庭ID */
+  familyId: string;
+  /** 必要席数（構成員の合計人数。ドライバー本人は除く） */
+  size: number;
+  /** 集合場所ID（永続化・同値比較用） */
+  pickupLocationId: string;
+  /** 集合場所（アルゴリズム用座標オブジェクト） */
+  pickupLocation: Location;
+  /** グループの乗車メンバー */
+  members: CarpoolMember[];
 }
 
 /**
@@ -86,10 +122,95 @@ export function initializeVehicles(
     )
     .map((candidate) => ({
       driverFamilyId: candidate.familyId,
+      driverName: candidate.driverName,
       driverPickupLocationId: candidate.driverPickupLocationId,
       driverPickupLocation: candidate.driverPickupLocation,
       remainingCapacity: candidate.vehicleCapacity - 1,
       pickupLocationIds: new Set<string>(),
       members: [],
     }));
+}
+
+/**
+ * 乗客を家庭（familyId）単位で1つのグループに統合します。
+ * 「兄弟は同じ車」「乗客コーチは所属家庭の子供と同じ集合場所から乗車」という
+ * 絶対制約をコードの構造で解決するため、以降の割り当て処理は家庭単位のグループを対象に行う。
+ * ref: docs/07_配車アルゴリズム.md#2.2 家族グループ（Family Group）の形成
+ *
+ * @param passengers 家庭単位に統合する前の乗客一覧
+ * @returns familyId単位に統合されたグループ一覧
+ */
+export function formFamilyGroups(passengers: Passenger[]): Group[] {
+  const groupsByFamilyId = new Map<string, Group>();
+
+  for (const passenger of passengers) {
+    const existingGroup = groupsByFamilyId.get(passenger.familyId);
+
+    if (existingGroup) {
+      existingGroup.size += 1;
+      existingGroup.members.push(passenger.member);
+      continue;
+    }
+
+    groupsByFamilyId.set(passenger.familyId, {
+      familyId: passenger.familyId,
+      size: 1,
+      pickupLocationId: passenger.pickupLocationId,
+      pickupLocation: passenger.pickupLocation,
+      members: [passenger.member],
+    });
+  }
+
+  return [...groupsByFamilyId.values()];
+}
+
+/**
+ * ドライバー家族グループ（ドライバー本人を除いた、同乗必須の家族グループ）の
+ * 必要席数が対応車両の有効定員を超過していないか検証したうえで、
+ * 各車両へドライバー家族グループを優先割り当てします。
+ * ref: docs/07_配車アルゴリズム.md#2.3 優先割り当てグループの定員検証と割当
+ *
+ * 超過している車両が1件でも存在する場合は、割り当てを一切行わずに
+ * 処理を中断する（Early Exit）。これにより、不正データに基づく部分的な割り当てが
+ * 発生することを防ぐ。
+ *
+ * @param vehicles T33で初期化済みの車両一覧（優先割り当てにより remainingCapacity・members・pickupLocationIds がミューテーションされる）
+ * @param groups T34で形成した家族グループ一覧（ドライバー家庭のグループを含む全グループ）
+ * @returns 優先割り当て済みのグループを除いた、以降の自動配車対象となる未配車グループ配列
+ * @throws ドライバー家族グループの必要席数が車両の有効定員を超過している場合、対象ドライバー名を含むエラー
+ */
+export function assignDriverFamilyGroups(
+  vehicles: Vehicle[],
+  groups: Group[]
+): Group[] {
+  const driverGroupByVehicle = new Map<Vehicle, Group | undefined>();
+
+  for (const vehicle of vehicles) {
+    const driverGroup = groups.find(
+      (group) => group.familyId === vehicle.driverFamilyId
+    );
+    driverGroupByVehicle.set(vehicle, driverGroup);
+
+    if (driverGroup && driverGroup.size > vehicle.remainingCapacity) {
+      throw new Error(
+        `${vehicle.driverName}様の優先割り当て人数（同乗必須メンバー数）が、車両の有効定員を超過しています`
+      );
+    }
+  }
+
+  const assignedFamilyIds = new Set<string>();
+
+  for (const vehicle of vehicles) {
+    const driverGroup = driverGroupByVehicle.get(vehicle);
+    if (!driverGroup) {
+      continue;
+    }
+
+    vehicle.members.push(...driverGroup.members);
+    vehicle.remainingCapacity -= driverGroup.size;
+    vehicle.pickupLocationIds.add(driverGroup.pickupLocationId);
+    assignedFamilyIds.add(driverGroup.familyId);
+  }
+
+  return groups.filter((group) => !assignedFamilyIds.has(group.familyId));
 }

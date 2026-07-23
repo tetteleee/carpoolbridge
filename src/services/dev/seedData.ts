@@ -48,7 +48,6 @@ export interface SeedChild {
   name: string;
   /** 小学1〜6年生（0〜5）で指定する。実際のschoolEntryYearへの変換はこのファイル内で行う */
   grade: number;
-  pickupLocationOverride: string | null;
   isActive: boolean;
 }
 
@@ -162,7 +161,6 @@ export const CHILDREN: SeedChild[] = [
     familyId: 'family-sato',
     name: '佐藤一郎',
     grade: 6,
-    pickupLocationOverride: null,
     isActive: true,
   },
   {
@@ -170,8 +168,6 @@ export const CHILDREN: SeedChild[] = [
     familyId: 'family-sato',
     name: '佐藤花子',
     grade: 3,
-    // 集合場所を家庭の基本集合場所と別にするサンプル
-    pickupLocationOverride: 'location-sakura-danchi',
     isActive: true,
   },
   {
@@ -179,7 +175,6 @@ export const CHILDREN: SeedChild[] = [
     familyId: 'family-suzuki',
     name: '鈴木健太',
     grade: 5,
-    pickupLocationOverride: null,
     isActive: true,
   },
   {
@@ -187,7 +182,6 @@ export const CHILDREN: SeedChild[] = [
     familyId: 'family-suzuki',
     name: '鈴木優希',
     grade: 2,
-    pickupLocationOverride: null,
     isActive: true,
   },
   {
@@ -195,7 +189,6 @@ export const CHILDREN: SeedChild[] = [
     familyId: 'family-tanaka',
     name: '田中美咲',
     grade: 2,
-    pickupLocationOverride: null,
     isActive: true,
   },
   {
@@ -203,7 +196,6 @@ export const CHILDREN: SeedChild[] = [
     familyId: 'family-tanaka',
     name: '田中大輔',
     grade: 4,
-    pickupLocationOverride: null,
     isActive: true,
   },
   {
@@ -211,7 +203,6 @@ export const CHILDREN: SeedChild[] = [
     familyId: 'family-takahashi',
     name: '高橋さくら',
     grade: 1,
-    pickupLocationOverride: null,
     isActive: true,
   },
   {
@@ -219,7 +210,6 @@ export const CHILDREN: SeedChild[] = [
     familyId: 'family-takahashi',
     name: '高橋涼',
     grade: 4,
-    pickupLocationOverride: null,
     isActive: true,
   },
   {
@@ -227,7 +217,6 @@ export const CHILDREN: SeedChild[] = [
     familyId: 'family-takahashi',
     name: '高橋美緒',
     grade: 6,
-    pickupLocationOverride: null,
     isActive: true,
   },
   {
@@ -235,7 +224,6 @@ export const CHILDREN: SeedChild[] = [
     familyId: 'family-ito',
     name: '伊藤翔太',
     grade: 6,
-    pickupLocationOverride: null,
     isActive: true,
   },
   {
@@ -243,7 +231,6 @@ export const CHILDREN: SeedChild[] = [
     familyId: 'family-ito',
     name: '伊藤陽菜',
     grade: 3,
-    pickupLocationOverride: null,
     isActive: true,
   },
   {
@@ -251,7 +238,6 @@ export const CHILDREN: SeedChild[] = [
     familyId: 'family-watanabe',
     name: '渡辺蓮',
     grade: 1,
-    pickupLocationOverride: null,
     isActive: true,
   },
   {
@@ -259,7 +245,6 @@ export const CHILDREN: SeedChild[] = [
     familyId: 'family-watanabe',
     name: '渡辺葵',
     grade: 3,
-    pickupLocationOverride: null,
     isActive: true,
   },
   {
@@ -267,7 +252,6 @@ export const CHILDREN: SeedChild[] = [
     familyId: 'family-watanabe',
     name: '渡辺悠真',
     grade: 5,
-    pickupLocationOverride: null,
     isActive: true,
   },
   {
@@ -275,7 +259,6 @@ export const CHILDREN: SeedChild[] = [
     familyId: 'family-yamamoto',
     name: '山本海斗',
     grade: 2,
-    pickupLocationOverride: null,
     isActive: true,
   },
   {
@@ -283,7 +266,6 @@ export const CHILDREN: SeedChild[] = [
     familyId: 'family-yamamoto',
     name: '山本莉子',
     grade: 4,
-    pickupLocationOverride: null,
     isActive: true,
   },
   {
@@ -291,7 +273,6 @@ export const CHILDREN: SeedChild[] = [
     familyId: 'family-nakamura',
     name: '中村大雅',
     grade: 6,
-    pickupLocationOverride: null,
     // 家庭の卒団に連動して子供も論理削除される想定のサンプル
     isActive: false,
   },
