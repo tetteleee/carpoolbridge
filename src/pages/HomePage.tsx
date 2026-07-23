@@ -104,7 +104,14 @@ export function HomePage() {
         </div>
       </div>
 
-      <div style={{ padding: '16px', boxSizing: 'border-box' }}>
+      <div
+        style={{
+          display: 'flex',
+          gap: '8px',
+          padding: '16px',
+          boxSizing: 'border-box',
+        }}
+      >
         <button
           type="button"
           onClick={() => navigate('/master')}
@@ -125,6 +132,26 @@ export function HomePage() {
           <SettingsIcon size={16} />
           マスタ管理
         </button>
+        <button
+          type="button"
+          onClick={() => navigate('/events/new')}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px',
+            padding: '10px 18px',
+            borderRadius: '999px',
+            border: 'none',
+            background: 'var(--accent-bg)',
+            color: 'var(--accent)',
+            fontSize: '14px',
+            fontWeight: 600,
+            fontFamily: 'var(--sans)',
+            cursor: 'pointer',
+          }}
+        >
+          + イベント作成
+        </button>
       </div>
 
       {error && (
@@ -140,26 +167,6 @@ export function HomePage() {
       ) : (
         <EventList events={events} destinationNameById={destinationNameById} />
       )}
-
-      <div style={{ padding: '0 16px 24px', textAlign: 'center', boxSizing: 'border-box' }}>
-        <button
-          type="button"
-          onClick={() => navigate('/events/new')}
-          style={{
-            padding: '12px 28px',
-            borderRadius: '999px',
-            border: 'none',
-            background: 'var(--accent-bg)',
-            color: 'var(--accent)',
-            fontSize: '15px',
-            fontWeight: 600,
-            fontFamily: 'var(--sans)',
-            cursor: 'pointer',
-          }}
-        >
-          + イベント作成
-        </button>
-      </div>
     </div>
   );
 }
