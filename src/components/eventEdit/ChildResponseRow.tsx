@@ -21,8 +21,11 @@ const rowLabelStyle: CSSProperties = {
 };
 
 const choiceButtonBaseStyle: CSSProperties = {
-  width: '32px',
-  padding: '4px 0',
+  minWidth: '44px',
+  minHeight: '44px',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
   borderRadius: '6px',
   fontSize: '13px',
   fontFamily: 'var(--sans)',
