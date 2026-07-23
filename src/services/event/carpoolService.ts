@@ -7,6 +7,7 @@ import {
   where,
   addDoc,
   updateDoc,
+  deleteDoc,
 } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { firestorePaths } from '../../constants';
@@ -80,4 +81,17 @@ export async function updateCarpool(
 ): Promise<void> {
   const docRef = doc(db, firestorePaths.carpoolDocument(eventId, carpoolId));
   await updateDoc(docRef, data);
+}
+
+/**
+ * 指定イベント配下の配車結果（行き・帰り両方向）をすべて物理削除します。
+ * 05_データ設計.md#11の例外（配車再作成）としてのみ利用する処理であり、
+ * 配車再作成の確認ダイアログで「再作成」が選択された場合にのみ呼び出す。
+ *
+ * @param eventId 対象のイベントID
+ */
+export async function deleteAllCarpools(eventId: string): Promise<void> {
+  const colRef = collection(db, firestorePaths.carpoolsCollection(eventId));
+  const snapshot = await getDocs(colRef);
+  await Promise.all(snapshot.docs.map((d) => deleteDoc(d.ref)));
 }

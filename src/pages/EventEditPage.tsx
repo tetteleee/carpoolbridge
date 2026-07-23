@@ -1,13 +1,35 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { FamilyResponseCard } from '../components/eventEdit/FamilyResponseCard';
+import { CarpoolRecreateDialog } from '../components/eventEdit/CarpoolRecreateDialog';
+import { CarIcon } from '../components/icons';
 import { getEvent } from '../services/event/eventService';
 import { getFamilies } from '../services/master/familyService';
 import { getChildrenByFamilyId } from '../services/master/childService';
 import { getResponses } from '../services/event/responseService';
+import { getCarpools, deleteAllCarpools } from '../services/event/carpoolService';
+import { runCarpoolAssignment } from '../services/carpool/runCarpoolAssignment';
 import { formatDateWithWeekday } from '../utils/date';
 import type { Event, Response } from '../types/event';
 import type { Child, Family } from '../types/master';
+
+/**
+ * 対象イベントの行き・帰り両方向の配車を作成する。
+ * 一方でもHard Failエラーが発生した場合は、その時点でエラーを返す
+ * （04_画面設計.md#7には方向別の分岐は定義されておらず、
+ * 「配車作成」ボタンは1つのため、両方向をまとめて作成する）。
+ */
+async function createCarpoolsForBothDirections(
+  eventId: string
+): Promise<{ success: true } | { success: false; message: string }> {
+  for (const direction of ['OUTWARD', 'RETURN'] as const) {
+    const result = await runCarpoolAssignment(eventId, direction);
+    if (result.status === 'ERROR') {
+      return { success: false, message: result.error.message };
+    }
+  }
+  return { success: true };
+}
 
 /**
  * イベント編集（回答入力）画面。
@@ -26,6 +48,12 @@ export function EventEditPage() {
   const [responsesByFamilyId, setResponsesByFamilyId] = useState<
     Record<string, Response>
   >({});
+  const [recreateDialogOpen, setRecreateDialogOpen] = useState(false);
+  const [creatingCarpools, setCreatingCarpools] = useState(false);
+  const [carpoolMessage, setCarpoolMessage] = useState<{
+    text: string;
+    isError: boolean;
+  } | null>(null);
 
   useEffect(() => {
     if (!eventId) {
@@ -59,6 +87,47 @@ export function EventEditPage() {
       .catch(() => setError('データの取得に失敗しました'))
       .finally(() => setLoading(false));
   }, [eventId]);
+
+  const runCreation = async (targetEventId: string) => {
+    setCreatingCarpools(true);
+    setCarpoolMessage(null);
+    const result = await createCarpoolsForBothDirections(targetEventId);
+    setCreatingCarpools(false);
+    if (result.success) {
+      // 配車画面（メイン）への遷移はT39aで接続する（配車画面自体が未実装のため）
+      setCarpoolMessage({ text: '配車を作成しました', isError: false });
+    } else {
+      setCarpoolMessage({ text: result.message, isError: true });
+    }
+  };
+
+  const handleCreateCarpoolClick = async () => {
+    if (!eventId) {
+      return;
+    }
+    setCarpoolMessage(null);
+    const existing = await getCarpools(eventId);
+    if (existing.length === 0) {
+      await runCreation(eventId);
+    } else {
+      setRecreateDialogOpen(true);
+    }
+  };
+
+  const handleCancelRecreate = () => {
+    setRecreateDialogOpen(false);
+  };
+
+  const handleConfirmRecreate = async () => {
+    if (!eventId) {
+      return;
+    }
+    setCreatingCarpools(true);
+    setCarpoolMessage(null);
+    await deleteAllCarpools(eventId);
+    setRecreateDialogOpen(false);
+    await runCreation(eventId);
+  };
 
   return (
     <div
@@ -133,7 +202,61 @@ export function EventEditPage() {
             />
           ))
         )}
+
+        {eventId && !loading && !error && (
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '8px',
+              paddingTop: '8px',
+            }}
+          >
+            {carpoolMessage && (
+              <p
+                style={{
+                  margin: 0,
+                  fontSize: '13px',
+                  color: carpoolMessage.isError ? 'crimson' : 'var(--text)',
+                }}
+              >
+                {carpoolMessage.text}
+              </p>
+            )}
+            <button
+              type="button"
+              onClick={handleCreateCarpoolClick}
+              disabled={creatingCarpools}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '12px 24px',
+                borderRadius: '8px',
+                border: 'none',
+                background: 'var(--accent)',
+                color: '#fff',
+                fontSize: '15px',
+                fontWeight: 700,
+                fontFamily: 'var(--sans)',
+                cursor: creatingCarpools ? 'default' : 'pointer',
+                opacity: creatingCarpools ? 0.6 : 1,
+              }}
+            >
+              <CarIcon size={18} />
+              {creatingCarpools ? '配車作成中...' : '配車作成'}
+            </button>
+          </div>
+        )}
       </div>
+
+      <CarpoolRecreateDialog
+        open={recreateDialogOpen}
+        processing={creatingCarpools}
+        onCancel={handleCancelRecreate}
+        onConfirm={handleConfirmRecreate}
+      />
     </div>
   );
 }
