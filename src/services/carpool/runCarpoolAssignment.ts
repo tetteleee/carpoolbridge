@@ -7,7 +7,7 @@
  * 結果をCarpoolドキュメント形式へ変換してFirestoreへ保存する。
  */
 
-import type { Carpool, Direction, Response, ResponseChild } from '../../types/event';
+import type { Carpool, Direction, Response } from '../../types/event';
 import type { PickupLocation } from '../../types/master';
 import { getFamilies } from '../master/familyService';
 import { getChildrenByFamilyId } from '../master/childService';
@@ -29,6 +29,7 @@ import {
   DriverGroupCapacityExceededError,
   buildAssignmentWarnings,
 } from './assignmentErrors';
+import { isDriverForDirection, isChildRidingForDirection } from './eligibility';
 
 /**
  * runCarpoolAssignmentの戻り値。
@@ -39,21 +40,6 @@ import {
 export type RunCarpoolAssignmentResult =
   | { status: 'ERROR'; error: AssignmentHardFailError }
   | { status: 'SUCCESS'; carpoolIds: string[]; warnings: AssignmentWarning[] };
-
-/** 対象方向における家庭の車出し可否（Response.driverOutward/driverReturn）を判定する */
-function isDriverForDirection(response: Response, direction: Direction): boolean {
-  return direction === 'OUTWARD'
-    ? response.driverOutward === true
-    : response.driverReturn === true;
-}
-
-/** 対象方向における子供の配車要否（isParticipating・noOutwardRide/noReturnRide）を判定する */
-function isChildRidingForDirection(child: ResponseChild, direction: Direction): boolean {
-  if (child.isParticipating !== true) {
-    return false;
-  }
-  return direction === 'OUTWARD' ? !child.noOutwardRide : !child.noReturnRide;
-}
 
 /** 家庭表示名を生成する（familyNameから末尾の「家」を除いた文字列。ref: 05_データ設計.md#3） */
 function toFamilyDisplayName(familyName: string): string {

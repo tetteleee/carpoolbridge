@@ -1,12 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { CarCard, type CarCardData } from '../components/carpool/CarCard';
+import { CarCard } from '../components/carpool/CarCard';
 import { OperationArea } from '../components/carpool/OperationArea';
-import {
-  UnassignedArea,
-  type UnassignedPerson,
-} from '../components/carpool/UnassignedArea';
+import { UnassignedArea } from '../components/carpool/UnassignedArea';
 import { useCarpoolDirection } from '../hooks/useCarpoolDirection';
+import { useCarpoolBoardData } from '../hooks/useCarpoolBoardData';
 import { getEvent } from '../services/event/eventService';
 import { formatDateWithWeekday } from '../utils/date';
 import type { Direction, Event } from '../types/event';
@@ -23,9 +21,22 @@ const DIRECTION_TABS: { direction: Direction; label: string }[] = [
 export function CarpoolPage() {
   const { eventId } = useParams<{ eventId: string }>();
   const [event, setEvent] = useState<Event | null>(null);
-  // carpools（配車結果そのもの）から車カード表示用データへの変換はT41の対象外のため未使用
-  const { direction, setDirection, loading, error } =
-    useCarpoolDirection(eventId);
+  const {
+    direction,
+    setDirection,
+    carpools,
+    loading: carpoolsLoading,
+    error: carpoolsError,
+  } = useCarpoolDirection(eventId);
+  const {
+    unassignedPeople,
+    carCards,
+    loading: boardDataLoading,
+    error: boardDataError,
+  } = useCarpoolBoardData(eventId, direction, carpools);
+
+  const loading = carpoolsLoading || boardDataLoading;
+  const error = carpoolsError ?? boardDataError;
 
   useEffect(() => {
     if (!eventId) {
@@ -39,14 +50,6 @@ export function CarpoolPage() {
 
   // LINE共有画面への遷移先接続はT46aで行う
   const handleShareClick = (_shareDirection: Direction) => {};
-
-  // 未配車データの取得・算出処理は対象設計書に規定がないためT40の対象外とし、
-  // 呼び出し元（本コンポーネント）から未配車一覧データを渡す前提とする
-  const unassignedPeople: UnassignedPerson[] = [];
-
-  // 車カードデータの取得・算出処理は対象設計書に取得元の規定がないためT41の対象外とし、
-  // 呼び出し元（本コンポーネント）から車ごとの配車結果データを渡す前提とする
-  const carCards: CarCardData[] = [];
 
   return (
     <div
