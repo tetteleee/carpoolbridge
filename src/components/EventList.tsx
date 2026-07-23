@@ -7,6 +7,8 @@ interface EventListProps {
   events: Event[];
   /** 目的地IDから目的地名を引くためのマップ */
   destinationNameById: Record<string, string>;
+  /** イベント行タップ時のコールバック（配車画面への遷移に使用） */
+  onEventClick: (eventId: string) => void;
 }
 
 /**
@@ -15,7 +17,11 @@ interface EventListProps {
  * 開催日を過ぎたイベントはグレーアウトして表示する。状態はラベル文字列ではなく
  * 表示スタイル（カードの縁取り・背景・不透明度）で表現する。
  */
-export function EventList({ events, destinationNameById }: EventListProps) {
+export function EventList({
+  events,
+  destinationNameById,
+  onEventClick,
+}: EventListProps) {
   if (events.length === 0) {
     return (
       <p
@@ -53,13 +59,16 @@ export function EventList({ events, destinationNameById }: EventListProps) {
         const destinationName = destinationNameById[event.destinationId] ?? '';
 
         return (
-          <div
+          <button
             key={event.id}
+            type="button"
             className="event-card"
+            onClick={() => onEventClick(event.id)}
             style={{
               display: 'flex',
               alignItems: 'center',
               gap: '12px',
+              width: '100%',
               padding: '14px 16px',
               borderRadius: '16px',
               border: isToday
@@ -69,6 +78,9 @@ export function EventList({ events, destinationNameById }: EventListProps) {
               boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)',
               boxSizing: 'border-box',
               opacity: isPast ? 0.5 : 1,
+              textAlign: 'left',
+              fontFamily: 'var(--sans)',
+              cursor: 'pointer',
             }}
           >
             <span
@@ -126,7 +138,7 @@ export function EventList({ events, destinationNameById }: EventListProps) {
             <span style={{ flexShrink: 0, color: 'var(--text)' }}>
               <ChevronRightIcon size={18} />
             </span>
-          </div>
+          </button>
         );
       })}
     </div>

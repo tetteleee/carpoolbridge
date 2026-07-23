@@ -9,7 +9,7 @@ import type { Event } from '../types/event';
 /**
  * ホーム画面（イベント一覧）。
  * イベントを日付順に表示し、本日のイベントを強調・過去のイベントをグレーアウトする。
- * イベントタップ時の配車画面への遷移はT38aで実施するため、本画面では行わない。
+ * イベント行をタップすると、そのイベントの配車画面（メイン）へ遷移する。
  */
 export function HomePage() {
   const navigate = useNavigate();
@@ -166,7 +166,11 @@ export function HomePage() {
           読み込み中...
         </p>
       ) : (
-        <EventList events={events} destinationNameById={destinationNameById} />
+        <EventList
+          events={events}
+          destinationNameById={destinationNameById}
+          onEventClick={(eventId) => navigate(`/events/${eventId}/carpool`)}
+        />
       )}
     </div>
   );
