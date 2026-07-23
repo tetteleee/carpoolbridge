@@ -51,6 +51,11 @@ const checkboxRowStyle: CSSProperties = {
   color: 'var(--text)',
 };
 
+const checkboxRowDisabledStyle: CSSProperties = {
+  ...checkboxRowStyle,
+  opacity: 0.5,
+};
+
 /**
  * イベント編集（回答入力）画面・家庭カード内の
  * 子供ごとの参加（3状態）・行き／帰りの配車不要チェックボックス。
@@ -71,6 +76,10 @@ export function ChildResponseRow({
   const [noReturnRide, setNoReturnRide] = useState<boolean>(
     initialResponseChild?.noReturnRide ?? false
   );
+
+  // 配車不要チェックは「参加」が○（true）の場合のみ意味を持つため、
+  // ○以外（✕・未回答）では操作不可にする。値自体は保持し、○に戻せば復元される。
+  const rideCheckboxDisabled = isParticipating !== true;
 
   return (
     <div
@@ -111,21 +120,29 @@ export function ChildResponseRow({
         </div>
       </div>
 
-      <label style={checkboxRowStyle} htmlFor={`no-outward-ride-${childId}`}>
+      <label
+        style={rideCheckboxDisabled ? checkboxRowDisabledStyle : checkboxRowStyle}
+        htmlFor={`no-outward-ride-${childId}`}
+      >
         <input
           id={`no-outward-ride-${childId}`}
           type="checkbox"
           checked={noOutwardRide}
+          disabled={rideCheckboxDisabled}
           onChange={(e) => setNoOutwardRide(e.target.checked)}
         />
         行きの配車不要
       </label>
 
-      <label style={checkboxRowStyle} htmlFor={`no-return-ride-${childId}`}>
+      <label
+        style={rideCheckboxDisabled ? checkboxRowDisabledStyle : checkboxRowStyle}
+        htmlFor={`no-return-ride-${childId}`}
+      >
         <input
           id={`no-return-ride-${childId}`}
           type="checkbox"
           checked={noReturnRide}
+          disabled={rideCheckboxDisabled}
           onChange={(e) => setNoReturnRide(e.target.checked)}
         />
         帰りの配車不要
