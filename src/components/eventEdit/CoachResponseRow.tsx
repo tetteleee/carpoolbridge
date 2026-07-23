@@ -1,10 +1,12 @@
-import { useState, type CSSProperties } from 'react';
+import type { CSSProperties } from 'react';
 
 interface CoachResponseRowProps {
   /** 対象家庭ID（DOM要素のid付与に使用） */
   familyId: string;
-  /** 初期表示に用いる既存回答のcoachParticipating（対象家庭が未回答の場合はundefined） */
-  initialCoachParticipating: boolean | null | undefined;
+  /** コーチが参加するかどうか。未選択=null */
+  coachParticipating: boolean | null;
+  /** 参加有無の変更 */
+  onChange: (value: boolean) => void;
 }
 
 const rowStyle: CSSProperties = {
@@ -57,18 +59,13 @@ const choiceUnselectedStyle: CSSProperties = {
  * イベント編集（回答入力）画面・家庭カード内の
  * コーチの参加（3状態）ボタン。呼び出し側（FamilyResponseCard）で
  * Family.coachNameが設定されている家庭のみ表示する。
- * 既存回答（Response.coachParticipating）が存在する場合は、その値を初期値として反映する。
- * 存在しない場合（未回答）はcoachParticipating=nullとする。
- * ここでの状態は画面内のみで保持し、Firestoreへの保存はT29で実装する。
+ * 値は呼び出し側が保持し、変更の都度Firestoreへ自動保存される（T29）。
  */
 export function CoachResponseRow({
   familyId,
-  initialCoachParticipating,
+  coachParticipating,
+  onChange,
 }: CoachResponseRowProps) {
-  const [coachParticipating, setCoachParticipating] = useState<
-    boolean | null
-  >(initialCoachParticipating ?? null);
-
   return (
     <div
       id={`coach-response-frame-${familyId}`}
@@ -81,7 +78,7 @@ export function CoachResponseRow({
             id={`coach-participating-yes-${familyId}`}
             type="button"
             aria-pressed={coachParticipating === true}
-            onClick={() => setCoachParticipating(true)}
+            onClick={() => onChange(true)}
             style={{
               ...choiceButtonBaseStyle,
               ...(coachParticipating === true
@@ -95,7 +92,7 @@ export function CoachResponseRow({
             id={`coach-participating-no-${familyId}`}
             type="button"
             aria-pressed={coachParticipating === false}
-            onClick={() => setCoachParticipating(false)}
+            onClick={() => onChange(false)}
             style={{
               ...choiceButtonBaseStyle,
               ...(coachParticipating === false

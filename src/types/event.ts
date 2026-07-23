@@ -41,10 +41,10 @@ export interface ResponseChild {
  * イベント回答（家庭情報）を表す型
  */
 export interface Response {
-  /** 行き車出し可否 */
-  driverOutward: boolean;
-  /** 帰り車出し可否 */
-  driverReturn: boolean;
+  /** 行き車出し可否。未選択（未回答）はnull */
+  driverOutward: boolean | null;
+  /** 帰り車出し可否。未選択（未回答）はnull */
+  driverReturn: boolean | null;
   /** 当日乗車可能人数（運転者本人を含む総定員）の上書き。通常通りならnull */
   capacityToday: number | null;
   /** コーチが参加するかどうか。コーチが紐づかない家庭ではnull */

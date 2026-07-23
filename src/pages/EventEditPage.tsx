@@ -12,9 +12,7 @@ import type { Child, Family } from '../types/master';
 /**
  * イベント編集（回答入力）画面。
  * 対象イベントに関わる有効な家庭を家庭単位のカードで一覧表示する。
- * 車出し・乗車可能人数の入力欄（T25）は実装済みで、既存回答（Response）を初期値として渡す。
- * 子供ごとの回答（T26）・コーチ参加回答（T27）・備考（T28）は
- * 表示領域（枠）の用意とデータ取得のみを行う。
+ * 各入力項目（T25〜T28）は、変更の都度Firestoreへ自動保存される（T29）。
  */
 export function EventEditPage() {
   const { eventId } = useParams<{ eventId: string }>();
@@ -128,6 +126,7 @@ export function EventEditPage() {
           families.map((family) => (
             <FamilyResponseCard
               key={family.id}
+              eventId={eventId}
               family={family}
               childList={childrenByFamilyId[family.id] ?? []}
               response={responsesByFamilyId[family.id]}

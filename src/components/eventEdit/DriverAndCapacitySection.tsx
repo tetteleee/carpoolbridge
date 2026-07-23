@@ -1,13 +1,22 @@
-import { useState, type CSSProperties } from 'react';
-import type { Response } from '../../types/event';
+import type { CSSProperties } from 'react';
 
 interface DriverAndCapacitySectionProps {
   /** 対象家庭ID（DOM要素のid付与に使用） */
   familyId: string;
   /** 家庭の通常定員（Family.vehicleCapacity）。乗車可能人数未変更時のプレースホルダーに使用 */
   vehicleCapacity: number;
-  /** 初期表示に用いる既存回答（対象家庭が未回答の場合はundefined） */
-  initialResponse: Response | undefined;
+  /** 行き車出し可否。未選択（未回答）はnull */
+  driverOutward: boolean | null;
+  /** 帰り車出し可否。未選択（未回答）はnull */
+  driverReturn: boolean | null;
+  /** 当日乗車可能人数の上書き。未変更はnull */
+  capacityToday: number | null;
+  /** 行き車出し可否の変更 */
+  onChangeDriverOutward: (value: boolean) => void;
+  /** 帰り車出し可否の変更 */
+  onChangeDriverReturn: (value: boolean) => void;
+  /** 当日乗車可能人数の変更 */
+  onChangeCapacityToday: (value: number) => void;
 }
 
 const rowStyle: CSSProperties = {
@@ -122,34 +131,28 @@ function DriverChoiceButtons({ idPrefix, value, onChange, possibleDisabled }: Dr
 /**
  * イベント編集（回答入力）画面・家庭カード内の
  * 車出し（行き／帰り）・乗車可能人数（capacityToday）の入力欄。
- * 既存回答（Response）が存在する場合は、その値を初期値として反映する。
- * ここでの状態は画面内のみで保持し、Firestoreへの保存はT29で実装する。
+ * 値は呼び出し側（FamilyResponseCard）が保持し、変更の都度Firestoreへ自動保存される（T29）。
  */
 export function DriverAndCapacitySection({
   familyId,
   vehicleCapacity,
-  initialResponse,
+  driverOutward,
+  driverReturn,
+  capacityToday,
+  onChangeDriverOutward,
+  onChangeDriverReturn,
+  onChangeCapacityToday,
 }: DriverAndCapacitySectionProps) {
-  const [driverOutward, setDriverOutward] = useState<boolean | null>(
-    initialResponse?.driverOutward ?? null
-  );
-  const [driverReturn, setDriverReturn] = useState<boolean | null>(
-    initialResponse?.driverReturn ?? null
-  );
-  const [capacityToday, setCapacityToday] = useState<number | null>(
-    initialResponse?.capacityToday ?? null
-  );
-
   const isCapacityChanged = capacityToday !== null && capacityToday !== vehicleCapacity;
   const displayCapacity = capacityToday ?? vehicleCapacity;
   const capacityIsZero = displayCapacity <= 0;
 
   const handleDecrement = () => {
-    setCapacityToday(Math.max(0, displayCapacity - 1));
+    onChangeCapacityToday(Math.max(0, displayCapacity - 1));
   };
 
   const handleIncrement = () => {
-    setCapacityToday(displayCapacity + 1);
+    onChangeCapacityToday(displayCapacity + 1);
   };
 
   return (
@@ -162,7 +165,7 @@ export function DriverAndCapacitySection({
         <DriverChoiceButtons
           idPrefix={`driver-outward-${familyId}`}
           value={driverOutward}
-          onChange={setDriverOutward}
+          onChange={onChangeDriverOutward}
           possibleDisabled={capacityIsZero}
         />
       </div>
@@ -172,7 +175,7 @@ export function DriverAndCapacitySection({
         <DriverChoiceButtons
           idPrefix={`driver-return-${familyId}`}
           value={driverReturn}
-          onChange={setDriverReturn}
+          onChange={onChangeDriverReturn}
           possibleDisabled={capacityIsZero}
         />
       </div>

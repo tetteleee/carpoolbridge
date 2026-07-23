@@ -1,11 +1,20 @@
-import { useState, type CSSProperties } from 'react';
-import type { ResponseChild } from '../../types/event';
+import type { CSSProperties } from 'react';
 
 interface ChildResponseRowProps {
   /** 対象子供ID（DOM要素のid付与に使用） */
   childId: string;
-  /** 初期表示に用いる既存回答（対象子供が未回答の場合はundefined） */
-  initialResponseChild: ResponseChild | undefined;
+  /** イベントに参加するかどうか。未選択=null */
+  isParticipating: boolean | null;
+  /** 行きの配車が不要かどうか */
+  noOutwardRide: boolean;
+  /** 帰りの配車が不要かどうか */
+  noReturnRide: boolean;
+  /** 参加有無の変更 */
+  onChangeIsParticipating: (value: boolean) => void;
+  /** 行きの配車不要チェックの変更 */
+  onChangeNoOutwardRide: (value: boolean) => void;
+  /** 帰りの配車不要チェックの変更 */
+  onChangeNoReturnRide: (value: boolean) => void;
 }
 
 const rowStyle: CSSProperties = {
@@ -70,24 +79,17 @@ const checkboxRowDisabledStyle: CSSProperties = {
 /**
  * イベント編集（回答入力）画面・家庭カード内の
  * 子供ごとの参加（3状態）・行き／帰りの配車不要チェックボックス。
- * 既存回答（Response.children[]）に対象childIdが存在する場合は、その値を初期値として反映する。
- * 存在しない場合（未回答）はisParticipating=null・noOutwardRide=false・noReturnRide=falseとする。
- * ここでの状態は画面内のみで保持し、Firestoreへの保存はT29で実装する。
+ * 値は呼び出し側（FamilyResponseCard）が保持し、変更の都度Firestoreへ自動保存される（T29）。
  */
 export function ChildResponseRow({
   childId,
-  initialResponseChild,
+  isParticipating,
+  noOutwardRide,
+  noReturnRide,
+  onChangeIsParticipating,
+  onChangeNoOutwardRide,
+  onChangeNoReturnRide,
 }: ChildResponseRowProps) {
-  const [isParticipating, setIsParticipating] = useState<boolean | null>(
-    initialResponseChild?.isParticipating ?? null
-  );
-  const [noOutwardRide, setNoOutwardRide] = useState<boolean>(
-    initialResponseChild?.noOutwardRide ?? false
-  );
-  const [noReturnRide, setNoReturnRide] = useState<boolean>(
-    initialResponseChild?.noReturnRide ?? false
-  );
-
   // 配車不要チェックは「参加」が○（true）の場合のみ意味を持つため、
   // ○以外（✕・未回答）では操作不可にする。値自体は保持し、○に戻せば復元される。
   const rideCheckboxDisabled = isParticipating !== true;
@@ -104,7 +106,7 @@ export function ChildResponseRow({
             id={`child-participating-yes-${childId}`}
             type="button"
             aria-pressed={isParticipating === true}
-            onClick={() => setIsParticipating(true)}
+            onClick={() => onChangeIsParticipating(true)}
             style={{
               ...choiceButtonBaseStyle,
               ...(isParticipating === true
@@ -118,7 +120,7 @@ export function ChildResponseRow({
             id={`child-participating-no-${childId}`}
             type="button"
             aria-pressed={isParticipating === false}
-            onClick={() => setIsParticipating(false)}
+            onClick={() => onChangeIsParticipating(false)}
             style={{
               ...choiceButtonBaseStyle,
               ...(isParticipating === false
@@ -140,7 +142,7 @@ export function ChildResponseRow({
           type="checkbox"
           checked={noOutwardRide}
           disabled={rideCheckboxDisabled}
-          onChange={(e) => setNoOutwardRide(e.target.checked)}
+          onChange={(e) => onChangeNoOutwardRide(e.target.checked)}
         />
         行きの配車不要
       </label>
@@ -154,7 +156,7 @@ export function ChildResponseRow({
           type="checkbox"
           checked={noReturnRide}
           disabled={rideCheckboxDisabled}
-          onChange={(e) => setNoReturnRide(e.target.checked)}
+          onChange={(e) => onChangeNoReturnRide(e.target.checked)}
         />
         帰りの配車不要
       </label>
