@@ -32,16 +32,28 @@ const memberNameStyle: CSSProperties = {
   color: 'var(--text-h)',
 };
 
-/** 子供・コーチ1人ごとの回答をまとめる内側ボックス（家カードの黒背景より一段明るいグレー） */
-const memberBoxStyle: CSSProperties = {
+/** 子供・コーチ1人ごとの回答をまとめる内側ボックスの共通スタイル */
+const memberBoxBaseStyle: CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
   gap: '6px',
   padding: '16px',
   borderRadius: '8px',
-  background: 'var(--code-bg)',
   boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)',
   boxSizing: 'border-box',
+};
+
+/** 子供カードの内側ボックス（家カードの黒背景より一段明るいグレー） */
+const childMemberBoxStyle: CSSProperties = {
+  ...memberBoxBaseStyle,
+  background: 'var(--code-bg)',
+};
+
+/** コーチカードの内側ボックス（子供カードと区別するため、アクセントカラーを淡く使用） */
+const coachMemberBoxStyle: CSSProperties = {
+  ...memberBoxBaseStyle,
+  background: 'var(--accent-bg)',
+  border: '1px solid var(--accent-border)',
 };
 
 /**
@@ -107,7 +119,7 @@ export function FamilyResponseCard({
         style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}
       >
         {childList.map((child) => (
-          <div key={child.id} style={memberBoxStyle}>
+          <div key={child.id} style={childMemberBoxStyle}>
             <span style={memberNameStyle}>
               <UserIcon size={14} />
               {child.name}
@@ -125,7 +137,7 @@ export function FamilyResponseCard({
         ))}
 
         {hasCoach && (
-          <div style={memberBoxStyle}>
+          <div style={coachMemberBoxStyle}>
             <span style={memberNameStyle}>
               <UserIcon size={14} />
               {family.coachName}
