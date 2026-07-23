@@ -3,6 +3,7 @@ import type { Response } from '../../types/event';
 import type { Child, Family } from '../../types/master';
 import { getSchoolGrade } from '../../utils/schoolGrade';
 import { HomeIcon, UserIcon } from '../icons';
+import { ChildResponseRow } from './ChildResponseRow';
 import { DriverAndCapacitySection } from './DriverAndCapacitySection';
 
 interface FamilyResponseCardProps {
@@ -124,11 +125,12 @@ export function FamilyResponseCard({
                   {formatGradeLabel(child.schoolEntryYear)}
                 </span>
               </span>
-              <div id={`child-response-frame-${child.id}`} style={frameStyle}>
-                <span style={frameLabelStyle}>参加</span>
-                <span style={frameLabelStyle}>行きの配車不要</span>
-                <span style={frameLabelStyle}>帰りの配車不要</span>
-              </div>
+              <ChildResponseRow
+                childId={child.id}
+                initialResponseChild={response?.children.find(
+                  (responseChild) => responseChild.childId === child.id
+                )}
+              />
             </div>
           </div>
         ))}
