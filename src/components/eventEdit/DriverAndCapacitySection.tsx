@@ -132,7 +132,7 @@ export function DriverAndCapacitySection({
     initialResponse?.capacityToday ?? null
   );
 
-  const isCapacityChanged = capacityToday !== null;
+  const isCapacityChanged = capacityToday !== null && capacityToday !== vehicleCapacity;
   const displayCapacity = capacityToday ?? vehicleCapacity;
   const capacityIsZero = displayCapacity <= 0;
 
