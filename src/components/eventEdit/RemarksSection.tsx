@@ -20,7 +20,7 @@ const labelStyle: CSSProperties = {
 
 const textareaStyle: CSSProperties = {
   width: '100%',
-  minHeight: '48px',
+  minHeight: '32px',
   padding: '6px 8px',
   borderRadius: '6px',
   border: '1px solid var(--border)',
