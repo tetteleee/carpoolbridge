@@ -64,9 +64,9 @@ test('配車作成ボタンと配車再作成確認ダイアログ', async ({ pa
 
   const carpoolsCollection = eventRef.collection('carpools');
 
-  // 既存の配車結果が存在しない場合：確認ダイアログを表示せず配車を作成する
+  // 既存の配車結果が存在しない場合：確認ダイアログを表示せず配車を作成し、配車画面（メイン）へ遷移する
   await page.getByRole('button', { name: '配車作成' }).click();
-  await expect(page.getByText('配車を作成しました')).toBeVisible();
+  await page.waitForURL(`**/events/${eventRef.id}/carpool`);
   await expect(page.locator('[role="dialog"]')).toHaveCount(0);
 
   await expect.poll(async () => (await carpoolsCollection.get()).size).toBe(2);
@@ -76,19 +76,22 @@ test('配車作成ボタンと配車再作成確認ダイアログ', async ({ pa
   const firstOutwardId = firstOutwardSnapshot.docs[0].id;
 
   // 既存の配車結果が存在する場合：再作成確認ダイアログを表示する
+  await page.goto(`/events/${eventRef.id}/edit`);
+  await expect(page.locator(`#family-response-card-${familyRef.id}`)).toBeVisible();
   await page.getByRole('button', { name: '配車作成' }).click();
   await expect(page.getByRole('heading', { name: '配車を再作成' })).toBeVisible();
   await expect(page.getByText('現在の配車結果は削除されます。')).toBeVisible();
 
-  // 「キャンセル」選択時：配車結果は変更されない
+  // 「キャンセル」選択時：配車結果は変更されず、画面遷移も発生しない
   await page.getByRole('button', { name: 'キャンセル' }).click();
   await expect(page.locator('[role="dialog"]')).toHaveCount(0);
   expect((await carpoolsCollection.get()).size).toBe(2);
+  expect(page.url()).toContain(`/events/${eventRef.id}/edit`);
 
-  // 「再作成」選択時：既存の配車結果を削除し、最新の回答内容を基に配車を再作成する
+  // 「再作成」選択時：既存の配車結果を削除し、最新の回答内容を基に配車を再作成したうえで配車画面（メイン）へ遷移する
   await page.getByRole('button', { name: '配車作成' }).click();
   await page.getByRole('button', { name: '再作成' }).click();
-  await expect(page.getByText('配車を作成しました')).toBeVisible();
+  await page.waitForURL(`**/events/${eventRef.id}/carpool`);
 
   await expect.poll(async () => (await carpoolsCollection.get()).size).toBe(2);
   const secondOutwardSnapshot = await carpoolsCollection

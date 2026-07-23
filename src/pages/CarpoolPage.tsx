@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { CarCard } from '../components/carpool/CarCard';
 import { OperationArea } from '../components/carpool/OperationArea';
 import { UnassignedArea } from '../components/carpool/UnassignedArea';
@@ -22,6 +22,7 @@ const DIRECTION_TABS: { direction: Direction; label: string }[] = [
  */
 export function CarpoolPage() {
   const { eventId } = useParams<{ eventId: string }>();
+  const navigate = useNavigate();
   const [event, setEvent] = useState<Event | null>(null);
   const {
     direction,
@@ -63,8 +64,12 @@ export function CarpoolPage() {
     onDrop: handleDrop,
   });
 
-  // イベント編集画面への遷移先接続はT39aで行う
-  const handleEditAnswersClick = () => {};
+  const handleEditAnswersClick = () => {
+    if (!eventId) {
+      return;
+    }
+    navigate(`/events/${eventId}/edit`);
+  };
 
   // LINE共有画面への遷移先接続はT46aで行う
   const handleShareClick = (_shareDirection: Direction) => {};

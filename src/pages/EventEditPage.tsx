@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { FamilyResponseCard } from '../components/eventEdit/FamilyResponseCard';
 import { CarpoolRecreateDialog } from '../components/eventEdit/CarpoolRecreateDialog';
 import { DevSampleResponseButton } from '../components/eventEdit/DevSampleResponseButton';
@@ -39,6 +39,7 @@ async function createCarpoolsForBothDirections(
  */
 export function EventEditPage() {
   const { eventId } = useParams<{ eventId: string }>();
+  const navigate = useNavigate();
   const [event, setEvent] = useState<Event | null>(null);
   const [families, setFamilies] = useState<Family[]>([]);
   const [childrenByFamilyId, setChildrenByFamilyId] = useState<
@@ -96,8 +97,7 @@ export function EventEditPage() {
     const result = await createCarpoolsForBothDirections(targetEventId);
     setCreatingCarpools(false);
     if (result.success) {
-      // 配車画面（メイン）への遷移はT39aで接続する（配車画面自体が未実装のため）
-      setCarpoolMessage({ text: '配車を作成しました', isError: false });
+      navigate(`/events/${targetEventId}/carpool`);
     } else {
       setCarpoolMessage({ text: result.message, isError: true });
     }
@@ -131,8 +131,12 @@ export function EventEditPage() {
     await runCreation(eventId);
   };
 
-  // 配車画面（メイン）への遷移先接続はT39aで行う
-  const handleBackClick = () => {};
+  const handleBackClick = () => {
+    if (!eventId) {
+      return;
+    }
+    navigate(`/events/${eventId}/carpool`);
+  };
 
   /**
    * サンプル回答生成（開発用機能）の完了後、最新の回答を再取得して画面に反映する。
