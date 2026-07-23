@@ -23,21 +23,29 @@ const rowLabelStyle: CSSProperties = {
 };
 
 const choiceButtonBaseStyle: CSSProperties = {
-  minWidth: '44px',
   minHeight: '44px',
+  padding: '0 10px',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
   borderRadius: '6px',
   fontSize: '13px',
   fontFamily: 'var(--sans)',
+  whiteSpace: 'nowrap',
   cursor: 'pointer',
 };
 
-const choiceSelectedStyle: CSSProperties = {
-  border: '1px solid var(--accent-border)',
-  background: 'var(--accent-bg)',
-  color: 'var(--accent)',
+const choicePositiveSelectedStyle: CSSProperties = {
+  border: '1px solid var(--positive-border)',
+  background: 'var(--positive-bg)',
+  color: 'var(--positive)',
+  fontWeight: 700,
+};
+
+const choiceNegativeSelectedStyle: CSSProperties = {
+  border: '1px solid var(--negative-border)',
+  background: 'var(--negative-bg)',
+  color: 'var(--negative)',
   fontWeight: 700,
 };
 
@@ -88,12 +96,12 @@ function DriverChoiceButtons({ idPrefix, value, onChange, possibleDisabled }: Dr
         onClick={() => onChange(true)}
         style={{
           ...choiceButtonBaseStyle,
-          ...(value === true ? choiceSelectedStyle : choiceUnselectedStyle),
+          ...(value === true ? choicePositiveSelectedStyle : choiceUnselectedStyle),
           opacity: possibleDisabled ? 0.4 : 1,
           cursor: possibleDisabled ? 'default' : 'pointer',
         }}
       >
-        ○
+        ○可
       </button>
       <button
         id={`${idPrefix}-impossible`}
@@ -102,10 +110,10 @@ function DriverChoiceButtons({ idPrefix, value, onChange, possibleDisabled }: Dr
         onClick={() => onChange(false)}
         style={{
           ...choiceButtonBaseStyle,
-          ...(value === false ? choiceSelectedStyle : choiceUnselectedStyle),
+          ...(value === false ? choiceNegativeSelectedStyle : choiceUnselectedStyle),
         }}
       >
-        ✕
+        ✕不可
       </button>
     </div>
   );

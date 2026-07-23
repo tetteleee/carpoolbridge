@@ -21,21 +21,29 @@ const rowLabelStyle: CSSProperties = {
 };
 
 const choiceButtonBaseStyle: CSSProperties = {
-  minWidth: '44px',
   minHeight: '44px',
+  padding: '0 10px',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
   borderRadius: '6px',
   fontSize: '13px',
   fontFamily: 'var(--sans)',
+  whiteSpace: 'nowrap',
   cursor: 'pointer',
 };
 
-const choiceSelectedStyle: CSSProperties = {
-  border: '1px solid var(--accent-border)',
-  background: 'var(--accent-bg)',
-  color: 'var(--accent)',
+const choicePositiveSelectedStyle: CSSProperties = {
+  border: '1px solid var(--positive-border)',
+  background: 'var(--positive-bg)',
+  color: 'var(--positive)',
+  fontWeight: 700,
+};
+
+const choiceNegativeSelectedStyle: CSSProperties = {
+  border: '1px solid var(--negative-border)',
+  background: 'var(--negative-bg)',
+  color: 'var(--negative)',
   fontWeight: 700,
 };
 
@@ -100,11 +108,11 @@ export function ChildResponseRow({
             style={{
               ...choiceButtonBaseStyle,
               ...(isParticipating === true
-                ? choiceSelectedStyle
+                ? choicePositiveSelectedStyle
                 : choiceUnselectedStyle),
             }}
           >
-            ○
+            ○参加
           </button>
           <button
             id={`child-participating-no-${childId}`}
@@ -114,11 +122,11 @@ export function ChildResponseRow({
             style={{
               ...choiceButtonBaseStyle,
               ...(isParticipating === false
-                ? choiceSelectedStyle
+                ? choiceNegativeSelectedStyle
                 : choiceUnselectedStyle),
             }}
           >
-            ✕
+            ✕不参加
           </button>
         </div>
       </div>

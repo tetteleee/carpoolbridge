@@ -7,6 +7,12 @@
   --accent: #2563eb;
   --accent-bg: rgba(37, 99, 235, 0.08);
   --accent-border: rgba(37, 99, 235, 0.4);
+  --positive: #0f766e;
+  --positive-bg: rgba(15, 118, 110, 0.09);
+  --positive-border: rgba(15, 118, 110, 0.4);
+  --negative: #c2410c;
+  --negative-bg: rgba(194, 65, 12, 0.08);
+  --negative-border: rgba(194, 65, 12, 0.35);
   --social-bg: rgba(244, 243, 236, 0.5);
   --shadow:
     rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
@@ -40,6 +46,12 @@
     --accent: #60a5fa;
     --accent-bg: rgba(96, 165, 250, 0.15);
     --accent-border: rgba(96, 165, 250, 0.5);
+    --positive: #2dd4bf;
+    --positive-bg: rgba(45, 212, 191, 0.13);
+    --positive-border: rgba(45, 212, 191, 0.4);
+    --negative: #fb923c;
+    --negative-bg: rgba(251, 146, 60, 0.13);
+    --negative-border: rgba(251, 146, 60, 0.4);
     --social-bg: rgba(47, 48, 58, 0.5);
     --shadow:
       rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
