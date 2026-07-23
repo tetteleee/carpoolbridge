@@ -19,7 +19,6 @@ const DIRECTION_TABS: { direction: Direction; label: string }[] = [
 /**
  * 配車画面（メイン）。
  * 「行き」「帰り」タブで選択中のdirectionに応じて配車結果を切り替える。
- * 人カードの詳細表示・色分けはT42で実装する。
  */
 export function CarpoolPage() {
   const { eventId } = useParams<{ eventId: string }>();

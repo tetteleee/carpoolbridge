@@ -1,20 +1,5 @@
-import { CarIcon, DragHandleIcon, MapPinIcon } from '../icons';
-
-/**
- * 車カードに表示する乗車メンバー1件分のデータ。
- * メンバー自体の詳細表示・色分けはT42で実施するため、
- * 本タスクでは名前・学年・集合場所名の表示にとどめる。
- */
-export interface CarCardMember {
-  /** 人カードの一意なキー（子供IDまたは家庭ID） */
-  id: string;
-  /** 表示名（子供名、または「〇〇父」などのコーチ表記） */
-  name: string;
-  /** 学年表記（例：「小4」）。学年を持たない人物（コーチなど）はnull */
-  grade: string | null;
-  /** 集合場所名 */
-  pickupLocationName: string;
-}
+import { CarIcon, MapPinIcon } from '../icons';
+import { PersonCard, type PersonCardData } from './PersonCard';
 
 /**
  * 車カード1台分のデータ。
@@ -31,7 +16,7 @@ export interface CarCardData {
   /** 巡回する集合場所名（巡回順） */
   routeLocationNames: string[];
   /** 乗車メンバー（運転者は含めない） */
-  members: CarCardMember[];
+  members: PersonCardData[];
 }
 
 interface CarCardProps {
@@ -49,7 +34,7 @@ function toCarName(familyName: string): string {
  * 配車画面（メイン）の車カード。
  * 乗車率・巡回する集合場所を表示し、乗車人数（運転者を含む）が
  * 定員を超過している場合はカード枠を赤色で表示する。
- * 乗車メンバー自体の詳細表示・色分けはT42、ドラッグ＆ドロップ動作はT43で実施する。
+ * ドラッグ＆ドロップ動作はT43で実施する。
  */
 export function CarCard({ car }: CarCardProps) {
   const occupantCount = car.members.length + 1;
@@ -137,40 +122,8 @@ export function CarCard({ car }: CarCardProps) {
         }}
       >
         {car.members.map((member) => (
-          <li
-            key={member.id}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              padding: '10px 12px',
-              borderTop: '1px solid var(--border)',
-              fontSize: '14px',
-              color: 'var(--text)',
-            }}
-          >
-            <span
-              aria-label="ドラッグハンドル"
-              style={{ display: 'flex', flexShrink: 0, color: 'var(--text)' }}
-            >
-              <DragHandleIcon size={16} />
-            </span>
-            <span style={{ fontWeight: 700, color: 'var(--text-h)' }}>
-              {member.name}
-              {member.grade && `(${member.grade})`}
-            </span>
-            <span
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '2px',
-                fontSize: '12px',
-                color: 'var(--text)',
-              }}
-            >
-              <MapPinIcon size={14} />
-              {member.pickupLocationName}
-            </span>
+          <li key={member.id} style={{ borderTop: '1px solid var(--border)' }}>
+            <PersonCard person={member} />
           </li>
         ))}
       </ul>
