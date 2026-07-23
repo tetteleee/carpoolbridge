@@ -5,6 +5,7 @@ import {
   collection,
   setDoc,
   updateDoc,
+  deleteDoc,
 } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { firestorePaths } from '../../constants';
@@ -98,4 +99,17 @@ export async function isUnanswered(eventId: string, familyId: string): Promise<b
   const docRef = doc(db, firestorePaths.responseDocument(eventId, familyId));
   const docSnap = await getDoc(docRef);
   return !docSnap.exists();
+}
+
+/**
+ * 指定イベント配下の回答（Response）をすべて物理削除します。
+ * 05_データ設計.md#11の例外（開発用「サンプル回答生成」機能）としてのみ利用する処理であり、
+ * 開発環境限定の当該機能の確認ダイアログで「実行」が選択された場合にのみ呼び出す。
+ *
+ * @param eventId 対象のイベントID
+ */
+export async function deleteAllResponses(eventId: string): Promise<void> {
+  const colRef = collection(db, firestorePaths.responsesCollection(eventId));
+  const snapshot = await getDocs(colRef);
+  await Promise.all(snapshot.docs.map((d) => deleteDoc(d.ref)));
 }

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { FamilyResponseCard } from '../components/eventEdit/FamilyResponseCard';
 import { CarpoolRecreateDialog } from '../components/eventEdit/CarpoolRecreateDialog';
+import { DevSampleResponseButton } from '../components/eventEdit/DevSampleResponseButton';
 import { CarIcon } from '../components/icons';
 import { getEvent } from '../services/event/eventService';
 import { getFamilies } from '../services/master/familyService';
@@ -48,6 +49,7 @@ export function EventEditPage() {
   const [responsesByFamilyId, setResponsesByFamilyId] = useState<
     Record<string, Response>
   >({});
+  const [responseVersion, setResponseVersion] = useState(0);
   const [recreateDialogOpen, setRecreateDialogOpen] = useState(false);
   const [creatingCarpools, setCreatingCarpools] = useState(false);
   const [carpoolMessage, setCarpoolMessage] = useState<{
@@ -129,6 +131,24 @@ export function EventEditPage() {
     await runCreation(eventId);
   };
 
+  /**
+   * サンプル回答生成（開発用機能）の完了後、最新の回答を再取得して画面に反映する。
+   * FamilyResponseCardは初回描画時のpropsを内部状態の初期値として保持するため、
+   * keyにresponseVersionを含めて再マウントさせることで最新の回答内容を反映させる。
+   */
+  const handleResponsesGenerated = async () => {
+    if (!eventId) {
+      return;
+    }
+    const responsesData = await getResponses(eventId);
+    setResponsesByFamilyId(
+      Object.fromEntries(
+        responsesData.map(({ familyId, ...response }) => [familyId, response])
+      )
+    );
+    setResponseVersion((v) => v + 1);
+  };
+
   return (
     <div
       id="event-edit-page"
@@ -194,7 +214,7 @@ export function EventEditPage() {
         ) : (
           families.map((family) => (
             <FamilyResponseCard
-              key={family.id}
+              key={`${family.id}-${responseVersion}`}
               eventId={eventId}
               family={family}
               childList={childrenByFamilyId[family.id] ?? []}
@@ -248,6 +268,13 @@ export function EventEditPage() {
               {creatingCarpools ? '配車作成中...' : '配車作成'}
             </button>
           </div>
+        )}
+
+        {eventId && !loading && !error && (
+          <DevSampleResponseButton
+            eventId={eventId}
+            onGenerated={handleResponsesGenerated}
+          />
         )}
       </div>
 
