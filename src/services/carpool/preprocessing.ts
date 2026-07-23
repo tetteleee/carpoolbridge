@@ -5,6 +5,10 @@
 
 import type { CarpoolMember, Direction } from '../../types/event';
 import type { PickupLocation } from '../../types/master';
+import {
+  DriverGroupCapacityExceededError,
+  MissingCoordinatesError,
+} from './assignmentErrors';
 import type { Location } from './scoring';
 
 /**
@@ -87,7 +91,7 @@ export interface Group {
  * 未設定の地点が1件でも存在する場合はエラーを送出し、自動配車処理を中断します。
  *
  * @param locations 検証対象の集合場所一覧（重複を含んでもよい）
- * @throws 緯度・経度が未設定の地点が存在する場合、該当地点名を含むエラー
+ * @throws {MissingCoordinatesError} 緯度・経度が未設定の地点が存在する場合
  */
 export function validatePickupLocations(locations: PickupLocation[]): void {
   const missingNames = locations
@@ -96,9 +100,7 @@ export function validatePickupLocations(locations: PickupLocation[]): void {
 
   if (missingNames.length > 0) {
     const uniqueNames = [...new Set(missingNames)];
-    throw new Error(
-      `緯度経度が未設定の集合場所があります: ${uniqueNames.join('、')}`
-    );
+    throw new MissingCoordinatesError(uniqueNames);
   }
 }
 
@@ -177,7 +179,7 @@ export function formFamilyGroups(passengers: Passenger[]): Group[] {
  * @param vehicles T33で初期化済みの車両一覧（優先割り当てにより remainingCapacity・members・pickupLocationIds がミューテーションされる）
  * @param groups T34で形成した家族グループ一覧（ドライバー家庭のグループを含む全グループ）
  * @returns 優先割り当て済みのグループを除いた、以降の自動配車対象となる未配車グループ配列
- * @throws ドライバー家族グループの必要席数が車両の有効定員を超過している場合、対象ドライバー名を含むエラー
+ * @throws {DriverGroupCapacityExceededError} ドライバー家族グループの必要席数が車両の有効定員を超過している場合
  */
 export function assignDriverFamilyGroups(
   vehicles: Vehicle[],
@@ -192,9 +194,7 @@ export function assignDriverFamilyGroups(
     driverGroupByVehicle.set(vehicle, driverGroup);
 
     if (driverGroup && driverGroup.size > vehicle.remainingCapacity) {
-      throw new Error(
-        `${vehicle.driverName}様の優先割り当て人数（同乗必須メンバー数）が、車両の有効定員を超過しています`
-      );
+      throw new DriverGroupCapacityExceededError(vehicle.driverName);
     }
   }
 
