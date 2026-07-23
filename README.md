@@ -1,6 +1,6 @@
 # CarpoolBridge
 
-![GitHub Actions](https://github.com/tetteleee/carpoolbridge/actions/workflows/firebase-deploy.yml/badge.svg)
+![GitHub Actions](https://github.com/tetteleee/carpoolbridge/actions/workflows/firebase-deploy.yml/badge.svg) ![GitHub Actions](https://github.com/tetteleee/carpoolbridge/actions/workflows/e2e.yml/badge.svg)
 
 ## 開発
 
@@ -40,7 +40,9 @@ npx playwright install chromium
 npm run seed
 ```
 
-- ドキュメントIDはすべて固定値です。既存データの削除は行わず`set()`で書き込むため、
+- **実行すると、`staffUsers`を除く既存データ（家族・子ども・集合場所・目的地・イベント。
+  イベント配下の`responses`・`carpools`を含む）をすべて物理削除したうえで、
+  固定IDのテストデータを投入し直します。** 画面操作で追加したデータも含めて消えます。
   何度実行しても同じ内容になります（冪等）。
 - 投入先は常に`.firebaserc`の`projects.default`（実Firebaseプロジェクト）です。
 - Firebase Admin SDKで実行するため、Firestore Security Rules（`isStaff()`）を経由しません。
@@ -59,9 +61,11 @@ npm run seed
   マスタ管理画面の開発用機能「サンプルデータ投入」ボタンとも共通のデータ定義です。
   Firestoreのデータ構造を変更した場合は、このファイルを更新してください。
 
-**注意：開発環境向けの機能です。現時点ではDev/Prod用のFirebaseプロジェクトが分離されて
-いないため、実行すると実際のFirebaseプロジェクトに書き込まれます。**
-（既存データの削除は行わないため、固定IDのドキュメントを追加・上書きするだけです）
+**注意：開発段階限定の機能です。現時点ではDev/Prod用のFirebaseプロジェクトが分離されて
+いないため、実行すると実際のFirebaseプロジェクトに対して全削除・再投入が行われます。
+運用開始後にこのスクリプトをそのまま使うと、実際に入力された家族・子ども・イベント等の
+データが消えてしまいます。運用開始後は別の手段（Dev/Prodプロジェクトの分離、削除範囲の限定等）
+を検討し、このスクリプトを本番運用中のプロジェクトに対して実行しないでください。**
 
 ## デプロイ
 

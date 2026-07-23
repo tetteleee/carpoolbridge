@@ -1,12 +1,14 @@
 /**
  * 開発用Seedスクリプト（`npm run seed`）。
  *
- * docs/05_データ設計.md のコレクション構成に合わせたテストデータ
- * （src/services/dev/seedData.ts。「サンプルデータ投入」ボタンと共通）を
- * Firestoreへ投入する。ドキュメントIDは固定値、Admin SDKのset()（setDoc相当）で書き込むため、
- * 何度実行しても同じ状態になる（既存データの削除は行わない）。
+ * 既存の集合場所・目的地・家庭・子供・イベント（配下のresponses・carpoolsを含む）を
+ * 全削除したうえで、docs/05_データ設計.md のコレクション構成に合わせたテストデータ
+ * （src/services/dev/seedData.ts。「サンプルデータ投入」ボタンと共通）をFirestoreへ投入する。
+ * staffUsersは削除対象外。
  *
  * 投入先は常に .firebaserc の projects.default（実Firebaseプロジェクト）。
+ * 開発段階では気軽にリセットできることを優先しているが、実運用開始後は
+ * このスクリプトをそのまま使わないこと（別の手段を検討する）。
  *
  * 実行方法・注意事項はREADME.mdを参照。
  */
@@ -45,6 +47,14 @@ function readProjectId(): string {
 }
 
 /**
+ * 指定コレクション配下のドキュメントを、サブコレクションを含めて再帰的に全削除する。
+ */
+async function deleteCollectionRecursively(db: Firestore, collectionPath: string): Promise<void> {
+  await db.recursiveDelete(db.collection(collectionPath));
+  console.log(`[seed] ${collectionPath}: 削除しました`);
+}
+
+/**
  * 指定コレクションへ、固定IDのドキュメント群をset()（全件上書き）する。
  * extraFieldsは全ドキュメント共通で付与するフィールド（createdAt等）。
  */
@@ -71,6 +81,12 @@ async function main(): Promise<void> {
 
   const app = initializeApp({ projectId });
   const db = getFirestore(app);
+
+  await deleteCollectionRecursively(db, firestorePaths.childrenCollection());
+  await deleteCollectionRecursively(db, firestorePaths.familiesCollection());
+  await deleteCollectionRecursively(db, firestorePaths.pickupLocationsCollection());
+  await deleteCollectionRecursively(db, firestorePaths.destinationsCollection());
+  await deleteCollectionRecursively(db, firestorePaths.eventsCollection());
 
   await seedCollection(db, firestorePaths.pickupLocationsCollection(), PICKUP_LOCATIONS);
   await seedCollection(db, firestorePaths.destinationsCollection(), DESTINATIONS);
