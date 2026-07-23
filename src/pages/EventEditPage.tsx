@@ -131,6 +131,9 @@ export function EventEditPage() {
     await runCreation(eventId);
   };
 
+  // 配車画面（メイン）への遷移先接続はT39aで行う
+  const handleBackClick = () => {};
+
   /**
    * サンプル回答生成（開発用機能）の完了後、最新の回答を再取得して画面に反映する。
    * FamilyResponseCardは初回描画時のpropsを内部状態の初期値として保持するため、
@@ -244,29 +247,56 @@ export function EventEditPage() {
                 {carpoolMessage.text}
               </p>
             )}
-            <button
-              type="button"
-              onClick={handleCreateCarpoolClick}
-              disabled={creatingCarpools}
+            <div
               style={{
                 display: 'flex',
+                justifyContent: 'space-between',
                 alignItems: 'center',
-                gap: '6px',
-                padding: '12px 24px',
-                borderRadius: '8px',
-                border: 'none',
-                background: 'var(--accent)',
-                color: '#fff',
-                fontSize: '15px',
-                fontWeight: 700,
-                fontFamily: 'var(--sans)',
-                cursor: creatingCarpools ? 'default' : 'pointer',
-                opacity: creatingCarpools ? 0.6 : 1,
+                width: '100%',
+                gap: '12px',
               }}
             >
-              <CarIcon size={18} />
-              {creatingCarpools ? '配車作成中...' : '配車作成'}
-            </button>
+              <button
+                type="button"
+                onClick={handleBackClick}
+                style={{
+                  padding: '12px 24px',
+                  borderRadius: '8px',
+                  border: '1px solid var(--border)',
+                  background: 'transparent',
+                  color: 'var(--text-h)',
+                  fontSize: '15px',
+                  fontWeight: 700,
+                  fontFamily: 'var(--sans)',
+                  cursor: 'pointer',
+                }}
+              >
+                戻る
+              </button>
+              <button
+                type="button"
+                onClick={handleCreateCarpoolClick}
+                disabled={creatingCarpools}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '12px 24px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  background: 'var(--accent)',
+                  color: '#fff',
+                  fontSize: '15px',
+                  fontWeight: 700,
+                  fontFamily: 'var(--sans)',
+                  cursor: creatingCarpools ? 'default' : 'pointer',
+                  opacity: creatingCarpools ? 0.6 : 1,
+                }}
+              >
+                <CarIcon size={18} />
+                {creatingCarpools ? '配車作成中...' : '配車作成'}
+              </button>
+            </div>
           </div>
         )}
 
