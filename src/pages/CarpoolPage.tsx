@@ -5,7 +5,9 @@ import { OperationArea } from '../components/carpool/OperationArea';
 import { UnassignedArea } from '../components/carpool/UnassignedArea';
 import { useCarpoolDirection } from '../hooks/useCarpoolDirection';
 import { useCarpoolBoardData } from '../hooks/useCarpoolBoardData';
+import { useDragAndDrop, type DropResult } from '../hooks/useDragAndDrop';
 import { getEvent } from '../services/event/eventService';
+import { moveCarpoolMember, UNASSIGNED_ZONE_ID } from '../services/carpool/carpoolMember';
 import { formatDateWithWeekday } from '../utils/date';
 import type { Direction, Event } from '../types/event';
 
@@ -27,6 +29,7 @@ export function CarpoolPage() {
     carpools,
     loading: carpoolsLoading,
     error: carpoolsError,
+    refresh: refreshCarpools,
   } = useCarpoolDirection(eventId);
   const {
     unassignedPeople,
@@ -34,9 +37,10 @@ export function CarpoolPage() {
     loading: boardDataLoading,
     error: boardDataError,
   } = useCarpoolBoardData(eventId, direction, carpools);
+  const [moveError, setMoveError] = useState<string | null>(null);
 
   const loading = carpoolsLoading || boardDataLoading;
-  const error = carpoolsError ?? boardDataError;
+  const error = carpoolsError ?? boardDataError ?? moveError;
 
   useEffect(() => {
     if (!eventId) {
@@ -44,6 +48,20 @@ export function CarpoolPage() {
     }
     getEvent(eventId).then(setEvent);
   }, [eventId]);
+
+  const handleDrop = ({ member, sourceZoneId, targetZoneId }: DropResult) => {
+    if (!eventId) {
+      return;
+    }
+    setMoveError(null);
+    moveCarpoolMember(eventId, member, sourceZoneId, targetZoneId, carpools)
+      .then(refreshCarpools)
+      .catch(() => setMoveError('人の移動に失敗しました'));
+  };
+
+  const { dragState, hoveredZoneId, createPointerDownHandler } = useDragAndDrop({
+    onDrop: handleDrop,
+  });
 
   // イベント編集画面への遷移先接続はT39aで行う
   const handleEditAnswersClick = () => {};
@@ -148,14 +166,51 @@ export function CarpoolPage() {
         ) : (
           !error && (
             <>
-              <UnassignedArea people={unassignedPeople} />
+              <UnassignedArea
+                people={unassignedPeople}
+                draggingPersonId={dragState?.personId ?? null}
+                onPersonPointerDown={(person) =>
+                  createPointerDownHandler(person, UNASSIGNED_ZONE_ID)
+                }
+              />
               {carCards.map((car) => (
-                <CarCard key={car.id} car={car} />
+                <CarCard
+                  key={car.id}
+                  car={car}
+                  isDropTarget={dragState !== null && hoveredZoneId === car.id}
+                  draggingPersonId={dragState?.personId ?? null}
+                  onPersonPointerDown={(person) => createPointerDownHandler(person, car.id)}
+                />
               ))}
             </>
           )
         )}
       </div>
+
+      {dragState && (
+        <div
+          aria-hidden="true"
+          style={{
+            position: 'fixed',
+            left: dragState.x,
+            top: dragState.y,
+            transform: 'translate(-50%, -120%)',
+            pointerEvents: 'none',
+            zIndex: 100,
+            padding: '6px 12px',
+            borderRadius: '6px',
+            background: 'var(--accent)',
+            color: '#fff',
+            fontSize: '13px',
+            fontWeight: 700,
+            fontFamily: 'var(--sans)',
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {dragState.personName}
+        </div>
+      )}
     </div>
   );
 }

@@ -1,4 +1,6 @@
+import type { PointerEvent as ReactPointerEvent } from 'react';
 import { PersonCard, type PersonCardData } from './PersonCard';
+import { UNASSIGNED_ZONE_ID } from '../../services/carpool/carpoolMember';
 
 /** 未配車エリアに表示する人カード1件分のデータ */
 export type UnassignedPerson = PersonCardData;
@@ -6,20 +8,30 @@ export type UnassignedPerson = PersonCardData;
 interface UnassignedAreaProps {
   /** 選択中タブ（行き／帰り）に応じた未配車の人一覧 */
   people: UnassignedPerson[];
+  /** ドラッグ中の人カードのID（自身のエリア内であれば薄く表示するために使用。T43） */
+  draggingPersonId?: string | null;
+  /** 人カードのonPointerDownハンドラーを生成する（T43。長押しドラッグ開始の検知に使用） */
+  onPersonPointerDown?: (
+    person: PersonCardData
+  ) => (event: ReactPointerEvent<HTMLDivElement>) => void;
 }
 
 /**
  * 配車画面（メイン）の未配車エリア。
  * 未配車人数が0人の場合はエリア自体を非表示にする。
- * ドラッグ＆ドロップ動作はT43で実施する。
  */
-export function UnassignedArea({ people }: UnassignedAreaProps) {
+export function UnassignedArea({
+  people,
+  draggingPersonId = null,
+  onPersonPointerDown,
+}: UnassignedAreaProps) {
   if (people.length === 0) {
     return null;
   }
 
   return (
     <section
+      data-drop-zone-id={UNASSIGNED_ZONE_ID}
       style={{
         border: '1px dashed var(--border)',
         borderRadius: '8px',
@@ -50,7 +62,11 @@ export function UnassignedArea({ people }: UnassignedAreaProps) {
       >
         {people.map((person) => (
           <li key={person.id} style={{ borderTop: '1px solid var(--border)' }}>
-            <PersonCard person={person} />
+            <PersonCard
+              person={person}
+              onPointerDown={onPersonPointerDown?.(person)}
+              isDragging={person.id === draggingPersonId}
+            />
           </li>
         ))}
       </ul>

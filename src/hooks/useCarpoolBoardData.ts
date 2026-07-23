@@ -7,6 +7,7 @@ import { getChildrenByFamilyId } from '../services/master/childService';
 import { getPickupLocations } from '../services/master/pickupLocationService';
 import { getResponses } from '../services/event/responseService';
 import { isDriverForDirection, isChildRidingForDirection } from '../services/carpool/eligibility';
+import { memberKey } from '../services/carpool/carpoolMember';
 import { getSchoolGrade } from '../utils/schoolGrade';
 import type { Carpool, CarpoolMember, Direction, Response } from '../types/event';
 import type { Child, Family, PickupLocation } from '../types/master';
@@ -28,11 +29,6 @@ interface BoardMasterData {
   childById: Map<string, Child>;
   responseByFamilyId: Map<string, Response>;
   pickupLocationById: Map<string, PickupLocation>;
-}
-
-/** 乗車メンバー（child/coach）を一意に識別するためのキーを生成する */
-function memberKey(member: CarpoolMember): string {
-  return member.type === 'child' ? `child:${member.childId}` : `coach:${member.familyId}`;
 }
 
 /** 学年表記（例：「小4」）を生成する。対象学年外の場合はnullを返す */
@@ -60,6 +56,7 @@ function toPersonCardData(
       name: child.name,
       grade: toGradeLabel(child.schoolEntryYear),
       pickupLocationName,
+      member,
     };
   }
 
@@ -72,6 +69,7 @@ function toPersonCardData(
     name: family.coachName,
     grade: null,
     pickupLocationName: masterData.pickupLocationById.get(family.pickupLocationId)?.name ?? '',
+    member,
   };
 }
 

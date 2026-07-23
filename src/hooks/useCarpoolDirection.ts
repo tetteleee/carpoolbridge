@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { getCarpools } from '../services/event/carpoolService';
 import type { Carpool, Direction } from '../types/event';
 
@@ -15,6 +15,8 @@ interface UseCarpoolDirectionResult {
   loading: boolean;
   /** 配車結果の取得に失敗した場合のエラーメッセージ */
   error: string | null;
+  /** 選択中タブの配車結果を再取得する（配車結果を変更した直後の再同期に使用。T43） */
+  refresh: () => Promise<void>;
 }
 
 /**
@@ -72,6 +74,18 @@ export function useCarpoolDirection(
     };
   }, [eventId, direction]);
 
+  const refresh = useCallback(async () => {
+    if (!eventId) {
+      return;
+    }
+    try {
+      const carpools = await getCarpools(eventId, direction);
+      setCarpoolsByDirection((prev) => ({ ...prev, [direction]: carpools }));
+    } catch {
+      setError('配車結果の取得に失敗しました');
+    }
+  }, [eventId, direction]);
+
   return {
     direction,
     setDirection,
@@ -79,5 +93,6 @@ export function useCarpoolDirection(
     carpoolsByDirection,
     loading,
     error,
+    refresh,
   };
 }

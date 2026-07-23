@@ -1,3 +1,4 @@
+import type { PointerEvent as ReactPointerEvent } from 'react';
 import { CarIcon, MapPinIcon } from '../icons';
 import { PersonCard, type PersonCardData } from './PersonCard';
 
@@ -21,6 +22,14 @@ export interface CarCardData {
 
 interface CarCardProps {
   car: CarCardData;
+  /** ドラッグ中、この車カードがドロップ可能な対象として強調表示されるかどうか（T43） */
+  isDropTarget?: boolean;
+  /** ドラッグ中の人カードのID（自身のカード内であれば薄く表示するために使用。T43） */
+  draggingPersonId?: string | null;
+  /** 人カードのonPointerDownハンドラーを生成する（T43。長押しドラッグ開始の検知に使用） */
+  onPersonPointerDown?: (
+    person: PersonCardData
+  ) => (event: ReactPointerEvent<HTMLDivElement>) => void;
 }
 
 /**
@@ -36,16 +45,24 @@ function toCarName(familyName: string): string {
  * 定員を超過している場合はカード枠を赤色で表示する。
  * ドラッグ＆ドロップ動作はT43で実施する。
  */
-export function CarCard({ car }: CarCardProps) {
+export function CarCard({
+  car,
+  isDropTarget = false,
+  draggingPersonId = null,
+  onPersonPointerDown,
+}: CarCardProps) {
   const occupantCount = car.members.length + 1;
   const isOverCapacity = occupantCount > car.capacity;
 
   return (
     <section
+      data-drop-zone-id={car.id}
       style={{
-        border: `1px solid ${isOverCapacity ? 'crimson' : 'var(--border)'}`,
+        border: `1px solid ${isOverCapacity ? 'crimson' : isDropTarget ? 'var(--accent)' : 'var(--border)'}`,
         borderRadius: '8px',
         overflow: 'hidden',
+        background: isDropTarget ? 'var(--accent-bg)' : undefined,
+        boxShadow: isDropTarget ? '0 0 0 2px var(--accent)' : undefined,
       }}
     >
       <div
@@ -123,7 +140,11 @@ export function CarCard({ car }: CarCardProps) {
       >
         {car.members.map((member) => (
           <li key={member.id} style={{ borderTop: '1px solid var(--border)' }}>
-            <PersonCard person={member} />
+            <PersonCard
+              person={member}
+              onPointerDown={onPersonPointerDown?.(member)}
+              isDragging={member.id === draggingPersonId}
+            />
           </li>
         ))}
       </ul>

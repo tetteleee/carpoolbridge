@@ -1,4 +1,6 @@
+import type { PointerEvent as ReactPointerEvent } from 'react';
 import { DragHandleIcon, MapPinIcon } from '../icons';
+import type { CarpoolMember } from '../../types/event';
 
 /**
  * 人カード1件分のデータ。
@@ -13,22 +15,30 @@ export interface PersonCardData {
   grade: string | null;
   /** 集合場所名 */
   pickupLocationName: string;
+  /** 元の乗車メンバー情報（ドラッグ＆ドロップによる移動時に、配車結果データを特定するために使用） */
+  member: CarpoolMember;
 }
 
 interface PersonCardProps {
   person: PersonCardData;
+  /** カードの長押しドラッグ開始を検知するためのポインター押下ハンドラー（T43） */
+  onPointerDown?: (event: ReactPointerEvent<HTMLDivElement>) => void;
+  /** このカードがドラッグ中かどうか（T43。ドラッグ中は薄く表示する） */
+  isDragging?: boolean;
 }
 
 /**
  * 配車画面（メイン）の人カード。
  * 未配車エリア・車カードのどちらの中でも同じ見た目・情報構成で表示する。
  * 学年の有無で子供・コーチを判定し、色分けで区別する。
+ * カード全体が長押しドラッグの起点となる（ドラッグハンドル部分に限定しない）。
  */
-export function PersonCard({ person }: PersonCardProps) {
+export function PersonCard({ person, onPointerDown, isDragging = false }: PersonCardProps) {
   const isCoach = person.grade === null;
 
   return (
     <div
+      onPointerDown={onPointerDown}
       style={{
         display: 'flex',
         alignItems: 'center',
@@ -38,6 +48,11 @@ export function PersonCard({ person }: PersonCardProps) {
         color: 'var(--text)',
         background: isCoach ? 'var(--coach-bg)' : 'var(--code-bg)',
         border: isCoach ? '1px solid var(--coach-border)' : 'none',
+        opacity: isDragging ? 0.4 : 1,
+        touchAction: onPointerDown ? 'none' : undefined,
+        userSelect: onPointerDown ? 'none' : undefined,
+        WebkitUserSelect: onPointerDown ? 'none' : undefined,
+        cursor: onPointerDown ? 'grab' : undefined,
       }}
     >
       <span
