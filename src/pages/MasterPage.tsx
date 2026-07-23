@@ -49,6 +49,7 @@ export function MasterPage() {
       style={{
         display: 'flex',
         flexDirection: 'column',
+        width: '100%',
         maxWidth: '480px',
         margin: '0 auto',
         boxSizing: 'border-box',
