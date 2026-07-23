@@ -1,6 +1,5 @@
 import { useState, type CSSProperties } from 'react';
 import type { Response } from '../../types/event';
-import { PencilIcon } from '../icons';
 
 interface DriverAndCapacitySectionProps {
   /** 対象家庭ID（DOM要素のid付与に使用） */
@@ -166,11 +165,10 @@ export function DriverAndCapacitySection({
         <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
           {isCapacityChanged && (
             <span
-              id={`capacity-changed-icon-${familyId}`}
-              style={{ color: 'var(--accent)', display: 'flex' }}
-              title="変更済み"
+              id={`capacity-changed-label-${familyId}`}
+              style={{ color: 'var(--accent)', fontSize: '11px', fontWeight: 700, whiteSpace: 'nowrap' }}
             >
-              <PencilIcon size={14} />
+              変更済み
             </span>
           )}
           <button
