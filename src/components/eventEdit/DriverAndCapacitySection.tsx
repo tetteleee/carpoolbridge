@@ -49,6 +49,21 @@ const choiceUnselectedStyle: CSSProperties = {
   fontWeight: 400,
 };
 
+const stepperButtonStyle: CSSProperties = {
+  minWidth: '44px',
+  minHeight: '44px',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  borderRadius: '6px',
+  border: '1px solid var(--border)',
+  background: 'transparent',
+  color: 'var(--text)',
+  fontSize: '16px',
+  fontFamily: 'var(--sans)',
+  cursor: 'pointer',
+};
+
 interface DriverChoiceButtonsProps {
   /** ボタン群のid付与に使用するid接頭辞 */
   idPrefix: string;
@@ -113,17 +128,14 @@ export function DriverAndCapacitySection({
   );
 
   const isCapacityChanged = capacityToday !== null;
+  const displayCapacity = capacityToday ?? vehicleCapacity;
 
-  const handleCapacityChange = (rawValue: string) => {
-    if (rawValue === '') {
-      setCapacityToday(null);
-      return;
-    }
-    const parsed = Number(rawValue);
-    if (Number.isNaN(parsed)) {
-      return;
-    }
-    setCapacityToday(parsed);
+  const handleDecrement = () => {
+    setCapacityToday(Math.max(0, displayCapacity - 1));
+  };
+
+  const handleIncrement = () => {
+    setCapacityToday(displayCapacity + 1);
   };
 
   return (
@@ -161,28 +173,42 @@ export function DriverAndCapacitySection({
               <PencilIcon size={14} />
             </span>
           )}
-          <input
-            id={`capacity-today-input-${familyId}`}
-            type="number"
-            min={0}
-            inputMode="numeric"
-            placeholder={String(vehicleCapacity)}
-            value={capacityToday === null ? '' : capacityToday}
-            onChange={(e) => handleCapacityChange(e.target.value)}
+          <button
+            id={`capacity-today-decrement-${familyId}`}
+            type="button"
+            aria-label="乗車可能人数を減らす"
+            disabled={displayCapacity <= 0}
+            onClick={handleDecrement}
             style={{
-              width: '56px',
-              padding: '4px 8px',
-              borderRadius: '6px',
-              border: '1px solid var(--border)',
+              ...stepperButtonStyle,
+              opacity: displayCapacity <= 0 ? 0.4 : 1,
+              cursor: displayCapacity <= 0 ? 'default' : 'pointer',
+            }}
+          >
+            －
+          </button>
+          <span
+            id={`capacity-today-value-${familyId}`}
+            style={{
+              minWidth: '24px',
+              textAlign: 'center',
               fontSize: '14px',
               fontFamily: 'var(--sans)',
               color: isCapacityChanged ? 'var(--text-h)' : 'var(--text)',
               fontWeight: isCapacityChanged ? 700 : 400,
-              background: 'transparent',
-              boxSizing: 'border-box',
-              textAlign: 'right',
             }}
-          />
+          >
+            {displayCapacity}
+          </span>
+          <button
+            id={`capacity-today-increment-${familyId}`}
+            type="button"
+            aria-label="乗車可能人数を増やす"
+            onClick={handleIncrement}
+            style={stepperButtonStyle}
+          >
+            ＋
+          </button>
           <span style={rowLabelStyle}>人</span>
         </div>
       </div>
