@@ -64,7 +64,7 @@
 - T24a_イベント編集回答入力画面_ルーティング追加 / 04_画面設計.md#4 画面遷移 / T24 / done
 - T25_車出し（行き/帰り）・乗車可能人数（capacityToday）入力 / 04_画面設計.md#7, 05_データ設計.md#8 capacityToday / T24 / done
 - T26_子供ごと参加・行き不要・帰り不要の3状態トグル / 04_画面設計.md#7, 05_データ設計.md#8 / T24 / done
-- T27_コーチ参加回答（coachName紐づく家庭のみ表示） / 04_画面設計.md#7, 02_要件定義.md#8, 05_データ設計.md#8 coachParticipating / T24 / not started
+- T27_コーチ参加回答（coachName紐づく家庭のみ表示） / 04_画面設計.md#7, 02_要件定義.md#8, 05_データ設計.md#8 coachParticipating / T24 / done
 - T28_備考入力（家庭単位） / 04_画面設計.md#7 / T24 / not started
 - T29_自動保存処理 / 04_画面設計.md#7 保存・全般仕様 / T25,T26,T27,T28 / not started
 - T30_「配車作成」ボタン＋配車再作成確認ダイアログ / 04_画面設計.md#7 配車再作成 / T29,T37 / not started

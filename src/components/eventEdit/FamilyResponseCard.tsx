@@ -4,6 +4,7 @@ import type { Child, Family } from '../../types/master';
 import { getSchoolGrade } from '../../utils/schoolGrade';
 import { HomeIcon, UserIcon } from '../icons';
 import { ChildResponseRow } from './ChildResponseRow';
+import { CoachResponseRow } from './CoachResponseRow';
 import { DriverAndCapacitySection } from './DriverAndCapacitySection';
 
 interface FamilyResponseCardProps {
@@ -162,11 +163,10 @@ export function FamilyResponseCard({
                   コーチ
                 </span>
               </span>
-              <div id={`coach-response-frame-${family.id}`} style={frameStyle}>
-                <span style={frameLabelStyle}>参加</span>
-                <span style={frameLabelStyle}>行きの配車不要</span>
-                <span style={frameLabelStyle}>帰りの配車不要</span>
-              </div>
+              <CoachResponseRow
+                familyId={family.id}
+                initialCoachParticipating={response?.coachParticipating}
+              />
             </div>
           </div>
         )}
