@@ -40,6 +40,7 @@ const memberBoxStyle: CSSProperties = {
   padding: '16px',
   borderRadius: '8px',
   background: 'var(--code-bg)',
+  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)',
   boxSizing: 'border-box',
 };
 
