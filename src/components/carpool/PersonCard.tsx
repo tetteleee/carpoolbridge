@@ -46,9 +46,10 @@ export function PersonCard({ person, onPointerDown, isDragging = false }: Person
         padding: '10px 12px',
         fontSize: '14px',
         color: 'var(--text)',
-        background: isCoach ? 'var(--coach-bg)' : 'var(--code-bg)',
-        border: isCoach ? '1px solid var(--coach-border)' : 'none',
-        opacity: isDragging ? 0.4 : 1,
+        background: isCoach ? 'var(--coach-bg)' : 'var(--child-bg)',
+        border: isCoach ? '1px solid var(--coach-border)' : '1px solid var(--child-border)',
+        borderLeft: isCoach ? '5px solid var(--coach-accent)' : '5px solid var(--child-accent)',
+        opacity: isDragging ? 'var(--drag-ghost-opacity)' : 1,
         // 縦スクロールはブラウザのネイティブ操作に任せ、長押し確定後のドラッグ中のみ
         // pointermove側でpreventDefault()してブラウザへのpan委譲を止める（useDragAndDrop.ts参照）
         touchAction: onPointerDown ? 'pan-y' : undefined,

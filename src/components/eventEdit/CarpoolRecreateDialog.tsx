@@ -90,7 +90,7 @@ export function CarpoolRecreateDialog({
               fontSize: '14px',
               fontFamily: 'var(--sans)',
               cursor: processing ? 'default' : 'pointer',
-              opacity: processing ? 0.6 : 1,
+              opacity: processing ? 'var(--disabled-opacity)' : 1,
             }}
           >
             キャンセル
@@ -108,7 +108,7 @@ export function CarpoolRecreateDialog({
               fontSize: '14px',
               fontFamily: 'var(--sans)',
               cursor: processing ? 'default' : 'pointer',
-              opacity: processing ? 0.6 : 1,
+              opacity: processing ? 'var(--disabled-opacity)' : 1,
             }}
           >
             {processing ? '再作成中...' : '再作成'}

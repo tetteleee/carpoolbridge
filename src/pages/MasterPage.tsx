@@ -88,7 +88,7 @@ export function MasterPage() {
         }}
       >
         {saveError && (
-          <p style={{ margin: 0, fontSize: '13px', color: 'crimson' }}>
+          <p style={{ margin: 0, fontSize: '13px', color: 'var(--negative)' }}>
             {saveError}
           </p>
         )}
@@ -105,7 +105,7 @@ export function MasterPage() {
             fontSize: '16px',
             fontFamily: 'var(--sans)',
             cursor: saving ? 'default' : 'pointer',
-            opacity: saving ? 0.6 : 1,
+            opacity: saving ? 'var(--disabled-opacity)' : 1,
             boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)',
           }}
         >

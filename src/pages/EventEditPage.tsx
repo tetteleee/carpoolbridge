@@ -196,7 +196,7 @@ export function EventEditPage() {
         }}
       >
         {error && (
-          <p style={{ margin: 0, fontSize: '13px', color: 'crimson' }}>
+          <p style={{ margin: 0, fontSize: '13px', color: 'var(--negative)' }}>
             {error}
           </p>
         )}
@@ -240,7 +240,7 @@ export function EventEditPage() {
                 style={{
                   margin: 0,
                   fontSize: '13px',
-                  color: carpoolMessage.isError ? 'crimson' : 'var(--text)',
+                  color: carpoolMessage.isError ? 'var(--negative)' : 'var(--text)',
                 }}
               >
                 {carpoolMessage.text}
@@ -289,7 +289,7 @@ export function EventEditPage() {
                   fontWeight: 700,
                   fontFamily: 'var(--sans)',
                   cursor: creatingCarpools ? 'default' : 'pointer',
-                  opacity: creatingCarpools ? 0.6 : 1,
+                  opacity: creatingCarpools ? 'var(--disabled-opacity)' : 1,
                 }}
               >
                 <CarIcon size={18} />

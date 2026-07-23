@@ -115,7 +115,7 @@ export function HomePage() {
       </div>
 
       {error && (
-        <p style={{ margin: 0, padding: '0 16px 16px', fontSize: '13px', color: 'crimson' }}>
+        <p style={{ margin: 0, padding: '0 16px 16px', fontSize: '13px', color: 'var(--negative)' }}>
           {error}
         </p>
       )}

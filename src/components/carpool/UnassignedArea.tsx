@@ -8,6 +8,8 @@ export type UnassignedPerson = PersonCardData;
 interface UnassignedAreaProps {
   /** 選択中タブ（行き／帰り）に応じた未配車の人一覧 */
   people: UnassignedPerson[];
+  /** ドラッグ中、このエリアがドロップ可能な対象として強調表示されるかどうか（T43） */
+  isDropTarget?: boolean;
   /** ドラッグ中の人カードのID（自身のエリア内であれば薄く表示するために使用。T43） */
   draggingPersonId?: string | null;
   /** 人カードのonPointerDownハンドラーを生成する（T43。長押しドラッグ開始の検知に使用） */
@@ -22,6 +24,7 @@ interface UnassignedAreaProps {
  */
 export function UnassignedArea({
   people,
+  isDropTarget = false,
   draggingPersonId = null,
   onPersonPointerDown,
 }: UnassignedAreaProps) {
@@ -33,9 +36,10 @@ export function UnassignedArea({
     <section
       data-drop-zone-id={UNASSIGNED_ZONE_ID}
       style={{
-        border: '1px dashed var(--border)',
+        border: isDropTarget ? '2px dashed var(--drop-target-border)' : '1px dashed var(--border)',
         borderRadius: '8px',
         overflow: 'hidden',
+        background: isDropTarget ? 'var(--drop-target-bg)' : undefined,
       }}
     >
       <h2

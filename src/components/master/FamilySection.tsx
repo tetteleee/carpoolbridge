@@ -286,7 +286,7 @@ export function FamilySection({ ref }: FamilySectionProps) {
       </h2>
 
       {error && (
-        <p style={{ margin: 0, fontSize: '13px', color: 'crimson' }}>
+        <p style={{ margin: 0, fontSize: '13px', color: 'var(--negative)' }}>
           {error}
         </p>
       )}

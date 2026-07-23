@@ -4,8 +4,19 @@
   --bg: #fff;
   --border: #e5e4e7;
   --code-bg: #f4f3ec;
-  --coach-bg: #edf0f5;
+  --panel-bg: #f4f3ec;
+
+  /* 役割カラー（子供・コーチ・保護者）。背景＋枠線＋左帯の3点セットで使う */
+  --child-bg: #f5ead8;
+  --child-border: #e6ddc8;
+  --child-accent: #b8823c;
+  --coach-bg: #e6ecf5;
   --coach-border: #d7dce3;
+  --coach-accent: #5b7290;
+  --parent-bg: #eee3f7;
+  --parent-border: #ddd2ea;
+  --parent-accent: #8a5aa8;
+
   --accent: #2563eb;
   --accent-bg: rgba(37, 99, 235, 0.08);
   --accent-border: rgba(37, 99, 235, 0.4);
@@ -19,13 +30,26 @@
   --shadow:
     rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
 
+  /* 無効化状態 */
+  --disabled-opacity: 0.6;
+
+  /* フォーカスリング */
+  --focus-ring: 2px solid var(--accent);
+
+  /* ドラッグ＆ドロップの視覚状態 */
+  --drag-ghost-opacity: 0.4;
+  --drop-target-bg: var(--accent-bg);
+  --drop-target-border: var(--accent);
+  --drop-invalid-bg: var(--negative-bg);
+  --drop-invalid-border: var(--negative);
+
   --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
   --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
   --mono: ui-monospace, Consolas, monospace;
 
   font: 18px/145% var(--sans);
   letter-spacing: 0.18px;
-  color-scheme: light dark;
+  color-scheme: light;
   color: var(--text);
   background: var(--bg);
   font-synthesis: none;
@@ -38,32 +62,14 @@
   }
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --coach-bg: #262a35;
-    --coach-border: #3a3f4d;
-    --accent: #60a5fa;
-    --accent-bg: rgba(96, 165, 250, 0.15);
-    --accent-border: rgba(96, 165, 250, 0.5);
-    --positive: #2dd4bf;
-    --positive-bg: rgba(45, 212, 191, 0.13);
-    --positive-border: rgba(45, 212, 191, 0.4);
-    --negative: #fb923c;
-    --negative-bg: rgba(251, 146, 60, 0.13);
-    --negative-border: rgba(251, 146, 60, 0.4);
-    --social-bg: rgba(47, 48, 58, 0.5);
-    --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
-  }
-
-  #social .button-icon {
-    filter: invert(1) brightness(2);
-  }
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[role='switch']:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: 2px;
 }
 
 #root {

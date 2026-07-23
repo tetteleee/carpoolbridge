@@ -58,11 +58,14 @@ export function CarCard({
     <section
       data-drop-zone-id={car.id}
       style={{
-        border: `1px solid ${isOverCapacity ? 'crimson' : isDropTarget ? 'var(--accent)' : 'var(--border)'}`,
+        border: isOverCapacity
+          ? '1px solid var(--negative-border)'
+          : isDropTarget
+            ? '2px dashed var(--drop-target-border)'
+            : '1px solid var(--border)',
         borderRadius: '8px',
         overflow: 'hidden',
-        background: isDropTarget ? 'var(--accent-bg)' : undefined,
-        boxShadow: isDropTarget ? '0 0 0 2px var(--accent)' : undefined,
+        background: isDropTarget ? 'var(--drop-target-bg)' : undefined,
       }}
     >
       <div
@@ -96,7 +99,7 @@ export function CarCard({
             style={{
               fontSize: '14px',
               fontWeight: 700,
-              color: isOverCapacity ? 'crimson' : 'var(--text-h)',
+              color: isOverCapacity ? 'var(--negative)' : 'var(--text-h)',
             }}
           >
             {occupantCount}/{car.capacity}

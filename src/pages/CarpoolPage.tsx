@@ -152,7 +152,7 @@ export function CarpoolPage() {
         }}
       >
         {error && (
-          <p style={{ margin: 0, fontSize: '13px', color: 'crimson' }}>
+          <p style={{ margin: 0, fontSize: '13px', color: 'var(--negative)' }}>
             {error}
           </p>
         )}
@@ -170,6 +170,7 @@ export function CarpoolPage() {
             <>
               <UnassignedArea
                 people={unassignedPeople}
+                isDropTarget={dragState !== null && hoveredZoneId === UNASSIGNED_ZONE_ID}
                 draggingPersonId={dragState?.personId ?? null}
                 onPersonPointerDown={(person) =>
                   createPointerDownHandler(person, UNASSIGNED_ZONE_ID)

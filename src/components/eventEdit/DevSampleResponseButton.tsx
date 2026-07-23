@@ -86,7 +86,7 @@ export function DevSampleResponseButton({
           style={{
             margin: 0,
             fontSize: '13px',
-            color: message.isError ? 'crimson' : 'var(--text)',
+            color: message.isError ? 'var(--negative)' : 'var(--text)',
           }}
         >
           {message.text}
@@ -99,9 +99,9 @@ export function DevSampleResponseButton({
         style={{
           padding: '10px 20px',
           borderRadius: '6px',
-          border: '1px solid crimson',
+          border: '1px solid var(--negative-border)',
           background: 'transparent',
-          color: 'crimson',
+          color: 'var(--negative)',
           fontSize: '14px',
           fontFamily: 'var(--sans)',
           cursor: 'pointer',
@@ -173,7 +173,7 @@ export function DevSampleResponseButton({
                   fontSize: '14px',
                   fontFamily: 'var(--sans)',
                   cursor: running ? 'default' : 'pointer',
-                  opacity: running ? 0.6 : 1,
+                  opacity: running ? 'var(--disabled-opacity)' : 1,
                 }}
               >
                 キャンセル
@@ -186,12 +186,12 @@ export function DevSampleResponseButton({
                   padding: '10px 20px',
                   borderRadius: '6px',
                   border: 'none',
-                  background: 'crimson',
+                  background: 'var(--negative)',
                   color: '#fff',
                   fontSize: '14px',
                   fontFamily: 'var(--sans)',
                   cursor: running ? 'default' : 'pointer',
-                  opacity: running ? 0.6 : 1,
+                  opacity: running ? 'var(--disabled-opacity)' : 1,
                 }}
               >
                 {running ? '実行中...' : '実行'}

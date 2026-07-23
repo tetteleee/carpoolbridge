@@ -46,17 +46,20 @@ const memberBoxBaseStyle: CSSProperties = {
   boxSizing: 'border-box',
 };
 
-/** 子供カードの内側ボックス（家カードの黒背景より一段明るいグレー） */
+/** 子供カードの内側ボックス（役割色：背景＋枠線＋左帯） */
 const childMemberBoxStyle: CSSProperties = {
   ...memberBoxBaseStyle,
-  background: 'var(--code-bg)',
+  background: 'var(--child-bg)',
+  border: '1px solid var(--child-border)',
+  borderLeft: '5px solid var(--child-accent)',
 };
 
-/** コーチカードの内側ボックス（子供カードと区別するため、選択色とは別のグレー系トーンを使用） */
+/** コーチカードの内側ボックス（役割色：背景＋枠線＋左帯） */
 const coachMemberBoxStyle: CSSProperties = {
   ...memberBoxBaseStyle,
   background: 'var(--coach-bg)',
   border: '1px solid var(--coach-border)',
+  borderLeft: '5px solid var(--coach-accent)',
 };
 
 /**
