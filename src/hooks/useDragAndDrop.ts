@@ -4,7 +4,7 @@ import type { CarpoolMember } from '../types/event';
 import type { PersonCardData } from '../components/carpool/PersonCard';
 
 /** 長押し判定の待機時間（ミリ秒）。この時間ポインターを動かさず押し続けるとドラッグを開始する */
-const LONG_PRESS_MS = 400;
+const LONG_PRESS_MS = 150;
 /** 長押し確定前にこの距離（px）を超えて指が動いた場合はタップ・スクロール操作とみなしキャンセルする */
 const MOVE_CANCEL_THRESHOLD_PX = 10;
 
