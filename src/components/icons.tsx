@@ -127,6 +127,17 @@ export function EditIcon({ size = 18 }: IconProps) {
   );
 }
 
+/** ドラッグハンドル（並び替え可能を示す）アイコン */
+export function DragHandleIcon({ size = 18 }: IconProps) {
+  return (
+    <svg {...baseProps(size)}>
+      <line x1="4" y1="7" x2="20" y2="7" />
+      <line x1="4" y1="12" x2="20" y2="12" />
+      <line x1="4" y1="17" x2="20" y2="17" />
+    </svg>
+  );
+}
+
 /** 共有アイコン */
 export function ShareIcon({ size = 18 }: IconProps) {
   return (

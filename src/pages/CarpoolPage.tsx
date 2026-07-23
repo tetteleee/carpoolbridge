@@ -1,6 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { OperationArea } from '../components/carpool/OperationArea';
+import {
+  UnassignedArea,
+  type UnassignedPerson,
+} from '../components/carpool/UnassignedArea';
 import { useCarpoolDirection } from '../hooks/useCarpoolDirection';
 import { getEvent } from '../services/event/eventService';
 import { formatDateWithWeekday } from '../utils/date';
@@ -14,7 +18,7 @@ const DIRECTION_TABS: { direction: Direction; label: string }[] = [
 /**
  * 配車画面（メイン）。
  * 「行き」「帰り」タブで選択中のdirectionに応じて配車結果を切り替える。
- * 未配車一覧・車カード・人カードなどの表示自体はT40〜T42で実装する。
+ * 車カード・人カードなどの表示自体はT41〜T42で実装する。
  */
 export function CarpoolPage() {
   const { eventId } = useParams<{ eventId: string }>();
@@ -34,6 +38,10 @@ export function CarpoolPage() {
 
   // LINE共有画面への遷移先接続はT46aで行う
   const handleShareClick = (_shareDirection: Direction) => {};
+
+  // 未配車データの取得・算出処理は対象設計書に規定がないためT40の対象外とし、
+  // 呼び出し元（本コンポーネント）から未配車一覧データを渡す前提とする
+  const unassignedPeople: UnassignedPerson[] = [];
 
   return (
     <div
@@ -131,9 +139,12 @@ export function CarpoolPage() {
           </p>
         ) : (
           !error && (
-            <p style={{ margin: 0, fontSize: '14px', color: 'var(--text)' }}>
-              配車 {carpools.length}台
-            </p>
+            <>
+              <UnassignedArea people={unassignedPeople} />
+              <p style={{ margin: 0, fontSize: '14px', color: 'var(--text)' }}>
+                配車 {carpools.length}台
+              </p>
+            </>
           )
         )}
       </div>
