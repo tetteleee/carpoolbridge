@@ -69,22 +69,28 @@ interface DriverChoiceButtonsProps {
   /** 現在の選択値。未選択はnull */
   value: boolean | null;
   onChange: (value: boolean) => void;
+  /** 乗車可能人数0人のため[可]を選択不可にするか */
+  possibleDisabled: boolean;
 }
 
 /**
  * 車出し可否の[可][不可]2択ボタン。
+ * 乗車可能人数が0人の場合、[可]は選択不可にする（既に選択済みの場合は選択状態を維持したまま操作不可にする）。
  */
-function DriverChoiceButtons({ idPrefix, value, onChange }: DriverChoiceButtonsProps) {
+function DriverChoiceButtons({ idPrefix, value, onChange, possibleDisabled }: DriverChoiceButtonsProps) {
   return (
     <div style={{ display: 'flex', gap: '6px' }}>
       <button
         id={`${idPrefix}-possible`}
         type="button"
         aria-pressed={value === true}
+        disabled={possibleDisabled}
         onClick={() => onChange(true)}
         style={{
           ...choiceButtonBaseStyle,
           ...(value === true ? choiceSelectedStyle : choiceUnselectedStyle),
+          opacity: possibleDisabled ? 0.4 : 1,
+          cursor: possibleDisabled ? 'default' : 'pointer',
         }}
       >
         ○
@@ -128,6 +134,7 @@ export function DriverAndCapacitySection({
 
   const isCapacityChanged = capacityToday !== null;
   const displayCapacity = capacityToday ?? vehicleCapacity;
+  const capacityIsZero = displayCapacity <= 0;
 
   const handleDecrement = () => {
     setCapacityToday(Math.max(0, displayCapacity - 1));
@@ -148,6 +155,7 @@ export function DriverAndCapacitySection({
           idPrefix={`driver-outward-${familyId}`}
           value={driverOutward}
           onChange={setDriverOutward}
+          possibleDisabled={capacityIsZero}
         />
       </div>
 
@@ -157,6 +165,7 @@ export function DriverAndCapacitySection({
           idPrefix={`driver-return-${familyId}`}
           value={driverReturn}
           onChange={setDriverReturn}
+          possibleDisabled={capacityIsZero}
         />
       </div>
 
