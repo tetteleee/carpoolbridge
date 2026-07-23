@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
+import { OperationArea } from '../components/carpool/OperationArea';
 import { useCarpoolDirection } from '../hooks/useCarpoolDirection';
 import { getEvent } from '../services/event/eventService';
 import { formatDateWithWeekday } from '../utils/date';
@@ -27,6 +28,12 @@ export function CarpoolPage() {
     }
     getEvent(eventId).then(setEvent);
   }, [eventId]);
+
+  // イベント編集画面への遷移先接続はT39aで行う
+  const handleEditAnswersClick = () => {};
+
+  // LINE共有画面への遷移先接続はT46aで行う
+  const handleShareClick = (_shareDirection: Direction) => {};
 
   return (
     <div
@@ -88,6 +95,14 @@ export function CarpoolPage() {
               </button>
             );
           })}
+        </div>
+
+        <div style={{ marginTop: '12px' }}>
+          <OperationArea
+            direction={direction}
+            onEditAnswers={handleEditAnswersClick}
+            onShare={handleShareClick}
+          />
         </div>
       </div>
 

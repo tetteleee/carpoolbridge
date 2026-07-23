@@ -116,3 +116,26 @@ export function ChevronDownIcon({ size = 18 }: IconProps) {
     </svg>
   );
 }
+
+/** 編集（鉛筆）アイコン */
+export function EditIcon({ size = 18 }: IconProps) {
+  return (
+    <svg {...baseProps(size)}>
+      <path d="M4 20h4L18.5 9.5a2 2 0 0 0 0-2.8l-1.2-1.2a2 2 0 0 0-2.8 0L4 16v4z" />
+      <line x1="13" y1="6.5" x2="17.5" y2="11" />
+    </svg>
+  );
+}
+
+/** 共有アイコン */
+export function ShareIcon({ size = 18 }: IconProps) {
+  return (
+    <svg {...baseProps(size)}>
+      <circle cx="18" cy="5" r="2.5" />
+      <circle cx="6" cy="12" r="2.5" />
+      <circle cx="18" cy="19" r="2.5" />
+      <line x1="8.2" y1="10.8" x2="15.8" y2="6.2" />
+      <line x1="8.2" y1="13.2" x2="15.8" y2="17.8" />
+    </svg>
+  );
+}
