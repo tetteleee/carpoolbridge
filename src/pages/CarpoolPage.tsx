@@ -6,6 +6,7 @@ import { OperationArea } from '../components/carpool/OperationArea';
 import { UnassignedArea } from '../components/carpool/UnassignedArea';
 import { useCarpoolDirection } from '../hooks/useCarpoolDirection';
 import { useCarpoolBoardData } from '../hooks/useCarpoolBoardData';
+import { useCarpoolValidation } from '../hooks/useCarpoolValidation';
 import { useDragAndDrop, type DropResult } from '../hooks/useDragAndDrop';
 import { getEvent } from '../services/event/eventService';
 import { moveCarpoolMember, UNASSIGNED_ZONE_ID } from '../services/carpool/carpoolMember';
@@ -40,6 +41,10 @@ export function CarpoolPage() {
     error: boardDataError,
   } = useCarpoolBoardData(eventId, direction, carpools);
   const [moveError, setMoveError] = useState<string | null>(null);
+  const { hasWarning, message: validationMessage } = useCarpoolValidation(
+    carCards,
+    unassignedPeople
+  );
 
   const loading = carpoolsLoading || boardDataLoading;
   const error = carpoolsError ?? boardDataError ?? moveError;
@@ -140,6 +145,25 @@ export function CarpoolPage() {
             onShare={handleShareClick}
           />
         </div>
+
+        {!loading && !error && hasWarning && (
+          <p
+            role="alert"
+            style={{
+              margin: '12px 0 0',
+              padding: '8px 12px',
+              borderRadius: '6px',
+              border: '1px solid var(--negative-border)',
+              background: 'var(--negative-bg)',
+              color: 'var(--negative)',
+              fontSize: '13px',
+              fontWeight: 700,
+              fontFamily: 'var(--sans)',
+            }}
+          >
+            ⚠ {validationMessage}
+          </p>
+        )}
       </div>
 
       <div
