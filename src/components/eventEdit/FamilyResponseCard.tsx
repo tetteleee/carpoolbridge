@@ -49,11 +49,11 @@ const childMemberBoxStyle: CSSProperties = {
   background: 'var(--code-bg)',
 };
 
-/** コーチカードの内側ボックス（子供カードと区別するため、アクセントカラーを淡く使用） */
+/** コーチカードの内側ボックス（子供カードと区別するため、選択色とは別のグレー系トーンを使用） */
 const coachMemberBoxStyle: CSSProperties = {
   ...memberBoxBaseStyle,
-  background: 'var(--accent-bg)',
-  border: '1px solid var(--accent-border)',
+  background: 'var(--coach-bg)',
+  border: '1px solid var(--coach-border)',
 };
 
 /**
