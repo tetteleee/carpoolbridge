@@ -25,6 +25,9 @@ dist-ssr/
 *serviceAccountKey*.json
 *service-account*.json
 
+# 個人情報に近いローカル専用テストデータ（誤コミット防止）
+src/services/dev/seedData.local.json
+
 # Playwright
 /playwright-report/
 /test-results/

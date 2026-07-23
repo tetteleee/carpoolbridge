@@ -9,7 +9,8 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test:e2e": "playwright test",
-    "seed": "tsx scripts/seed/seed.ts"
+    "seed": "tsx scripts/seed/seed.ts",
+    "seed:local": "SEED_SOURCE=local tsx scripts/seed/seed.ts"
   },
   "dependencies": {
     "firebase": "^12.16.0",
