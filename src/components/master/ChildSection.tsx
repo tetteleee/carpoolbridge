@@ -25,7 +25,7 @@ const inputStyle = {
   padding: '8px 10px',
   borderRadius: '6px',
   border: '1px solid var(--border)',
-  fontSize: '15px',
+  fontSize: '16px',
   fontFamily: 'var(--sans)',
   color: 'var(--text-h)',
   background: 'transparent',

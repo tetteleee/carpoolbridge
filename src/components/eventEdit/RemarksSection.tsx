@@ -26,7 +26,7 @@ const textareaStyle: CSSProperties = {
   padding: '6px 8px',
   borderRadius: '6px',
   border: '1px solid var(--border)',
-  fontSize: '14px',
+  fontSize: '16px',
   fontFamily: 'var(--sans)',
   color: 'var(--text-h)',
   background: 'transparent',
