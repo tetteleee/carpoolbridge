@@ -44,7 +44,7 @@ interface UseDragAndDropResult {
   createPointerDownHandler: (
     person: PersonCardData,
     sourceZoneId: string
-  ) => (event: ReactPointerEvent<HTMLDivElement>) => void;
+  ) => (event: ReactPointerEvent<Element>) => void;
 }
 
 interface ActiveDrag {
@@ -175,7 +175,7 @@ export function useDragAndDrop({ onDrop }: UseDragAndDropOptions): UseDragAndDro
 
   const createPointerDownHandler =
     (person: PersonCardData, sourceZoneId: string) =>
-    (event: ReactPointerEvent<HTMLDivElement>) => {
+    (event: ReactPointerEvent<Element>) => {
       if (event.pointerType === 'mouse' && event.button !== 0) {
         return;
       }

@@ -22,7 +22,7 @@ export interface PersonCardData {
 interface PersonCardProps {
   person: PersonCardData;
   /** カードの長押しドラッグ開始を検知するためのポインター押下ハンドラー（T43） */
-  onPointerDown?: (event: ReactPointerEvent<HTMLDivElement>) => void;
+  onPointerDown?: (event: ReactPointerEvent<Element>) => void;
   /** このカードがドラッグ中かどうか（T43。ドラッグ中は薄く表示する） */
   isDragging?: boolean;
 }
@@ -49,7 +49,7 @@ export function PersonCard({ person, onPointerDown, isDragging = false }: Person
     onPointerDown(event);
   };
 
-  const handleHandlePointerDown = (event: ReactPointerEvent<HTMLSpanElement>) => {
+  const handleHandlePointerDown = (event: ReactPointerEvent<Element>) => {
     if (!onPointerDown || event.pointerType === 'mouse') {
       return;
     }

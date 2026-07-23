@@ -15,7 +15,7 @@ interface UnassignedAreaProps {
   /** 人カードのonPointerDownハンドラーを生成する（T43。長押しドラッグ開始の検知に使用） */
   onPersonPointerDown?: (
     person: PersonCardData
-  ) => (event: ReactPointerEvent<HTMLDivElement>) => void;
+  ) => (event: ReactPointerEvent<Element>) => void;
 }
 
 /**
