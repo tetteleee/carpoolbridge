@@ -6,6 +6,7 @@ import { HomeIcon, UserIcon } from '../icons';
 import { ChildResponseRow } from './ChildResponseRow';
 import { CoachResponseRow } from './CoachResponseRow';
 import { DriverAndCapacitySection } from './DriverAndCapacitySection';
+import { RemarksSection } from './RemarksSection';
 
 interface FamilyResponseCardProps {
   /** 対象家庭 */
@@ -15,21 +16,6 @@ interface FamilyResponseCardProps {
   /** 対象家庭の既存回答（未回答の場合はundefined） */
   response: Response | undefined;
 }
-
-const frameStyle: CSSProperties = {
-  display: 'flex',
-  flexDirection: 'column',
-  gap: '4px',
-  padding: '10px 12px',
-  borderRadius: '10px',
-  border: '1px dashed var(--border)',
-  boxSizing: 'border-box',
-};
-
-const frameLabelStyle: CSSProperties = {
-  fontSize: '12px',
-  color: 'var(--text)',
-};
 
 const dividerStyle: CSSProperties = {
   border: 'none',
@@ -47,8 +33,8 @@ function formatGradeLabel(schoolEntryYear: number): string {
 
 /**
  * イベント編集（回答入力）画面の家庭カード。
- * 家庭名・所属する子供の一覧（名前・学年）、車出し・乗車可能人数（T25）の入力欄を表示するとともに、
- * 子供ごとの回答（T26）・コーチ参加回答（T27）・備考（T28）の入力欄を組み込むための表示領域（枠）を用意する。
+ * 家庭名・所属する子供の一覧（名前・学年）、車出し・乗車可能人数（T25）、
+ * 子供ごとの回答（T26）・コーチ参加回答（T27）・備考（T28）の入力欄を表示する。
  * コーチ参加回答の枠は、家庭にコーチが紐づく場合（coachNameが設定されている場合）のみ表示する。
  */
 export function FamilyResponseCard({
@@ -174,9 +160,7 @@ export function FamilyResponseCard({
 
       <hr style={dividerStyle} />
 
-      <div id={`remarks-frame-${family.id}`} style={frameStyle}>
-        <span style={frameLabelStyle}>備考</span>
-      </div>
+      <RemarksSection familyId={family.id} initialRemarks={response?.remarks} />
     </section>
   );
 }
