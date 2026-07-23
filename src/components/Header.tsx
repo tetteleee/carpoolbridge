@@ -1,96 +1,92 @@
-import type { ReactNode } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CarIcon, ChevronLeftIcon } from './icons';
+import { BaseballIcon, ChevronLeftIcon } from './icons';
 
 interface HeaderProps {
   /** 画面タイトル。長い場合は1行で省略表示される */
   title: string;
-  /** ルート画面（ホーム）のみ指定。指定時はタイトル行の上にブランドバッジを表示する */
-  badge?: string;
+  /** ルート画面（ホーム）のみ指定。指定時はタイトル左にアプリアイコン（野球ボール）を表示する */
+  showAppIcon?: boolean;
   /** サブ画面のみ指定。指定時はタイトル左に戻るボタン（アイコンのみ）を表示する */
   backTo?: string;
   /** タイトル行右側に表示する任意要素（件数チップなど） */
   trailing?: ReactNode;
 }
 
+/** 戻るボタン・アプリアイコンで共通の円形ボタンスタイル（タップしやすい44px角） */
+const iconButtonStyle: CSSProperties = {
+  flexShrink: 0,
+  width: '44px',
+  height: '44px',
+  padding: 0,
+  borderRadius: '999px',
+  border: 'none',
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+};
+
 /**
- * 全画面共通のヘッダー本体（バッジ or 戻るボタン＋タイトル＋任意の右側要素）。
+ * 全画面共通のヘッダー本体（アプリアイコン or 戻るボタン＋タイトル＋任意の右側要素）。
  * position: sticky や padding、border-bottomなど外枠のスタイルは呼び出し側で用意する。
  */
-export function Header({ title, badge, backTo, trailing }: HeaderProps) {
+export function Header({ title, showAppIcon, backTo, trailing }: HeaderProps) {
   const navigate = useNavigate();
 
   return (
-    <>
-      {badge && (
-        <span
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '10px',
+      }}
+    >
+      {backTo && (
+        <button
+          type="button"
+          onClick={() => navigate(backTo)}
+          aria-label="戻る"
           style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '6px',
-            padding: '4px 10px',
-            borderRadius: '999px',
+            ...iconButtonStyle,
+            background: 'var(--code-bg)',
+            color: 'var(--text-h)',
+            cursor: 'pointer',
+          }}
+        >
+          <ChevronLeftIcon size={20} />
+        </button>
+      )}
+      {showAppIcon && !backTo && (
+        <span
+          aria-hidden="true"
+          style={{
+            ...iconButtonStyle,
             background: 'var(--accent-bg)',
             color: 'var(--accent)',
-            fontSize: '12px',
-            fontWeight: 600,
           }}
         >
-          <CarIcon size={14} />
-          {badge}
+          <BaseballIcon size={20} />
         </span>
       )}
-      <div
+      <h1
         style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '10px',
-          marginTop: badge ? '10px' : 0,
+          margin: 0,
+          flex: 1,
+          minWidth: 0,
+          fontSize: '20px',
+          fontWeight: 700,
+          letterSpacing: '0.015em',
+          color: 'var(--text-h)',
+          textAlign: 'left',
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
         }}
       >
-        {backTo && (
-          <button
-            type="button"
-            onClick={() => navigate(backTo)}
-            aria-label="戻る"
-            style={{
-              flexShrink: 0,
-              width: '32px',
-              height: '32px',
-              padding: 0,
-              borderRadius: '999px',
-              border: 'none',
-              background: 'var(--code-bg)',
-              color: 'var(--text-h)',
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-            }}
-          >
-            <ChevronLeftIcon size={16} />
-          </button>
-        )}
-        <h1
-          style={{
-            margin: 0,
-            flex: 1,
-            minWidth: 0,
-            fontSize: '20px',
-            fontWeight: 700,
-            letterSpacing: '0.015em',
-            color: 'var(--text-h)',
-            textAlign: 'left',
-            whiteSpace: 'nowrap',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-          }}
-        >
-          {title}
-        </h1>
-        {trailing}
-      </div>
-    </>
+        {title}
+      </h1>
+      {trailing}
+    </div>
   );
 }
 

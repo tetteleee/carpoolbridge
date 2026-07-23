@@ -59,7 +59,7 @@ export function HomePage() {
       >
         <Header
           title="イベント一覧"
-          badge="配車アシスタント"
+          showAppIcon
           trailing={<HeaderChip>全{events.length}件</HeaderChip>}
         />
       </div>

@@ -99,6 +99,21 @@ export function CarIcon({ size = 18 }: IconProps) {
   );
 }
 
+/** 配車アシスタント（野球ボール）アイコン */
+export function BaseballIcon({ size = 18 }: IconProps) {
+  return (
+    <svg {...baseProps(size)}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M7 5.5c2.3 2 3.5 4.2 3.5 6.5S9.3 16.5 7 18.5" />
+      <path d="M17 5.5c-2.3 2-3.5 4.2-3.5 6.5s1.2 4.5 3.5 6.5" />
+      <line x1="8.6" y1="8" x2="10.4" y2="8.7" />
+      <line x1="8.6" y1="16" x2="10.4" y2="15.3" />
+      <line x1="15.4" y1="8" x2="13.6" y2="8.7" />
+      <line x1="15.4" y1="16" x2="13.6" y2="15.3" />
+    </svg>
+  );
+}
+
 /** 右向きシェブロン（詳細遷移を示す）アイコン */
 export function ChevronRightIcon({ size = 18 }: IconProps) {
   return (
