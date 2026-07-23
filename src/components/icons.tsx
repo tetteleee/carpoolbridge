@@ -99,6 +99,16 @@ export function CarIcon({ size = 18 }: IconProps) {
   );
 }
 
+/** 変更済みアイコン（鉛筆） */
+export function PencilIcon({ size = 18 }: IconProps) {
+  return (
+    <svg {...baseProps(size)}>
+      <path d="M4 20l1-4.5L15.5 5 19 8.5 8.5 19 4 20z" />
+      <path d="M13.5 6.5 17.5 10.5" />
+    </svg>
+  );
+}
+
 /** 右向きシェブロン（詳細遷移を示す）アイコン */
 export function ChevronRightIcon({ size = 18 }: IconProps) {
   return (

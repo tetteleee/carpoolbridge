@@ -1,13 +1,17 @@
 import type { CSSProperties } from 'react';
+import type { Response } from '../../types/event';
 import type { Child, Family } from '../../types/master';
 import { getSchoolGrade } from '../../utils/schoolGrade';
 import { HomeIcon, UserIcon } from '../icons';
+import { DriverAndCapacitySection } from './DriverAndCapacitySection';
 
 interface FamilyResponseCardProps {
   /** 対象家庭 */
   family: Family;
   /** この家庭に属する有効な子供一覧 */
   childList: Child[];
+  /** 対象家庭の既存回答（未回答の場合はundefined） */
+  response: Response | undefined;
 }
 
 const frameStyle: CSSProperties = {
@@ -41,12 +45,15 @@ function formatGradeLabel(schoolEntryYear: number): string {
 
 /**
  * イベント編集（回答入力）画面の家庭カード。
- * 家庭名・所属する子供の一覧（名前・学年）を表示するとともに、
- * 車出し・乗車可能人数（T25）・子供ごとの回答（T26）・コーチ参加回答（T27）・
- * 備考（T28）の入力欄を組み込むための表示領域（枠）を用意する。
+ * 家庭名・所属する子供の一覧（名前・学年）、車出し・乗車可能人数（T25）の入力欄を表示するとともに、
+ * 子供ごとの回答（T26）・コーチ参加回答（T27）・備考（T28）の入力欄を組み込むための表示領域（枠）を用意する。
  * コーチ参加回答の枠は、家庭にコーチが紐づく場合（coachNameが設定されている場合）のみ表示する。
  */
-export function FamilyResponseCard({ family, childList }: FamilyResponseCardProps) {
+export function FamilyResponseCard({
+  family,
+  childList,
+  response,
+}: FamilyResponseCardProps) {
   const hasCoach = family.coachName !== null;
 
   return (
@@ -78,11 +85,11 @@ export function FamilyResponseCard({ family, childList }: FamilyResponseCardProp
         {family.familyName}
       </h2>
 
-      <div id={`drive-offer-frame-${family.id}`} style={frameStyle}>
-        <span style={frameLabelStyle}>車出し（行き）</span>
-        <span style={frameLabelStyle}>車出し（帰り）</span>
-        <span style={frameLabelStyle}>乗車可能人数</span>
-      </div>
+      <DriverAndCapacitySection
+        familyId={family.id}
+        vehicleCapacity={family.vehicleCapacity}
+        initialResponse={response}
+      />
 
       <hr style={dividerStyle} />
 

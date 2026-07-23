@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { FamilyResponseCard } from '../components/eventEdit/FamilyResponseCard';
 import { getEvent } from '../services/event/eventService';
@@ -12,10 +12,9 @@ import type { Child, Family } from '../types/master';
 /**
  * イベント編集（回答入力）画面。
  * 対象イベントに関わる有効な家庭を家庭単位のカードで一覧表示する。
- * カード内の各入力項目（車出し・乗車可能人数・子供ごとの回答・コーチ参加回答・備考）の
- * 入力処理自体はT25〜T28で実装するため、本画面では表示領域（枠）の用意とデータ取得のみを行う。
- * 既存回答（Response）はT25〜T28が初期値として利用できるよう取得のみ行い、
- * 本画面では表示に用いない。
+ * 車出し・乗車可能人数の入力欄（T25）は実装済みで、既存回答（Response）を初期値として渡す。
+ * 子供ごとの回答（T26）・コーチ参加回答（T27）・備考（T28）は
+ * 表示領域（枠）の用意とデータ取得のみを行う。
  */
 export function EventEditPage() {
   const { eventId } = useParams<{ eventId: string }>();
@@ -26,7 +25,9 @@ export function EventEditPage() {
   >({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const responsesByFamilyIdRef = useRef<Record<string, Response>>({});
+  const [responsesByFamilyId, setResponsesByFamilyId] = useState<
+    Record<string, Response>
+  >({});
 
   useEffect(() => {
     if (!eventId) {
@@ -51,8 +52,10 @@ export function EventEditPage() {
         });
         setChildrenByFamilyId(childrenMap);
 
-        responsesByFamilyIdRef.current = Object.fromEntries(
-          responsesData.map(({ familyId, ...response }) => [familyId, response])
+        setResponsesByFamilyId(
+          Object.fromEntries(
+            responsesData.map(({ familyId, ...response }) => [familyId, response])
+          )
         );
       })
       .catch(() => setError('データの取得に失敗しました'))
@@ -127,6 +130,7 @@ export function EventEditPage() {
               key={family.id}
               family={family}
               childList={childrenByFamilyId[family.id] ?? []}
+              response={responsesByFamilyId[family.id]}
             />
           ))
         )}

@@ -62,7 +62,7 @@
 
 - T24_家庭カード一覧のレイアウト・データ取得 / 04_画面設計.md#7 / T19,T11,T12 / done
 - T24a_イベント編集回答入力画面_ルーティング追加 / 04_画面設計.md#4 画面遷移 / T24 / done
-- T25_車出し（行き/帰り）・乗車可能人数（capacityToday）入力 / 04_画面設計.md#7, 05_データ設計.md#8 capacityToday / T24 / not started
+- T25_車出し（行き/帰り）・乗車可能人数（capacityToday）入力 / 04_画面設計.md#7, 05_データ設計.md#8 capacityToday / T24 / done
 - T26_子供ごと参加・行き不要・帰り不要の3状態トグル / 04_画面設計.md#7, 05_データ設計.md#8 / T24 / not started
 - T27_コーチ参加回答（coachName紐づく家庭のみ表示） / 04_画面設計.md#7, 02_要件定義.md#8, 05_データ設計.md#8 coachParticipating / T24 / not started
 - T28_備考入力（家庭単位） / 04_画面設計.md#7 / T24 / not started
