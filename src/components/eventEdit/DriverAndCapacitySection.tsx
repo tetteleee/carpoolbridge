@@ -24,7 +24,8 @@ const rowLabelStyle: CSSProperties = {
 };
 
 const choiceButtonBaseStyle: CSSProperties = {
-  padding: '4px 14px',
+  width: '32px',
+  padding: '4px 0',
   borderRadius: '6px',
   fontSize: '13px',
   fontFamily: 'var(--sans)',
@@ -69,7 +70,7 @@ function DriverChoiceButtons({ idPrefix, value, onChange }: DriverChoiceButtonsP
           ...(value === true ? choiceSelectedStyle : choiceUnselectedStyle),
         }}
       >
-        可
+        ○
       </button>
       <button
         id={`${idPrefix}-impossible`}
@@ -81,7 +82,7 @@ function DriverChoiceButtons({ idPrefix, value, onChange }: DriverChoiceButtonsP
           ...(value === false ? choiceSelectedStyle : choiceUnselectedStyle),
         }}
       >
-        不可
+        ✕
       </button>
     </div>
   );
