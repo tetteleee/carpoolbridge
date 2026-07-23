@@ -90,8 +90,9 @@ export function ChildSection({
               flexDirection: 'column',
               gap: '8px',
               padding: '10px',
-              borderRadius: '8px',
+              borderRadius: '14px',
               border: '1px solid var(--border)',
+              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)',
               boxSizing: 'border-box',
             }}
           >
@@ -192,9 +193,9 @@ export function ChildSection({
         style={{
           alignSelf: 'flex-end',
           padding: '8px 16px',
-          borderRadius: '6px',
-          border: '1px solid var(--accent-border)',
-          background: 'transparent',
+          borderRadius: '999px',
+          border: 'none',
+          background: 'var(--accent-bg)',
           color: 'var(--accent)',
           fontSize: '13px',
           fontFamily: 'var(--sans)',

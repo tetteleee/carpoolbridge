@@ -153,8 +153,9 @@ export function DestinationSection({ ref }: DestinationSectionProps) {
                 flexDirection: 'column',
                 gap: '8px',
                 padding: '12px',
-                borderRadius: '8px',
+                borderRadius: '16px',
                 border: '1px solid var(--border)',
+                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)',
                 boxSizing: 'border-box',
               }}
             >
@@ -271,9 +272,9 @@ export function DestinationSection({ ref }: DestinationSectionProps) {
         style={{
           alignSelf: 'flex-end',
           padding: '10px 20px',
-          borderRadius: '6px',
-          border: '1px solid var(--accent-border)',
-          background: 'transparent',
+          borderRadius: '999px',
+          border: 'none',
+          background: 'var(--accent-bg)',
           color: 'var(--accent)',
           fontSize: '14px',
           fontFamily: 'var(--sans)',

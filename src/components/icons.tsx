@@ -86,3 +86,24 @@ export function CodeIcon({ size = 18 }: IconProps) {
     </svg>
   );
 }
+
+/** 配車（車）アイコン */
+export function CarIcon({ size = 18 }: IconProps) {
+  return (
+    <svg {...baseProps(size)}>
+      <path d="M4 16v-3.2a1.5 1.5 0 0 1 .9-1.37l1.35-.58 1.4-2.8A2 2 0 0 1 9.44 7h5.12a2 2 0 0 1 1.79 1.05l1.4 2.8 1.35.58a1.5 1.5 0 0 1 .9 1.37V16" />
+      <path d="M4 16h16" />
+      <path d="M4 16v1.5A1.5 1.5 0 0 0 5.5 19a1.5 1.5 0 0 0 1.5-1.5V16" />
+      <path d="M17 16v1.5a1.5 1.5 0 0 0 1.5 1.5 1.5 1.5 0 0 0 1.5-1.5V16" />
+    </svg>
+  );
+}
+
+/** 右向きシェブロン（詳細遷移を示す）アイコン */
+export function ChevronRightIcon({ size = 18 }: IconProps) {
+  return (
+    <svg {...baseProps(size)}>
+      <polyline points="9 5 16 12 9 19" />
+    </svg>
+  );
+}

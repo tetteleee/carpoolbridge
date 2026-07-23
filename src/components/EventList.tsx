@@ -1,4 +1,5 @@
 import type { Event } from '../types/event';
+import { ChevronRightIcon } from './icons';
 import { formatDateWithWeekday, getTodayDateString } from '../utils/date';
 
 interface EventListProps {
@@ -10,8 +11,9 @@ interface EventListProps {
 
 /**
  * イベント一覧をホーム画面用に表示するコンポーネント。
- * 日付順に並び替え、本日のイベントを強調表示、開催日を過ぎたイベントは
- * グレーアウトして表示する。状態はラベル文字列ではなく表示スタイルで表現する。
+ * 1件ずつ角丸カードで表示し、日付順に並び替え、本日のイベントを強調表示、
+ * 開催日を過ぎたイベントはグレーアウトして表示する。状態はラベル文字列ではなく
+ * 表示スタイル（カードの縁取り・背景・不透明度）で表現する。
  */
 export function EventList({ events, destinationNameById }: EventListProps) {
   if (events.length === 0) {
@@ -37,7 +39,13 @@ export function EventList({ events, destinationNameById }: EventListProps) {
   return (
     <div
       id="event-list"
-      style={{ display: 'flex', flexDirection: 'column' }}
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '12px',
+        padding: '0 16px 16px',
+        boxSizing: 'border-box',
+      }}
     >
       {sortedEvents.map((event) => {
         const isToday = event.date === today;
@@ -47,49 +55,76 @@ export function EventList({ events, destinationNameById }: EventListProps) {
         return (
           <div
             key={event.id}
-            className="event-list-row"
+            className="event-card"
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '10px',
+              gap: '12px',
               padding: '14px 16px',
-              borderBottom: '1px solid var(--border)',
+              borderRadius: '16px',
+              border: isToday
+                ? '1px solid var(--accent-border)'
+                : '1px solid var(--border)',
+              background: isToday ? 'var(--accent-bg)' : 'var(--bg)',
+              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)',
               boxSizing: 'border-box',
-              opacity: isPast ? 0.45 : 1,
-              background: isToday ? 'var(--accent-bg)' : 'transparent',
+              opacity: isPast ? 0.5 : 1,
             }}
           >
             <span
-              aria-hidden="true"
               style={{
-                width: '10px',
-                textAlign: 'center',
-                color: 'var(--accent)',
-                visibility: isToday ? 'visible' : 'hidden',
-              }}
-            >
-              ●
-            </span>
-            <span
-              style={{
-                minWidth: '76px',
+                flexShrink: 0,
                 fontSize: '14px',
-                fontWeight: isToday ? 700 : 400,
+                fontWeight: isToday ? 700 : 500,
                 color: isToday ? 'var(--accent)' : 'var(--text-h)',
+                whiteSpace: 'nowrap',
               }}
             >
               {formatDateWithWeekday(event.date)}
             </span>
-            <span
+
+            <div
               style={{
-                fontSize: '15px',
-                fontWeight: isToday ? 700 : 400,
-                color: isToday ? 'var(--accent)' : 'var(--text-h)',
+                flex: 1,
+                minWidth: 0,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '2px',
                 textAlign: 'left',
               }}
             >
-              {event.name}
-              {destinationName ? ` ${destinationName}` : ''}
+              <span
+                style={{
+                  display: '-webkit-box',
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: 'vertical',
+                  overflow: 'hidden',
+                  fontSize: '15px',
+                  fontWeight: 700,
+                  lineHeight: 1.35,
+                  wordBreak: 'break-word',
+                  color: isToday ? 'var(--accent)' : 'var(--text-h)',
+                }}
+              >
+                {event.name}
+              </span>
+              {destinationName && (
+                <span
+                  style={{
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                    fontSize: '13px',
+                    color: 'var(--text)',
+                  }}
+                >
+                  {destinationName}
+                </span>
+              )}
+            </div>
+
+            <span style={{ flexShrink: 0, color: 'var(--text)' }}>
+              <ChevronRightIcon size={18} />
             </span>
           </div>
         );

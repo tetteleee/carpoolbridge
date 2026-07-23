@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { EventList } from '../components/EventList';
-import { SettingsIcon } from '../components/icons';
+import { CarIcon, SettingsIcon } from '../components/icons';
 import { getEvents } from '../services/event/eventService';
 import { getDestinations } from '../services/master/destinationService';
 import type { Event } from '../types/event';
@@ -44,23 +44,67 @@ export function HomePage() {
       }}
     >
       <div
+        id="home-header"
         style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          padding: '16px',
+          position: 'sticky',
+          top: 0,
+          zIndex: 10,
+          background: 'var(--bg)',
+          padding: '16px 16px 20px',
           borderBottom: '1px solid var(--border)',
+          boxSizing: 'border-box',
         }}
       >
-        <h1
+        <span
           style={{
-            margin: 0,
-            fontSize: '20px',
-            color: 'var(--text-h)',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px',
+            padding: '4px 10px',
+            borderRadius: '999px',
+            background: 'var(--accent-bg)',
+            color: 'var(--accent)',
+            fontSize: '12px',
+            fontWeight: 600,
           }}
         >
-          CarpoolBridge
-        </h1>
+          <CarIcon size={14} />
+          配車アシスタント
+        </span>
+
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'baseline',
+            justifyContent: 'space-between',
+            gap: '8px',
+            marginTop: '10px',
+          }}
+        >
+          <h1
+            style={{
+              margin: 0,
+              fontSize: '26px',
+              fontWeight: 700,
+              color: 'var(--text-h)',
+            }}
+          >
+            イベント一覧
+          </h1>
+          <span
+            style={{
+              flexShrink: 0,
+              fontSize: '13px',
+              color: 'var(--text)',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            全{events.length}件
+          </span>
+        </div>
+      </div>
+
+      <div style={{ padding: '16px', boxSizing: 'border-box' }}>
         <button
           type="button"
           onClick={() => navigate('/master')}
@@ -68,11 +112,11 @@ export function HomePage() {
             display: 'inline-flex',
             alignItems: 'center',
             gap: '6px',
-            padding: '8px 12px',
-            borderRadius: '6px',
-            border: '1px solid var(--border)',
-            background: 'none',
-            color: 'var(--text)',
+            padding: '10px 18px',
+            borderRadius: '999px',
+            border: 'none',
+            background: 'var(--code-bg)',
+            color: 'var(--text-h)',
             fontSize: '14px',
             fontFamily: 'var(--sans)',
             cursor: 'pointer',
@@ -84,13 +128,13 @@ export function HomePage() {
       </div>
 
       {error && (
-        <p style={{ margin: 0, padding: '16px', fontSize: '13px', color: 'crimson' }}>
+        <p style={{ margin: 0, padding: '0 16px 16px', fontSize: '13px', color: 'crimson' }}>
           {error}
         </p>
       )}
 
       {loading ? (
-        <p style={{ margin: 0, padding: '16px', fontSize: '14px', color: 'var(--text)' }}>
+        <p style={{ margin: 0, padding: '0 16px 16px', fontSize: '14px', color: 'var(--text)' }}>
           読み込み中...
         </p>
       ) : (

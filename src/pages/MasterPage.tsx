@@ -56,22 +56,27 @@ export function MasterPage() {
     >
       <div
         style={{
+          position: 'sticky',
+          top: 0,
+          zIndex: 10,
+          background: 'var(--bg)',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
           padding: '16px',
           borderBottom: '1px solid var(--border)',
+          boxSizing: 'border-box',
         }}
       >
         <button
           type="button"
           onClick={() => navigate('/')}
           style={{
-            padding: '8px 12px',
-            borderRadius: '6px',
-            border: '1px solid var(--border)',
-            background: 'none',
-            color: 'var(--text)',
+            padding: '8px 14px',
+            borderRadius: '999px',
+            border: 'none',
+            background: 'var(--code-bg)',
+            color: 'var(--text-h)',
             fontSize: '14px',
             fontFamily: 'var(--sans)',
             cursor: 'pointer',
@@ -82,7 +87,8 @@ export function MasterPage() {
         <h1
           style={{
             margin: 0,
-            fontSize: '20px',
+            fontSize: '18px',
+            fontWeight: 700,
             color: 'var(--text-h)',
           }}
         >
@@ -121,7 +127,7 @@ export function MasterPage() {
           disabled={saving}
           style={{
             padding: '12px 32px',
-            borderRadius: '6px',
+            borderRadius: '999px',
             border: 'none',
             background: 'var(--accent)',
             color: 'var(--accent-contrast, #fff)',
@@ -129,6 +135,7 @@ export function MasterPage() {
             fontFamily: 'var(--sans)',
             cursor: saving ? 'default' : 'pointer',
             opacity: saving ? 0.6 : 1,
+            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)',
           }}
         >
           {saving ? '保存中...' : '保存'}

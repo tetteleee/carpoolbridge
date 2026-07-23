@@ -56,8 +56,9 @@ export function RequestAccess({ uid }: RequestAccessProps) {
           width: '100%',
           maxWidth: '480px',
           padding: '40px 32px',
-          borderRadius: '12px',
+          borderRadius: '20px',
           border: '1px solid var(--border)',
+          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)',
           boxSizing: 'border-box',
         }}
       >
@@ -134,7 +135,7 @@ export function RequestAccess({ uid }: RequestAccessProps) {
           onClick={handleCopy}
           style={{
             padding: '10px 32px',
-            borderRadius: '6px',
+            borderRadius: '999px',
             border: '1px solid var(--accent-border)',
             background: copied ? 'var(--accent-bg)' : 'transparent',
             color: 'var(--accent)',
