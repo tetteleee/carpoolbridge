@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Header } from '../components/Header';
 import { FlagIcon } from '../components/icons';
 import { createEvent } from '../services/event/eventService';
 import { getDestinations } from '../services/master/destinationService';
@@ -68,41 +69,12 @@ export function EventCreatePage() {
           top: 0,
           zIndex: 10,
           background: 'var(--bg)',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          padding: '16px',
+          padding: '14px 16px',
           borderBottom: '1px solid var(--border)',
           boxSizing: 'border-box',
         }}
       >
-        <button
-          type="button"
-          onClick={() => navigate('/')}
-          style={{
-            padding: '8px 14px',
-            borderRadius: '999px',
-            border: 'none',
-            background: 'var(--code-bg)',
-            color: 'var(--text-h)',
-            fontSize: '14px',
-            fontFamily: 'var(--sans)',
-            cursor: 'pointer',
-          }}
-        >
-          ← 戻る
-        </button>
-        <h1
-          style={{
-            margin: 0,
-            fontSize: '18px',
-            fontWeight: 700,
-            color: 'var(--text-h)',
-          }}
-        >
-          イベント作成
-        </h1>
-        <span style={{ width: '72px' }} />
+        <Header title="イベント作成" backTo="/" />
       </div>
 
       <div

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { Header } from '../components/Header';
 import { CarCard } from '../components/carpool/CarCard';
 import { OperationArea } from '../components/carpool/OperationArea';
 import { UnassignedArea } from '../components/carpool/UnassignedArea';
@@ -92,21 +93,17 @@ export function CarpoolPage() {
           top: 0,
           zIndex: 10,
           background: 'var(--bg)',
-          padding: '16px',
+          padding: '14px 16px 16px',
           borderBottom: '1px solid var(--border)',
           boxSizing: 'border-box',
         }}
       >
-        <h1
-          style={{
-            margin: '0 0 12px',
-            fontSize: '18px',
-            fontWeight: 700,
-            color: 'var(--text-h)',
-          }}
-        >
-          {event ? `${formatDateWithWeekday(event.date)} ${event.name}` : '配車'}
-        </h1>
+        <div style={{ marginBottom: '12px' }}>
+          <Header
+            title={event ? `${formatDateWithWeekday(event.date)} ${event.name}` : '配車'}
+            backTo="/"
+          />
+        </div>
 
         <div role="tablist" style={{ display: 'flex', gap: '8px' }}>
           {DIRECTION_TABS.map((tab) => {

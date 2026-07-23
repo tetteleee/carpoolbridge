@@ -117,6 +117,15 @@ export function ChevronDownIcon({ size = 18 }: IconProps) {
   );
 }
 
+/** 左向きシェブロン（前の画面へ戻ることを示す）アイコン */
+export function ChevronLeftIcon({ size = 18 }: IconProps) {
+  return (
+    <svg {...baseProps(size)}>
+      <polyline points="15 5 8 12 15 19" />
+    </svg>
+  );
+}
+
 /** 編集（鉛筆）アイコン */
 export function EditIcon({ size = 18 }: IconProps) {
   return (

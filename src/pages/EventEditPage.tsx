@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { Header } from '../components/Header';
 import { FamilyResponseCard } from '../components/eventEdit/FamilyResponseCard';
 import { CarpoolRecreateDialog } from '../components/eventEdit/CarpoolRecreateDialog';
 import { DevSampleResponseButton } from '../components/eventEdit/DevSampleResponseButton';
@@ -174,21 +175,15 @@ export function EventEditPage() {
           top: 0,
           zIndex: 10,
           background: 'var(--bg)',
-          padding: '16px',
+          padding: '14px 16px',
           borderBottom: '1px solid var(--border)',
           boxSizing: 'border-box',
         }}
       >
-        <h1
-          style={{
-            margin: 0,
-            fontSize: '18px',
-            fontWeight: 700,
-            color: 'var(--text-h)',
-          }}
-        >
-          {event ? `${formatDateWithWeekday(event.date)} ${event.name}` : '回答入力'}
-        </h1>
+        <Header
+          title={event ? `${formatDateWithWeekday(event.date)} ${event.name}` : '回答入力'}
+          backTo={eventId ? `/events/${eventId}/carpool` : undefined}
+        />
       </div>
 
       <div

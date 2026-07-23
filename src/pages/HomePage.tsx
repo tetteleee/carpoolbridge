@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { EventList } from '../components/EventList';
-import { CarIcon, SettingsIcon } from '../components/icons';
+import { Header, HeaderChip } from '../components/Header';
+import { SettingsIcon } from '../components/icons';
 import { getEvents } from '../services/event/eventService';
 import { getDestinations } from '../services/master/destinationService';
 import type { Event } from '../types/event';
@@ -56,53 +57,11 @@ export function HomePage() {
           boxSizing: 'border-box',
         }}
       >
-        <span
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '6px',
-            padding: '4px 10px',
-            borderRadius: '999px',
-            background: 'var(--accent-bg)',
-            color: 'var(--accent)',
-            fontSize: '12px',
-            fontWeight: 600,
-          }}
-        >
-          <CarIcon size={14} />
-          配車アシスタント
-        </span>
-
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'baseline',
-            justifyContent: 'space-between',
-            gap: '8px',
-            marginTop: '10px',
-          }}
-        >
-          <h1
-            style={{
-              margin: 0,
-              fontSize: '26px',
-              fontWeight: 700,
-              color: 'var(--text-h)',
-            }}
-          >
-            イベント一覧
-          </h1>
-          <span
-            style={{
-              flexShrink: 0,
-              fontSize: '13px',
-              color: 'var(--text)',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            全{events.length}件
-          </span>
-        </div>
+        <Header
+          title="イベント一覧"
+          badge="配車アシスタント"
+          trailing={<HeaderChip>全{events.length}件</HeaderChip>}
+        />
       </div>
 
       <div
