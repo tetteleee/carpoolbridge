@@ -31,14 +31,34 @@ interface PersonCardProps {
  * 配車画面（メイン）の人カード。
  * 未配車エリア・車カードのどちらの中でも同じ見た目・情報構成で表示する。
  * 学年の有無で子供・コーチを判定し、色分けで区別する。
- * カード全体が長押しドラッグの起点となる（ドラッグハンドル部分に限定しない）。
+ *
+ * ドラッグ起点はデバイスにより異なる（ref: docs/04_画面設計.md#ドラッグ＆ドロップ）。
+ * マウスはカード全体、タッチ／ペンはドラッグハンドル（≡）部分のみとする。
+ * これはtouch-action: pan-yをカード全体に指定すると、ネイティブの縦スクロールに
+ * ジェスチャーの制御が渡ってしまい長押しドラッグへ移行できなくなるための対応。
+ * ハンドル部分のみtouch-action: noneとすることで、カード本体からは縦スクロールでき、
+ * ハンドルからは確実に長押しドラッグを開始できるようにしている。
  */
 export function PersonCard({ person, onPointerDown, isDragging = false }: PersonCardProps) {
   const isCoach = person.grade === null;
 
+  const handleCardPointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (!onPointerDown || event.pointerType !== 'mouse') {
+      return;
+    }
+    onPointerDown(event);
+  };
+
+  const handleHandlePointerDown = (event: ReactPointerEvent<HTMLSpanElement>) => {
+    if (!onPointerDown || event.pointerType === 'mouse') {
+      return;
+    }
+    onPointerDown(event);
+  };
+
   return (
     <div
-      onPointerDown={onPointerDown}
+      onPointerDown={handleCardPointerDown}
       style={{
         display: 'flex',
         alignItems: 'center',
@@ -50,9 +70,6 @@ export function PersonCard({ person, onPointerDown, isDragging = false }: Person
         border: isCoach ? '1px solid var(--coach-border)' : '1px solid var(--child-border)',
         borderLeft: isCoach ? '5px solid var(--coach-accent)' : '5px solid var(--child-accent)',
         opacity: isDragging ? 'var(--drag-ghost-opacity)' : 1,
-        // 縦スクロールはブラウザのネイティブ操作に任せ、長押し確定後のドラッグ中のみ
-        // pointermove側でpreventDefault()してブラウザへのpan委譲を止める（useDragAndDrop.ts参照）
-        touchAction: onPointerDown ? 'pan-y' : undefined,
         userSelect: onPointerDown ? 'none' : undefined,
         WebkitUserSelect: onPointerDown ? 'none' : undefined,
         cursor: onPointerDown ? 'grab' : undefined,
@@ -60,7 +77,19 @@ export function PersonCard({ person, onPointerDown, isDragging = false }: Person
     >
       <span
         aria-label="ドラッグハンドル"
-        style={{ display: 'flex', flexShrink: 0, color: 'var(--text)' }}
+        onPointerDown={handleHandlePointerDown}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexShrink: 0,
+          color: 'var(--text)',
+          // タッチ操作の当たり判定を広げるため、見た目を変えずにmargin/paddingで
+          // タップ領域のみ拡大する（親のpadding: 10px 12px の範囲内に収まるよう10pxとしている）
+          margin: '-10px',
+          padding: '10px',
+          touchAction: onPointerDown ? 'none' : undefined,
+        }}
       >
         <DragHandleIcon size={16} />
       </span>
