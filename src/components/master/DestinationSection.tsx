@@ -50,7 +50,7 @@ export function DestinationSection({ ref }: DestinationSectionProps) {
         destination.id === id
           ? {
               ...destination,
-              [field]: field === 'name' ? value : Number(value) || 0,
+              [field]: field === 'name' ? value : value === '' ? null : Number(value),
             }
           : destination
       )
@@ -62,7 +62,7 @@ export function DestinationSection({ ref }: DestinationSectionProps) {
     setNewIds((prev) => new Set(prev).add(id));
     setDestinations((prev) => [
       ...prev,
-      { id, name: '', latitude: 0, longitude: 0 },
+      { id, name: '', latitude: null, longitude: null },
     ]);
   };
 
@@ -203,7 +203,7 @@ export function DestinationSection({ ref }: DestinationSectionProps) {
                   <input
                     type="number"
                     step="any"
-                    value={destination.latitude}
+                    value={destination.latitude ?? ''}
                     onChange={(e) =>
                       handleFieldChange(
                         destination.id,
@@ -239,7 +239,7 @@ export function DestinationSection({ ref }: DestinationSectionProps) {
                   <input
                     type="number"
                     step="any"
-                    value={destination.longitude}
+                    value={destination.longitude ?? ''}
                     onChange={(e) =>
                       handleFieldChange(
                         destination.id,

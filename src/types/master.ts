@@ -44,8 +44,10 @@ export interface Child {
 export interface PickupLocation {
   id: string;
   name: string;
-  latitude: number;
-  longitude: number;
+  /** 緯度。未入力の場合はnull（緯度経度未設定） */
+  latitude: number | null;
+  /** 経度。未入力の場合はnull（緯度経度未設定） */
+  longitude: number | null;
 }
 
 /**
@@ -54,6 +56,8 @@ export interface PickupLocation {
 export interface Destination {
   id: string;
   name: string;
-  latitude: number;
-  longitude: number;
+  /** 緯度。未入力の場合はnull（緯度経度未設定） */
+  latitude: number | null;
+  /** 経度。未入力の場合はnull（緯度経度未設定） */
+  longitude: number | null;
 }

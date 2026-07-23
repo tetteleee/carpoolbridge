@@ -50,7 +50,7 @@ export function PickupLocationSection({ ref }: PickupLocationSectionProps) {
         location.id === id
           ? {
               ...location,
-              [field]: field === 'name' ? value : Number(value) || 0,
+              [field]: field === 'name' ? value : value === '' ? null : Number(value),
             }
           : location
       )
@@ -60,7 +60,10 @@ export function PickupLocationSection({ ref }: PickupLocationSectionProps) {
   const handleAdd = () => {
     const id = crypto.randomUUID();
     setNewIds((prev) => new Set(prev).add(id));
-    setLocations((prev) => [...prev, { id, name: '', latitude: 0, longitude: 0 }]);
+    setLocations((prev) => [
+      ...prev,
+      { id, name: '', latitude: null, longitude: null },
+    ]);
   };
 
   useImperativeHandle(ref, () => ({
@@ -198,7 +201,7 @@ export function PickupLocationSection({ ref }: PickupLocationSectionProps) {
                   <input
                     type="number"
                     step="any"
-                    value={location.latitude}
+                    value={location.latitude ?? ''}
                     onChange={(e) =>
                       handleFieldChange(
                         location.id,
@@ -234,7 +237,7 @@ export function PickupLocationSection({ ref }: PickupLocationSectionProps) {
                   <input
                     type="number"
                     step="any"
-                    value={location.longitude}
+                    value={location.longitude ?? ''}
                     onChange={(e) =>
                       handleFieldChange(
                         location.id,
