@@ -107,3 +107,12 @@ export function ChevronRightIcon({ size = 18 }: IconProps) {
     </svg>
   );
 }
+
+/** 下向きシェブロン（開閉トグルを示す）アイコン */
+export function ChevronDownIcon({ size = 18 }: IconProps) {
+  return (
+    <svg {...baseProps(size)}>
+      <polyline points="5 9 12 16 19 9" />
+    </svg>
+  );
+}
