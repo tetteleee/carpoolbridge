@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
 import type { CarpoolMember } from '../types/event';
 import type { PersonCardData } from '../components/carpool/PersonCard';
+import { memberKey } from '../services/carpool/carpoolMember';
 
 /** 長押し判定の待機時間（ミリ秒）。この時間ポインターを動かさず押し続けるとドラッグを開始する */
 const LONG_PRESS_MS = 150;
@@ -32,6 +33,8 @@ export interface DropResult {
   member: CarpoolMember;
   sourceZoneId: string;
   targetZoneId: string;
+  /** 移動先ゾーン内で、このメンバーの直前に挿入するべき乗車メンバーのキー（memberKeyの形式）。ゾーン内の末尾に挿入する場合はnull */
+  targetAnchorKey: string | null;
 }
 
 interface UseDragAndDropOptions {
@@ -44,6 +47,8 @@ interface UseDragAndDropResult {
   dragState: DragState | null;
   /** ドラッグ中の人カードが現在ホバーしているドロップゾーンID */
   hoveredZoneId: string | null;
+  /** ホバー中のドロップゾーン内で、挿入先となる直前の乗車メンバーのキー。ゾーン内末尾に挿入される場合、またはドロップゾーンをホバーしていない場合はnull */
+  insertionAnchorKey: string | null;
   /** 人カードのルート要素に設定するonPointerDownハンドラーを生成する */
   createPointerDownHandler: (
     person: PersonCardData,
@@ -71,11 +76,44 @@ interface AttachedListeners {
   cancel: (event: PointerEvent) => void;
 }
 
-/** 指定座標の直下にあるドロップゾーン（[data-drop-zone-id]を持つ最も近い要素）のIDを返す */
-function resolveZoneId(x: number, y: number): string | null {
+/** 座標に対するドロップ判定結果。ゾーンIDと、そのゾーン内での挿入位置（挿入先の直前の乗車メンバーのキー）を含む */
+interface DropTarget {
+  zoneId: string;
+  /** このキーを持つ乗車メンバーの直前に挿入する。ゾーン内末尾に挿入する場合はnull */
+  anchorKey: string | null;
+}
+
+/**
+ * 指定座標の直下にあるドロップゾーン（[data-drop-zone-id]を持つ最も近い要素）と、
+ * そのゾーン内での挿入位置を求める。
+ * 挿入位置は、ゾーン内の各人カード（[data-person-key]）の縦方向の中点とyを比較し、
+ * 中点がyより下側にある最初の人カードの直前に挿入する、という判定で求める
+ * （elementFromPointのスタッキング挙動に依存しないよう、ジオメトリ比較のみで判定する）。
+ * ドラッグ中の本人のカード（excludeKey）は挿入位置の判定対象から除外する。
+ */
+function resolveDropTarget(x: number, y: number, excludeKey: string): DropTarget | null {
   const element = document.elementFromPoint(x, y);
   const zoneElement = element?.closest<HTMLElement>('[data-drop-zone-id]');
-  return zoneElement?.dataset.dropZoneId ?? null;
+  const zoneId = zoneElement?.dataset.dropZoneId;
+  if (!zoneElement || !zoneId) {
+    return null;
+  }
+
+  const candidates = Array.from(
+    zoneElement.querySelectorAll<HTMLElement>('[data-person-key]')
+  ).filter((candidate) => candidate.dataset.personKey !== excludeKey);
+
+  let anchorKey: string | null = null;
+  for (const candidate of candidates) {
+    const rect = candidate.getBoundingClientRect();
+    const midpointY = rect.top + rect.height / 2;
+    if (y < midpointY) {
+      anchorKey = candidate.dataset.personKey ?? null;
+      break;
+    }
+  }
+
+  return { zoneId, anchorKey };
 }
 
 /**
@@ -90,6 +128,7 @@ function resolveZoneId(x: number, y: number): string | null {
 export function useDragAndDrop({ onDrop }: UseDragAndDropOptions): UseDragAndDropResult {
   const [dragState, setDragState] = useState<DragState | null>(null);
   const [hoveredZoneId, setHoveredZoneId] = useState<string | null>(null);
+  const [insertionAnchorKey, setInsertionAnchorKey] = useState<string | null>(null);
 
   // pointerdown〜pointerup/cancelの1回のジェスチャーを通じて参照し続けるため、
   // 再レンダリングの影響を受けないrefで保持する
@@ -159,6 +198,7 @@ export function useDragAndDrop({ onDrop }: UseDragAndDropOptions): UseDragAndDro
     pendingRef.current = null;
     setDragState(null);
     setHoveredZoneId(null);
+    setInsertionAnchorKey(null);
   };
 
   const handlePointerMove = (event: PointerEvent) => {
@@ -177,8 +217,10 @@ export function useDragAndDrop({ onDrop }: UseDragAndDropOptions): UseDragAndDro
 
     event.preventDefault();
     updateAutoScroll(event.clientY);
-    const zoneId = resolveZoneId(event.clientX, event.clientY);
-    setHoveredZoneId(zoneId);
+    const excludeKey = memberKey(activeDragRef.current.member);
+    const target = resolveDropTarget(event.clientX, event.clientY, excludeKey);
+    setHoveredZoneId(target?.zoneId ?? null);
+    setInsertionAnchorKey(target?.anchorKey ?? null);
     setDragState({
       personId: activeDragRef.current.personId,
       personName: activeDragRef.current.personName,
@@ -196,12 +238,14 @@ export function useDragAndDrop({ onDrop }: UseDragAndDropOptions): UseDragAndDro
 
     const active = activeDragRef.current;
     if (active) {
-      const targetZoneId = resolveZoneId(event.clientX, event.clientY);
-      if (targetZoneId && targetZoneId !== active.sourceZoneId) {
+      const excludeKey = memberKey(active.member);
+      const target = resolveDropTarget(event.clientX, event.clientY, excludeKey);
+      if (target) {
         onDrop({
           member: active.member,
           sourceZoneId: active.sourceZoneId,
-          targetZoneId,
+          targetZoneId: target.zoneId,
+          targetAnchorKey: target.anchorKey,
         });
       }
     }
@@ -258,5 +302,5 @@ export function useDragAndDrop({ onDrop }: UseDragAndDropOptions): UseDragAndDro
       }, LONG_PRESS_MS);
     };
 
-  return { dragState, hoveredZoneId, createPointerDownHandler };
+  return { dragState, hoveredZoneId, insertionAnchorKey, createPointerDownHandler };
 }

@@ -1,6 +1,7 @@
 import type { PointerEvent as ReactPointerEvent } from 'react';
 import { CarIcon, MapPinIcon } from '../icons';
 import { PersonCard, type PersonCardData } from './PersonCard';
+import { memberKey } from '../../services/carpool/carpoolMember';
 
 /**
  * 車カード1台分のデータ。
@@ -26,6 +27,8 @@ interface CarCardProps {
   isDropTarget?: boolean;
   /** ドラッグ中の人カードのID（自身のカード内であれば薄く表示するために使用。T43） */
   draggingPersonId?: string | null;
+  /** ドラッグ中、この車カード内で挿入先となる直前の乗車メンバーのキー（memberKey形式）。末尾に挿入される場合はnull。isDropTargetがfalseの間は意味を持たない */
+  insertionAnchorKey?: string | null;
   /** 人カードのonPointerDownハンドラーを生成する（T43。長押しドラッグ開始の検知に使用） */
   onPersonPointerDown?: (
     person: PersonCardData
@@ -49,6 +52,7 @@ export function CarCard({
   car,
   isDropTarget = false,
   draggingPersonId = null,
+  insertionAnchorKey = null,
   onPersonPointerDown,
 }: CarCardProps) {
   const occupantCount = car.members.length + 1;
@@ -138,15 +142,30 @@ export function CarCard({
           flexDirection: 'column',
         }}
       >
-        {car.members.map((member) => (
-          <li key={member.id} style={{ borderTop: '1px solid var(--border)' }}>
-            <PersonCard
-              person={member}
-              onPointerDown={onPersonPointerDown?.(member)}
-              isDragging={member.id === draggingPersonId}
-            />
-          </li>
-        ))}
+        {car.members.map((member, index) => {
+          const personKey = memberKey(member.member);
+          const isInsertionAnchor = isDropTarget && insertionAnchorKey === personKey;
+          const isAppendTarget =
+            isDropTarget && insertionAnchorKey === null && index === car.members.length - 1;
+          return (
+            <li
+              key={member.id}
+              data-person-key={personKey}
+              style={{
+                borderTop: isInsertionAnchor
+                  ? '3px solid var(--drop-target-border)'
+                  : '1px solid var(--border)',
+                borderBottom: isAppendTarget ? '3px solid var(--drop-target-border)' : undefined,
+              }}
+            >
+              <PersonCard
+                person={member}
+                onPointerDown={onPersonPointerDown?.(member)}
+                isDragging={member.id === draggingPersonId}
+              />
+            </li>
+          );
+        })}
       </ul>
     </section>
   );

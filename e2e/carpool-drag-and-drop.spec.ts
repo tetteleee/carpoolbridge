@@ -309,3 +309,204 @@ test('画面外（下方）の車カードへは、画面端までドラッグ�
   const targetCarpool = await eventRef.collection('carpools').doc(lastCarpoolId).get();
   expect(targetCarpool.data()?.members).toEqual([{ type: 'child', childId: childRider.id }]);
 });
+
+test('同じ車の中で人カードをドラッグすると、ドロップした位置に並び替えられる', async ({ page }) => {
+  const db = getEmulatorFirestore();
+  const now = Timestamp.now();
+
+  const locA = await db.collection('pickupLocations').add({ name: '西公園', latitude: 35.0, longitude: 139.0 });
+  const destinationRef = await db.collection('destinations').add({ name: '目的地A', latitude: 35.1, longitude: 139.1 });
+
+  const familyDriver = await db.collection('families').add({
+    familyName: '鈴木家', coachName: null, vehicleCapacity: 4, pickupLocationId: locA.id,
+    isActive: true, createdAt: now, updatedAt: now,
+  });
+
+  const riderNames = ['山田太郎', '佐藤花子', '田中一郎'];
+  const riderFamilyIds: string[] = [];
+  const riderChildIds: string[] = [];
+  for (const name of riderNames) {
+    const familyRef = await db.collection('families').add({
+      familyName: `${name}家`, coachName: null, vehicleCapacity: 0, pickupLocationId: locA.id,
+      isActive: true, createdAt: now, updatedAt: now,
+    });
+    const childRef = await db.collection('children').add({
+      familyId: familyRef.id, name, schoolEntryYear: 2019, isActive: true, createdAt: now, updatedAt: now,
+    });
+    riderFamilyIds.push(familyRef.id);
+    riderChildIds.push(childRef.id);
+  }
+  const [yamadaId, satoId, tanakaId] = riderChildIds;
+
+  const eventRef = await db.collection('events').add({
+    name: '練習試合', date: '2026-08-01', destinationId: destinationRef.id, createdAt: now, updatedAt: now,
+  });
+
+  await eventRef.collection('responses').doc(familyDriver.id).set({
+    driverOutward: true, driverReturn: true, capacityToday: null, coachParticipating: null, remarks: '',
+    children: [],
+  });
+  for (let i = 0; i < riderChildIds.length; i += 1) {
+    await eventRef.collection('responses').doc(riderFamilyIds[i]).set({
+      driverOutward: false, driverReturn: false, capacityToday: null, coachParticipating: null, remarks: '',
+      children: [{ childId: riderChildIds[i], isParticipating: true, noOutwardRide: false, noReturnRide: false }],
+    });
+  }
+
+  // 鈴木号に山田太郎・佐藤花子・田中一郎の順で乗車済みの状態を直接作成する
+  const carpoolRef = await eventRef.collection('carpools').add({
+    direction: 'OUTWARD',
+    driverFamilyId: familyDriver.id,
+    driverIsCoach: false,
+    capacity: 4,
+    members: [
+      { type: 'child', childId: yamadaId },
+      { type: 'child', childId: satoId },
+      { type: 'child', childId: tanakaId },
+    ],
+  });
+
+  await page.goto(`/events/${eventRef.id}/carpool`);
+  await expect(page.locator('#request-access-container')).toBeVisible();
+  const uid = (await page.locator('#request-access-uid-value').textContent())?.trim();
+  await db.collection('staffUsers').doc(uid as string).set({});
+  await page.reload();
+  await expect(page.getByText('読み込み中...')).toHaveCount(0);
+
+  const satoCard = page.getByText('佐藤花子').locator('..');
+  const yamadaCard = page.getByText('山田太郎').locator('..');
+  const satoBox = await satoCard.boundingBox();
+  const yamadaBox = await yamadaCard.boundingBox();
+  if (!satoBox || !yamadaBox) {
+    throw new Error('bounding box not found');
+  }
+
+  // 佐藤花子を、一覧先頭の山田太郎カードの上半分（挿入先の直前とみなされる領域）へドラッグする
+  const startX = satoBox.x + satoBox.width / 2;
+  const startY = satoBox.y + satoBox.height / 2;
+  const endX = yamadaBox.x + yamadaBox.width / 2;
+  const endY = yamadaBox.y + 4;
+
+  await page.mouse.move(startX, startY);
+  await page.mouse.down();
+  await page.waitForTimeout(600);
+  await page.mouse.move((startX + endX) / 2, (startY + endY) / 2, { steps: 5 });
+  await page.mouse.move(endX, endY, { steps: 5 });
+  await page.mouse.up();
+
+  await expect(async () => {
+    const carpoolSnapshot = await carpoolRef.get();
+    expect(carpoolSnapshot.data()?.members).toEqual([
+      { type: 'child', childId: satoId },
+      { type: 'child', childId: yamadaId },
+      { type: 'child', childId: tanakaId },
+    ]);
+  }).toPass();
+});
+
+test('未配車から車カードへ、既存メンバーの位置を指定してドロップすると、その位置に挿入される', async ({ page }) => {
+  const db = getEmulatorFirestore();
+  const now = Timestamp.now();
+
+  const locA = await db.collection('pickupLocations').add({ name: '西公園', latitude: 35.0, longitude: 139.0 });
+  const destinationRef = await db.collection('destinations').add({ name: '目的地A', latitude: 35.1, longitude: 139.1 });
+
+  const familyDriver = await db.collection('families').add({
+    familyName: '鈴木家', coachName: null, vehicleCapacity: 4, pickupLocationId: locA.id,
+    isActive: true, createdAt: now, updatedAt: now,
+  });
+
+  const familySato = await db.collection('families').add({
+    familyName: '佐藤家', coachName: null, vehicleCapacity: 0, pickupLocationId: locA.id,
+    isActive: true, createdAt: now, updatedAt: now,
+  });
+  const childSato = await db.collection('children').add({
+    familyId: familySato.id, name: '佐藤花子', schoolEntryYear: 2019, isActive: true, createdAt: now, updatedAt: now,
+  });
+
+  const familyTanaka = await db.collection('families').add({
+    familyName: '田中家', coachName: null, vehicleCapacity: 0, pickupLocationId: locA.id,
+    isActive: true, createdAt: now, updatedAt: now,
+  });
+  const childTanaka = await db.collection('children').add({
+    familyId: familyTanaka.id, name: '田中一郎', schoolEntryYear: 2019, isActive: true, createdAt: now, updatedAt: now,
+  });
+
+  const familyYamada = await db.collection('families').add({
+    familyName: '山田家', coachName: null, vehicleCapacity: 0, pickupLocationId: locA.id,
+    isActive: true, createdAt: now, updatedAt: now,
+  });
+  const childYamada = await db.collection('children').add({
+    familyId: familyYamada.id, name: '山田太郎', schoolEntryYear: 2019, isActive: true, createdAt: now, updatedAt: now,
+  });
+
+  const eventRef = await db.collection('events').add({
+    name: '練習試合', date: '2026-08-01', destinationId: destinationRef.id, createdAt: now, updatedAt: now,
+  });
+
+  await eventRef.collection('responses').doc(familyDriver.id).set({
+    driverOutward: true, driverReturn: true, capacityToday: null, coachParticipating: null, remarks: '',
+    children: [],
+  });
+  await eventRef.collection('responses').doc(familySato.id).set({
+    driverOutward: false, driverReturn: false, capacityToday: null, coachParticipating: null, remarks: '',
+    children: [{ childId: childSato.id, isParticipating: true, noOutwardRide: false, noReturnRide: false }],
+  });
+  await eventRef.collection('responses').doc(familyTanaka.id).set({
+    driverOutward: false, driverReturn: false, capacityToday: null, coachParticipating: null, remarks: '',
+    children: [{ childId: childTanaka.id, isParticipating: true, noOutwardRide: false, noReturnRide: false }],
+  });
+  await eventRef.collection('responses').doc(familyYamada.id).set({
+    driverOutward: false, driverReturn: false, capacityToday: null, coachParticipating: null, remarks: '',
+    children: [{ childId: childYamada.id, isParticipating: true, noOutwardRide: false, noReturnRide: false }],
+  });
+
+  // 鈴木号に佐藤花子・田中一郎の順で乗車済み。山田太郎は未配車のまま
+  const carpoolRef = await eventRef.collection('carpools').add({
+    direction: 'OUTWARD',
+    driverFamilyId: familyDriver.id,
+    driverIsCoach: false,
+    capacity: 4,
+    members: [
+      { type: 'child', childId: childSato.id },
+      { type: 'child', childId: childTanaka.id },
+    ],
+  });
+
+  await page.goto(`/events/${eventRef.id}/carpool`);
+  await expect(page.locator('#request-access-container')).toBeVisible();
+  const uid = (await page.locator('#request-access-uid-value').textContent())?.trim();
+  await db.collection('staffUsers').doc(uid as string).set({});
+  await page.reload();
+  await expect(page.getByText('読み込み中...')).toHaveCount(0);
+
+  const yamadaCard = page.getByText('山田太郎').locator('..');
+  const tanakaCard = page.getByText('田中一郎').locator('..');
+  const yamadaBox = await yamadaCard.boundingBox();
+  const tanakaBox = await tanakaCard.boundingBox();
+  if (!yamadaBox || !tanakaBox) {
+    throw new Error('bounding box not found');
+  }
+
+  // 山田太郎を、田中一郎カードの上半分（＝田中一郎の直前に挿入される領域）へドラッグする
+  const startX = yamadaBox.x + yamadaBox.width / 2;
+  const startY = yamadaBox.y + yamadaBox.height / 2;
+  const endX = tanakaBox.x + tanakaBox.width / 2;
+  const endY = tanakaBox.y + 4;
+
+  await page.mouse.move(startX, startY);
+  await page.mouse.down();
+  await page.waitForTimeout(600);
+  await page.mouse.move((startX + endX) / 2, (startY + endY) / 2, { steps: 5 });
+  await page.mouse.move(endX, endY, { steps: 5 });
+  await page.mouse.up();
+
+  await expect(async () => {
+    const carpoolSnapshot = await carpoolRef.get();
+    expect(carpoolSnapshot.data()?.members).toEqual([
+      { type: 'child', childId: childSato.id },
+      { type: 'child', childId: childYamada.id },
+      { type: 'child', childId: childTanaka.id },
+    ]);
+  }).toPass();
+});
