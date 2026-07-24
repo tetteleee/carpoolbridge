@@ -48,8 +48,9 @@ export function Header({ title, showAppIcon, backTo, trailing }: HeaderProps) {
           aria-label="戻る"
           style={{
             ...iconButtonStyle,
-            background: 'var(--code-bg)',
+            background: 'var(--bg)',
             color: 'var(--text-h)',
+            boxShadow: 'var(--shadow)',
             cursor: 'pointer',
           }}
         >

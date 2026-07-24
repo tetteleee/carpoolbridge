@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { EventList } from '../components/EventList';
 import { Header, HeaderChip } from '../components/Header';
+import { Button } from '../components/common/Button';
 import { SettingsIcon } from '../components/icons';
 import { getEvents } from '../services/event/eventService';
 import { getDestinations } from '../services/master/destinationService';
@@ -72,46 +73,21 @@ export function HomePage() {
           boxSizing: 'border-box',
         }}
       >
-        <button
-          type="button"
+        <Button
+          variant="secondary"
+          size="sm"
+          icon={<SettingsIcon size={16} />}
           onClick={() => navigate('/master')}
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '6px',
-            padding: '10px 18px',
-            borderRadius: '999px',
-            border: 'none',
-            background: 'var(--code-bg)',
-            color: 'var(--text-h)',
-            fontSize: '14px',
-            fontFamily: 'var(--sans)',
-            cursor: 'pointer',
-          }}
         >
-          <SettingsIcon size={16} />
           マスタ管理
-        </button>
-        <button
-          type="button"
+        </Button>
+        <Button
+          variant="primary"
+          size="sm"
           onClick={() => navigate('/events/new')}
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '6px',
-            padding: '10px 18px',
-            borderRadius: '999px',
-            border: 'none',
-            background: 'var(--accent-bg)',
-            color: 'var(--accent)',
-            fontSize: '14px',
-            fontWeight: 600,
-            fontFamily: 'var(--sans)',
-            cursor: 'pointer',
-          }}
         >
           + イベント作成
-        </button>
+        </Button>
       </div>
 
       {error && (

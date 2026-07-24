@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import { Header } from '../components/Header';
+import { Button } from '../components/common/Button';
 import {
   PickupLocationSection,
   type PickupLocationSectionHandle,
@@ -92,25 +93,9 @@ export function MasterPage() {
             {saveError}
           </p>
         )}
-        <button
-          type="button"
-          onClick={handleSave}
-          disabled={saving}
-          style={{
-            padding: '12px 32px',
-            borderRadius: '999px',
-            border: 'none',
-            background: 'var(--accent)',
-            color: 'var(--accent-contrast, #fff)',
-            fontSize: '16px',
-            fontFamily: 'var(--sans)',
-            cursor: saving ? 'default' : 'pointer',
-            opacity: saving ? 'var(--disabled-opacity)' : 1,
-            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)',
-          }}
-        >
+        <Button variant="primary" onClick={handleSave} disabled={saving}>
           {saving ? '保存中...' : '保存'}
-        </button>
+        </Button>
       </div>
 
       <hr

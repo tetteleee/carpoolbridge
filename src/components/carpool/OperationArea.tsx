@@ -1,3 +1,4 @@
+import { Button } from '../common/Button';
 import { EditIcon, ShareIcon } from '../icons';
 import type { Direction } from '../../types/event';
 
@@ -21,35 +22,24 @@ export function OperationArea({
   onEditAnswers,
   onShare,
 }: OperationAreaProps) {
-  const buttonStyle = {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '6px',
-    padding: '8px 16px',
-    borderRadius: '6px',
-    border: '1px solid var(--border)',
-    background: 'transparent',
-    color: 'var(--text-h)',
-    fontSize: '14px',
-    fontWeight: 700,
-    fontFamily: 'var(--sans)',
-    cursor: 'pointer',
-  } as const;
-
   return (
     <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
-      <button type="button" onClick={onEditAnswers} style={buttonStyle}>
-        <EditIcon size={16} />
-        回答編集
-      </button>
-      <button
-        type="button"
-        onClick={() => onShare(direction)}
-        style={buttonStyle}
+      <Button
+        variant="secondary"
+        size="sm"
+        icon={<EditIcon size={16} />}
+        onClick={onEditAnswers}
       >
-        <ShareIcon size={16} />
+        回答編集
+      </Button>
+      <Button
+        variant="secondary"
+        size="sm"
+        icon={<ShareIcon size={16} />}
+        onClick={() => onShare(direction)}
+      >
         共有
-      </button>
+      </Button>
     </div>
   );
 }

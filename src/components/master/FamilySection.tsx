@@ -12,6 +12,7 @@ import {
 import { getPickupLocations } from '../../services/master/pickupLocationService';
 import type { Child, Family, PickupLocation } from '../../types/master';
 import { ChildSection } from './ChildSection';
+import { Button } from '../common/Button';
 import { getSchoolEntryYearOptions } from '../../utils/schoolGrade';
 import { HomeIcon } from '../icons';
 
@@ -494,23 +495,14 @@ export function FamilySection({ ref }: FamilySectionProps) {
         </div>
       )}
 
-      <button
-        type="button"
+      <Button
+        variant="secondary"
+        size="sm"
         onClick={handleAdd}
-        style={{
-          alignSelf: 'flex-end',
-          padding: '10px 20px',
-          borderRadius: '999px',
-          border: 'none',
-          background: 'var(--accent-bg)',
-          color: 'var(--accent)',
-          fontSize: '14px',
-          fontFamily: 'var(--sans)',
-          cursor: 'pointer',
-        }}
+        style={{ alignSelf: 'flex-end' }}
       >
         + 家庭を追加
-      </button>
+      </Button>
     </section>
   );
 }

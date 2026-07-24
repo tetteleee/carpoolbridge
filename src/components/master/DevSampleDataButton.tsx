@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { seedSampleData } from '../../services/dev/seedSampleData';
+import { Button } from '../common/Button';
 import { CodeIcon } from '../icons';
 
 interface DevSampleDataButtonProps {
@@ -88,22 +89,9 @@ export function DevSampleDataButton({ onSeeded }: DevSampleDataButtonProps) {
         </p>
       )}
 
-      <button
-        type="button"
-        onClick={handleOpen}
-        style={{
-          padding: '10px 20px',
-          borderRadius: '6px',
-          border: '1px solid var(--negative-border)',
-          background: 'transparent',
-          color: 'var(--negative)',
-          fontSize: '14px',
-          fontFamily: 'var(--sans)',
-          cursor: 'pointer',
-        }}
-      >
+      <Button variant="danger" size="sm" onClick={handleOpen}>
         サンプルデータ投入
-      </button>
+      </Button>
 
       {dialogOpen && (
         <div
@@ -155,42 +143,22 @@ export function DevSampleDataButton({ onSeeded }: DevSampleDataButtonProps) {
               サンプルデータを投入しますか？
             </p>
             <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-              <button
-                type="button"
+              <Button
+                variant="secondary"
+                size="sm"
                 onClick={handleCancel}
                 disabled={running}
-                style={{
-                  padding: '10px 20px',
-                  borderRadius: '6px',
-                  border: '1px solid var(--border)',
-                  background: 'transparent',
-                  color: 'var(--text-h)',
-                  fontSize: '14px',
-                  fontFamily: 'var(--sans)',
-                  cursor: running ? 'default' : 'pointer',
-                  opacity: running ? 'var(--disabled-opacity)' : 1,
-                }}
               >
                 キャンセル
-              </button>
-              <button
-                type="button"
+              </Button>
+              <Button
+                variant="danger"
+                size="sm"
                 onClick={handleExecute}
                 disabled={running}
-                style={{
-                  padding: '10px 20px',
-                  borderRadius: '6px',
-                  border: 'none',
-                  background: 'var(--negative)',
-                  color: '#fff',
-                  fontSize: '14px',
-                  fontFamily: 'var(--sans)',
-                  cursor: running ? 'default' : 'pointer',
-                  opacity: running ? 'var(--disabled-opacity)' : 1,
-                }}
               >
                 {running ? '実行中...' : '実行'}
-              </button>
+              </Button>
             </div>
           </div>
         </div>

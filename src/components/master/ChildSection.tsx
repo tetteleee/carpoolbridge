@@ -3,6 +3,7 @@ import {
   formatSchoolEntryYearLabel,
   getSchoolEntryYearOptions,
 } from '../../utils/schoolGrade';
+import { Button } from '../common/Button';
 import { UserIcon } from '../icons';
 
 interface ChildSectionProps {
@@ -159,23 +160,14 @@ export function ChildSection({
         ))}
       </div>
 
-      <button
-        type="button"
+      <Button
+        variant="secondary"
+        size="sm"
         onClick={onAdd}
-        style={{
-          alignSelf: 'flex-end',
-          padding: '8px 16px',
-          borderRadius: '999px',
-          border: 'none',
-          background: 'var(--accent-bg)',
-          color: 'var(--accent)',
-          fontSize: '13px',
-          fontFamily: 'var(--sans)',
-          cursor: 'pointer',
-        }}
+        style={{ alignSelf: 'flex-end' }}
       >
         + 子供を追加
-      </button>
+      </Button>
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Button } from './common/Button';
 
 interface RequestAccessProps {
   uid: string;
@@ -129,25 +130,14 @@ export function RequestAccess({ uid }: RequestAccessProps) {
           </code>
         </div>
 
-        <button
+        <Button
           id="request-access-copy-button"
-          type="button"
+          variant="primary"
           onClick={handleCopy}
-          style={{
-            padding: '10px 32px',
-            borderRadius: '999px',
-            border: '1px solid var(--accent-border)',
-            background: copied ? 'var(--accent-bg)' : 'transparent',
-            color: 'var(--accent)',
-            fontSize: '15px',
-            fontFamily: 'var(--sans)',
-            cursor: 'pointer',
-            transition: 'background 0.2s, border-color 0.2s',
-            minWidth: '120px',
-          }}
+          style={{ minWidth: '120px' }}
         >
           {copied ? 'コピーしました' : 'コピー'}
-        </button>
+        </Button>
       </div>
     </div>
   );

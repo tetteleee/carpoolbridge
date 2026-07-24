@@ -1,4 +1,5 @@
 import { useEffect, useImperativeHandle, useState } from 'react';
+import { Button } from '../common/Button';
 import { FlagIcon } from '../icons';
 import {
   createDestination,
@@ -266,23 +267,14 @@ export function DestinationSection({ ref }: DestinationSectionProps) {
         </div>
       )}
 
-      <button
-        type="button"
+      <Button
+        variant="secondary"
+        size="sm"
         onClick={handleAdd}
-        style={{
-          alignSelf: 'flex-end',
-          padding: '10px 20px',
-          borderRadius: '999px',
-          border: 'none',
-          background: 'var(--accent-bg)',
-          color: 'var(--accent)',
-          fontSize: '14px',
-          fontFamily: 'var(--sans)',
-          cursor: 'pointer',
-        }}
+        style={{ alignSelf: 'flex-end' }}
       >
         + 目的地を追加
-      </button>
+      </Button>
     </section>
   );
 }

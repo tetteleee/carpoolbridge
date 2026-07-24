@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Header } from '../components/Header';
+import { Button } from '../components/common/Button';
 import { FlagIcon } from '../components/icons';
 import { createEvent } from '../services/event/eventService';
 import { getDestinations } from '../services/master/destinationService';
@@ -201,25 +202,9 @@ export function EventCreatePage() {
           boxSizing: 'border-box',
         }}
       >
-        <button
-          type="button"
-          onClick={handleSave}
-          disabled={!canSave || saving}
-          style={{
-            padding: '12px 32px',
-            borderRadius: '999px',
-            border: 'none',
-            background: 'var(--accent)',
-            color: 'var(--accent-contrast, #fff)',
-            fontSize: '16px',
-            fontFamily: 'var(--sans)',
-            cursor: !canSave || saving ? 'default' : 'pointer',
-            opacity: !canSave || saving ? 'var(--disabled-opacity)' : 1,
-            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)',
-          }}
-        >
+        <Button variant="primary" onClick={handleSave} disabled={!canSave || saving}>
           {saving ? '保存中...' : '保存'}
-        </button>
+        </Button>
       </div>
     </div>
   );

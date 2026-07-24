@@ -1,3 +1,5 @@
+import { Button } from '../common/Button';
+
 interface CarpoolRecreateDialogProps {
   /** ダイアログの表示・非表示 */
   open: boolean;
@@ -77,42 +79,22 @@ export function CarpoolRecreateDialog({
           配車を再作成しますか？
         </p>
         <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-          <button
-            type="button"
+          <Button
+            variant="secondary"
+            size="sm"
             onClick={onCancel}
             disabled={processing}
-            style={{
-              padding: '10px 20px',
-              borderRadius: '6px',
-              border: '1px solid var(--border)',
-              background: 'transparent',
-              color: 'var(--text-h)',
-              fontSize: '14px',
-              fontFamily: 'var(--sans)',
-              cursor: processing ? 'default' : 'pointer',
-              opacity: processing ? 'var(--disabled-opacity)' : 1,
-            }}
           >
             キャンセル
-          </button>
-          <button
-            type="button"
+          </Button>
+          <Button
+            variant="primary"
+            size="sm"
             onClick={onConfirm}
             disabled={processing}
-            style={{
-              padding: '10px 20px',
-              borderRadius: '6px',
-              border: 'none',
-              background: 'var(--accent)',
-              color: '#fff',
-              fontSize: '14px',
-              fontFamily: 'var(--sans)',
-              cursor: processing ? 'default' : 'pointer',
-              opacity: processing ? 'var(--disabled-opacity)' : 1,
-            }}
           >
             {processing ? '再作成中...' : '再作成'}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

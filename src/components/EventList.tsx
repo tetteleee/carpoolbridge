@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { Event } from '../types/event';
+import { Button } from './common/Button';
 import { ChevronDownIcon, ChevronRightIcon } from './icons';
 import { formatDateWithWeekday, getTodayDateString } from '../utils/date';
 
@@ -165,26 +166,13 @@ export function EventList({
 
       {pastEvents.length > 0 && (
         <>
-          <button
-            type="button"
+          <Button
+            variant="secondary"
+            size="sm"
             id="event-list-past-toggle"
             onClick={() => setShowPast((prev) => !prev)}
             aria-expanded={showPast}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: '8px',
-              width: '100%',
-              padding: '10px 16px',
-              borderRadius: '12px',
-              border: 'none',
-              background: 'transparent',
-              color: 'var(--text)',
-              fontSize: '13px',
-              fontFamily: 'var(--sans)',
-              cursor: 'pointer',
-            }}
+            style={{ justifyContent: 'space-between', width: '100%' }}
           >
             <span>過去のイベント（{pastEvents.length}件）</span>
             <span
@@ -196,7 +184,7 @@ export function EventList({
             >
               <ChevronDownIcon size={16} />
             </span>
-          </button>
+          </Button>
 
           {showPast && pastEvents.map((event) => renderEventCard(event, true))}
         </>

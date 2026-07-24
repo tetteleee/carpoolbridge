@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Header } from '../components/Header';
+import { Button } from '../components/common/Button';
 import { FamilyResponseCard } from '../components/eventEdit/FamilyResponseCard';
 import { CarpoolRecreateDialog } from '../components/eventEdit/CarpoolRecreateDialog';
 import { DevSampleResponseButton } from '../components/eventEdit/DevSampleResponseButton';
@@ -255,46 +256,17 @@ export function EventEditPage() {
                 gap: '12px',
               }}
             >
-              <button
-                type="button"
-                onClick={handleBackClick}
-                style={{
-                  padding: '12px 24px',
-                  borderRadius: '8px',
-                  border: '1px solid var(--border)',
-                  background: 'transparent',
-                  color: 'var(--text-h)',
-                  fontSize: '15px',
-                  fontWeight: 700,
-                  fontFamily: 'var(--sans)',
-                  cursor: 'pointer',
-                }}
-              >
+              <Button variant="secondary" onClick={handleBackClick}>
                 戻る
-              </button>
-              <button
-                type="button"
+              </Button>
+              <Button
+                variant="primary"
+                icon={<CarIcon size={18} />}
                 onClick={handleCreateCarpoolClick}
                 disabled={creatingCarpools}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  padding: '12px 24px',
-                  borderRadius: '8px',
-                  border: 'none',
-                  background: 'var(--accent)',
-                  color: '#fff',
-                  fontSize: '15px',
-                  fontWeight: 700,
-                  fontFamily: 'var(--sans)',
-                  cursor: creatingCarpools ? 'default' : 'pointer',
-                  opacity: creatingCarpools ? 'var(--disabled-opacity)' : 1,
-                }}
               >
-                <CarIcon size={18} />
                 {creatingCarpools ? '配車作成中...' : '配車作成'}
-              </button>
+              </Button>
             </div>
           </div>
         )}
