@@ -34,7 +34,7 @@ export class DriverGroupCapacityExceededError extends Error {
 
   constructor(driverName: string) {
     super(
-      `${driverName}様の優先割り当て人数（同乗必須メンバー数）が、車両の有効定員（車両定員 - 1名）を超過しています。登録データを確認してください`
+      `${driverName}様の優先割り当て人数（同乗必須メンバー数）が、車両の有効定員を超過しています。登録データを確認してください`
     );
     this.name = 'DriverGroupCapacityExceededError';
     this.driverName = driverName;

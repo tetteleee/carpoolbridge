@@ -1,10 +1,16 @@
 import { useMemo } from 'react';
-import type { CarCardData } from '../components/carpool/CarCard';
+import {
+  computeOccupantCount,
+  isCoachSeatOccupied,
+  type CarCardData,
+} from '../components/carpool/CarCard';
 import type { UnassignedPerson } from '../components/carpool/UnassignedArea';
 
 interface UseCarpoolValidationResult {
   /** 定員超過の車が存在するかどうか */
   hasOverCapacityCar: boolean;
+  /** 運転者不在（参加コーチが自分の家庭の車に乗っていない）の車が存在するかどうか */
+  hasMissingDriverCoach: boolean;
   /** 未配車の子供・コーチが存在するかどうか */
   hasUnassignedPerson: boolean;
   /** いずれかの問題が存在するかどうか */
@@ -14,7 +20,7 @@ interface UseCarpoolValidationResult {
 }
 
 /**
- * 配車画面（メイン）の定員超過・未配車をリアルタイムに再判定するフック。
+ * 配車画面（メイン）の定員超過・運転者不在・未配車をリアルタイムに再判定するフック。
  * ref: docs/03_ユースケース.md#UC-05, docs/02_要件定義.md#14 配車修正機能
  *
  * carCards・unassignedPeopleは人カードの移動（ドラッグ＆ドロップ）のたびに
@@ -26,20 +32,38 @@ export function useCarpoolValidation(
 ): UseCarpoolValidationResult {
   return useMemo(() => {
     const hasOverCapacityCar = carCards.some(
-      (car) => car.members.length + 1 > car.capacity
+      (car) => computeOccupantCount(car) > car.capacity
+    );
+    const hasMissingDriverCoach = carCards.some(
+      (car) => car.expectedCoachPersonId !== null && !isCoachSeatOccupied(car)
     );
     const hasUnassignedPerson = unassignedPeople.length > 0;
-    const hasWarning = hasOverCapacityCar || hasUnassignedPerson;
+    const hasWarning = hasOverCapacityCar || hasMissingDriverCoach || hasUnassignedPerson;
 
-    let message: string | null = null;
-    if (hasOverCapacityCar && hasUnassignedPerson) {
-      message = '定員超過の車と未配車の子供があります';
-    } else if (hasOverCapacityCar) {
-      message = '定員超過の車があります';
-    } else if (hasUnassignedPerson) {
-      message = '未配車の子供がいます';
+    const phrases: string[] = [];
+    if (hasOverCapacityCar) {
+      phrases.push('定員超過の車');
+    }
+    if (hasMissingDriverCoach) {
+      phrases.push('運転者不在の車');
+    }
+    if (hasUnassignedPerson) {
+      phrases.push('未配車の子供');
     }
 
-    return { hasOverCapacityCar, hasUnassignedPerson, hasWarning, message };
+    let message: string | null = null;
+    if (phrases.length === 1 && hasUnassignedPerson) {
+      message = `${phrases[0]}がいます`;
+    } else if (phrases.length > 0) {
+      message = `${phrases.join('と')}があります`;
+    }
+
+    return {
+      hasOverCapacityCar,
+      hasMissingDriverCoach,
+      hasUnassignedPerson,
+      hasWarning,
+      message,
+    };
   }, [carCards, unassignedPeople]);
 }

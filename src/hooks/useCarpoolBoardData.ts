@@ -6,7 +6,7 @@ import { getFamilies } from '../services/master/familyService';
 import { getChildrenByFamilyId } from '../services/master/childService';
 import { getPickupLocations } from '../services/master/pickupLocationService';
 import { getResponses } from '../services/event/responseService';
-import { isDriverForDirection, isChildRidingForDirection } from '../services/carpool/eligibility';
+import { isChildRidingForDirection } from '../services/carpool/eligibility';
 import { memberKey } from '../services/carpool/carpoolMember';
 import { getSchoolGrade } from '../utils/schoolGrade';
 import type { Carpool, CarpoolMember, Direction, Response } from '../types/event';
@@ -35,6 +35,11 @@ interface BoardMasterData {
 function toGradeLabel(schoolEntryYear: number): string | null {
   const grade = getSchoolGrade(schoolEntryYear);
   return grade === null ? null : `小${grade}`;
+}
+
+/** 家庭に参加するコーチが紐づいているかどうか（車出し可否に関わらず判定） */
+function hasParticipatingCoach(family: Family | undefined, response: Response | undefined): boolean {
+  return !!family && family.coachName !== null && response?.coachParticipating === true;
 }
 
 /** 乗車メンバー（CarpoolMember）の集合場所IDを取得する。対応するマスタが見つからない場合はnull */
@@ -124,7 +129,6 @@ function buildEligibleMembers(masterData: BoardMasterData, direction: Direction)
     if (!family || !family.isActive) {
       continue;
     }
-    const driving = isDriverForDirection(response, direction);
 
     for (const child of response.children) {
       const childMaster = masterData.childById.get(child.childId);
@@ -137,7 +141,7 @@ function buildEligibleMembers(masterData: BoardMasterData, direction: Direction)
       }
     }
 
-    if (family.coachName !== null && response.coachParticipating === true && !driving) {
+    if (hasParticipatingCoach(family, response)) {
       members.push({ type: 'coach', familyId });
     }
   }
@@ -238,11 +242,13 @@ export function useCarpoolBoardData(
 
     return carpools.map((carpool) => {
       const family = masterData.familyById.get(carpool.driverFamilyId);
+      const response = masterData.responseByFamilyId.get(carpool.driverFamilyId);
       return {
         id: carpool.id,
         familyName: family?.familyName ?? '',
         capacity: carpool.capacity,
         routeLocationNames: buildRouteLocationNames(carpool, masterData),
+        expectedCoachPersonId: hasParticipatingCoach(family, response) ? (family as Family).id : null,
         members: carpool.members
           .map((member) => toPersonCardData(member, masterData))
           .filter((person): person is PersonCardData => person !== null),

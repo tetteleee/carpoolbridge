@@ -84,12 +84,10 @@ export interface Carpool {
   id: string;
   /** 方向（行き／帰り） */
   direction: Direction;
-  /** 運転者の所属家庭ID */
+  /** この車を出す家庭ID（運転者個人を特定するデータではない） */
   driverFamilyId: string;
-  /** 運転者がコーチかどうか */
-  driverIsCoach: boolean;
   /** 運転者本人を含む総定員 */
   capacity: number;
-  /** 乗車メンバー（運転者は含めない） */
+  /** 乗車メンバー（実体を持たない運転者（保護者）は含めない。家庭に参加コーチがいる場合はコーチ自身も通常のメンバーとして含む） */
   members: CarpoolMember[];
 }

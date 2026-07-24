@@ -95,8 +95,7 @@ export async function runCarpoolAssignment(
     const hasRidingChild = response.children.some(
       (child) => activeChildIds.has(child.childId) && isChildRidingForDirection(child, direction)
     );
-    const hasRidingCoach =
-      family.coachName !== null && response.coachParticipating === true && !driving;
+    const hasRidingCoach = family.coachName !== null && response.coachParticipating === true;
 
     if (
       (driving || hasRidingChild || hasRidingCoach) &&
@@ -128,30 +127,26 @@ export async function runCarpoolAssignment(
   };
 
   const vehicleCapacityByFamilyId = new Map<string, number>();
-  const driverIsCoachByFamilyId = new Map<string, boolean>();
   const candidates: DrivingCandidate[] = [];
   const passengers: Passenger[] = [];
 
   for (const family of answeredFamilies) {
     const response = responseByFamilyId.get(family.id) as Response;
     const activeChildIds = activeChildIdsByFamilyId.get(family.id) as Set<string>;
-    const driving = isDriverForDirection(response, direction);
-    const driverIsCoach = family.coachName !== null && response.coachParticipating === true;
+    const hasParticipatingCoach = family.coachName !== null && response.coachParticipating === true;
     const vehicleCapacity = response.capacityToday ?? family.vehicleCapacity;
 
     vehicleCapacityByFamilyId.set(family.id, vehicleCapacity);
-    driverIsCoachByFamilyId.set(family.id, driverIsCoach);
 
     candidates.push({
       familyId: family.id,
-      driverName: driverIsCoach
-        ? (family.coachName as string)
-        : toFamilyDisplayName(family.familyName),
+      driverName: toFamilyDisplayName(family.familyName),
       vehicleCapacity,
       driverPickupLocationId: family.pickupLocationId,
       driverPickupLocation: toLocation(family.pickupLocationId),
       driverOutward: response.driverOutward,
       driverReturn: response.driverReturn,
+      hasParticipatingCoach,
     });
 
     for (const child of response.children) {
@@ -165,7 +160,7 @@ export async function runCarpoolAssignment(
       }
     }
 
-    if (family.coachName !== null && response.coachParticipating === true && !driving) {
+    if (hasParticipatingCoach) {
       passengers.push({
         familyId: family.id,
         pickupLocationId: family.pickupLocationId,
@@ -194,7 +189,6 @@ export async function runCarpoolAssignment(
   const carpoolDocs: Omit<Carpool, 'id'>[] = assignedVehicles.map((vehicle) => ({
     direction,
     driverFamilyId: vehicle.driverFamilyId,
-    driverIsCoach: driverIsCoachByFamilyId.get(vehicle.driverFamilyId) ?? false,
     capacity: vehicleCapacityByFamilyId.get(vehicle.driverFamilyId) ?? 0,
     members: vehicle.members,
   }));

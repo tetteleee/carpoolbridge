@@ -17,8 +17,23 @@ export interface CarCardData {
   capacity: number;
   /** 経由する集合場所名の一覧（表示順は巡回順を意味しない。実際の順番は当日ドライバーが判断する） */
   routeLocationNames: string[];
-  /** 乗車メンバー（運転者は含めない） */
+  /** 車を出す家庭自身の参加コーチの人カードID（family.id）。該当コーチがいない場合はnull */
+  expectedCoachPersonId: string | null;
+  /** 乗車メンバー（実体を持たない運転者（保護者）は含めない） */
   members: PersonCardData[];
+}
+
+/** 車を出す家庭自身の参加コーチが、この車の乗車メンバーとして実際に乗っているかどうか */
+export function isCoachSeatOccupied(car: CarCardData): boolean {
+  return (
+    car.expectedCoachPersonId !== null &&
+    car.members.some((member) => member.id === car.expectedCoachPersonId)
+  );
+}
+
+/** 乗車人数を算出する（参加コーチが乗車メンバーに含まれない場合のみ、実体を持たない運転者の1名を加算） */
+export function computeOccupantCount(car: CarCardData): number {
+  return car.members.length + (isCoachSeatOccupied(car) ? 0 : 1);
 }
 
 interface CarCardProps {
@@ -55,7 +70,7 @@ export function CarCard({
   insertionAnchorKey = null,
   onPersonPointerDown,
 }: CarCardProps) {
-  const occupantCount = car.members.length + 1;
+  const occupantCount = computeOccupantCount(car);
   const isOverCapacity = occupantCount > car.capacity;
 
   return (
