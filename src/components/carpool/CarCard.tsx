@@ -59,7 +59,7 @@ export function CarCard({
       data-drop-zone-id={car.id}
       style={{
         border: isOverCapacity
-          ? '1px solid var(--negative-border)'
+          ? '3.0px solid var(--negative-border)'
           : isDropTarget
             ? '2px dashed var(--drop-target-border)'
             : '1px solid var(--border)',
