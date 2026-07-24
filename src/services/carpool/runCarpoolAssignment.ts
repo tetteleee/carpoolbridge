@@ -196,12 +196,6 @@ export async function runCarpoolAssignment(
     driverFamilyId: vehicle.driverFamilyId,
     driverIsCoach: driverIsCoachByFamilyId.get(vehicle.driverFamilyId) ?? false,
     capacity: vehicleCapacityByFamilyId.get(vehicle.driverFamilyId) ?? 0,
-    routeOrder: [
-      vehicle.driverPickupLocationId,
-      ...[...vehicle.pickupLocationIds].filter(
-        (locationId) => locationId !== vehicle.driverPickupLocationId
-      ),
-    ],
     members: vehicle.members,
   }));
 

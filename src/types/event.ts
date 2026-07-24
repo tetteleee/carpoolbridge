@@ -90,8 +90,6 @@ export interface Carpool {
   driverIsCoach: boolean;
   /** 運転者本人を含む総定員 */
   capacity: number;
-  /** 巡回順（集合場所IDの配列） */
-  routeOrder: string[];
   /** 乗車メンバー（運転者は含めない） */
   members: CarpoolMember[];
 }

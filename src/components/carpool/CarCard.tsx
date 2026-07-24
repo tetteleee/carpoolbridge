@@ -14,7 +14,7 @@ export interface CarCardData {
   familyName: string;
   /** 運転者本人を含む総定員 */
   capacity: number;
-  /** 巡回する集合場所名（巡回順） */
+  /** 経由する集合場所名の一覧（表示順は巡回順を意味しない。実際の順番は当日ドライバーが判断する） */
   routeLocationNames: string[];
   /** 乗車メンバー（運転者は含めない） */
   members: PersonCardData[];
@@ -41,7 +41,7 @@ function toCarName(familyName: string): string {
 
 /**
  * 配車画面（メイン）の車カード。
- * 乗車率・巡回する集合場所を表示し、乗車人数（運転者を含む）が
+ * 乗車率・経由する集合場所を表示し、乗車人数（運転者を含む）が
  * 定員を超過している場合はカード枠を赤色で表示する。
  * ドラッグ＆ドロップ動作はT43で実施する。
  */
@@ -112,7 +112,7 @@ export function CarCard({
             display: 'flex',
             flexWrap: 'wrap',
             alignItems: 'center',
-            gap: '4px',
+            gap: '4px 10px',
             fontSize: '12px',
             color: 'var(--text)',
           }}
@@ -120,13 +120,10 @@ export function CarCard({
           {car.routeLocationNames.map((locationName, index) => (
             <span
               key={index}
-              style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
+              style={{ display: 'flex', alignItems: 'center', gap: '2px' }}
             >
-              {index > 0 && <span>→</span>}
-              <span style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
-                <MapPinIcon size={12} />
-                {locationName}
-              </span>
+              <MapPinIcon size={12} />
+              {locationName}
             </span>
           ))}
         </div>
