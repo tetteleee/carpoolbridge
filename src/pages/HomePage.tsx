@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { EventList } from '../components/EventList';
-import { Header, HeaderChip } from '../components/Header';
+import { Header } from '../components/Header';
 import { Button } from '../components/common/Button';
 import { SettingsIcon } from '../components/icons';
 import { getEvents } from '../services/event/eventService';
@@ -58,11 +58,7 @@ export function HomePage() {
           boxSizing: 'border-box',
         }}
       >
-        <Header
-          title="イベント一覧"
-          showAppIcon
-          trailing={<HeaderChip>全{events.length}件</HeaderChip>}
-        />
+        <Header title="イベント一覧" showAppIcon />
       </div>
 
       <div
