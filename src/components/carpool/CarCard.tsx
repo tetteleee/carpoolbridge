@@ -152,9 +152,10 @@ export function CarCard({
         style={{
           listStyle: 'none',
           margin: 0,
-          padding: 0,
+          padding: '8px 10px',
           display: 'flex',
           flexDirection: 'column',
+          gap: '6px',
         }}
       >
         {car.members.map((member, index) => {
@@ -167,10 +168,10 @@ export function CarCard({
               key={member.id}
               data-person-key={personKey}
               style={{
-                borderTop: isInsertionAnchor
-                  ? '3px solid var(--drop-target-border)'
-                  : '1px solid var(--border)',
+                borderTop: isInsertionAnchor ? '3px solid var(--drop-target-border)' : undefined,
                 borderBottom: isAppendTarget ? '3px solid var(--drop-target-border)' : undefined,
+                borderRadius: '6px',
+                overflow: 'hidden',
               }}
             >
               <PersonCard
