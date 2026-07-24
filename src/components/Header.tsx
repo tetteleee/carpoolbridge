@@ -1,11 +1,12 @@
 import type { CSSProperties, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BaseballIcon, ChevronLeftIcon } from './icons';
+import appIcon from '../assets/app-icon.svg';
+import { ChevronLeftIcon } from './icons';
 
 interface HeaderProps {
   /** 画面タイトル。長い場合は1行で省略表示される */
   title: string;
-  /** ルート画面（ホーム）のみ指定。指定時はタイトル左にアプリアイコン（野球ボール）を表示する */
+  /** ルート画面（ホーム）のみ指定。指定時はタイトル左にアプリアイコンを表示する */
   showAppIcon?: boolean;
   /** サブ画面のみ指定。指定時はタイトル左に戻るボタン（アイコンのみ）を表示する */
   backTo?: string;
@@ -62,11 +63,10 @@ export function Header({ title, showAppIcon, backTo, trailing }: HeaderProps) {
           aria-hidden="true"
           style={{
             ...iconButtonStyle,
-            background: 'var(--accent-bg)',
-            color: 'var(--accent)',
+            background: 'rgba(61, 90, 128, 0.08)',
           }}
         >
-          <BaseballIcon size={20} />
+          <img src={appIcon} width={32} height={20} alt="" />
         </span>
       )}
       <h1
