@@ -7,6 +7,10 @@ import type { PersonCardData } from '../components/carpool/PersonCard';
 const LONG_PRESS_MS = 150;
 /** 長押し確定前にこの距離（px）を超えて指が動いた場合はタップ・スクロール操作とみなしキャンセルする */
 const MOVE_CANCEL_THRESHOLD_PX = 10;
+/** オートスクロールが発生する、画面上端・下端からの範囲（px）。ヘッダーの実高さには依存させない固定値 */
+const AUTO_SCROLL_EDGE_PX = 60;
+/** オートスクロールの速度（1フレームあたりのスクロール量、px） */
+const AUTO_SCROLL_SPEED_PX = 12;
 
 /** ドラッグ中の情報 */
 export interface DragState {
@@ -93,6 +97,9 @@ export function useDragAndDrop({ onDrop }: UseDragAndDropOptions): UseDragAndDro
   const pendingRef = useRef<PendingPress | null>(null);
   const longPressTimerRef = useRef<number | null>(null);
   const listenersRef = useRef<AttachedListeners | null>(null);
+  // オートスクロールの現在の方向。稼働中はrequestAnimationFrameのループを回し続ける
+  const autoScrollDirectionRef = useRef<'up' | 'down' | null>(null);
+  const autoScrollFrameRef = useRef<number | null>(null);
 
   const clearLongPressTimer = () => {
     if (longPressTimerRef.current !== null) {
@@ -110,9 +117,44 @@ export function useDragAndDrop({ onDrop }: UseDragAndDropOptions): UseDragAndDro
     }
   };
 
+  const stopAutoScroll = () => {
+    if (autoScrollFrameRef.current !== null) {
+      window.cancelAnimationFrame(autoScrollFrameRef.current);
+      autoScrollFrameRef.current = null;
+    }
+    autoScrollDirectionRef.current = null;
+  };
+
+  const runAutoScrollFrame = () => {
+    if (autoScrollDirectionRef.current === 'up') {
+      window.scrollBy(0, -AUTO_SCROLL_SPEED_PX);
+    } else if (autoScrollDirectionRef.current === 'down') {
+      window.scrollBy(0, AUTO_SCROLL_SPEED_PX);
+    }
+    autoScrollFrameRef.current = window.requestAnimationFrame(runAutoScrollFrame);
+  };
+
+  /** ポインターのY座標から、画面端に近ければオートスクロールを開始・継続し、離れれば停止する */
+  const updateAutoScroll = (clientY: number) => {
+    if (clientY < AUTO_SCROLL_EDGE_PX) {
+      autoScrollDirectionRef.current = 'up';
+    } else if (clientY > window.innerHeight - AUTO_SCROLL_EDGE_PX) {
+      autoScrollDirectionRef.current = 'down';
+    } else {
+      autoScrollDirectionRef.current = null;
+    }
+
+    if (autoScrollDirectionRef.current === null) {
+      stopAutoScroll();
+    } else if (autoScrollFrameRef.current === null) {
+      autoScrollFrameRef.current = window.requestAnimationFrame(runAutoScrollFrame);
+    }
+  };
+
   const resetAll = () => {
     clearLongPressTimer();
     detachListeners();
+    stopAutoScroll();
     activeDragRef.current = null;
     pendingRef.current = null;
     setDragState(null);
@@ -134,6 +176,7 @@ export function useDragAndDrop({ onDrop }: UseDragAndDropOptions): UseDragAndDro
     }
 
     event.preventDefault();
+    updateAutoScroll(event.clientY);
     const zoneId = resolveZoneId(event.clientX, event.clientY);
     setHoveredZoneId(zoneId);
     setDragState({
