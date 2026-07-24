@@ -35,10 +35,11 @@ export function OperationArea({
       <Button
         variant="secondary"
         size="sm"
-        icon={<ShareIcon size={16} />}
+        aria-label="共有"
         onClick={() => onShare(direction)}
+        style={{ padding: '8px', width: '36px' }}
       >
-        共有
+        <ShareIcon size={16} />
       </Button>
     </div>
   );

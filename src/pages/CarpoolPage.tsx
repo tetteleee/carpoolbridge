@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Header } from '../components/Header';
 import { CarCard } from '../components/carpool/CarCard';
+import { CarpoolWarningPopup } from '../components/carpool/CarpoolWarningPopup';
+import { DirectionToggle } from '../components/carpool/DirectionToggle';
 import { OperationArea } from '../components/carpool/OperationArea';
 import { UnassignedArea } from '../components/carpool/UnassignedArea';
 import { useCarpoolDirection } from '../hooks/useCarpoolDirection';
@@ -9,23 +11,20 @@ import { useCarpoolBoardData } from '../hooks/useCarpoolBoardData';
 import { useCarpoolValidation } from '../hooks/useCarpoolValidation';
 import { useDragAndDrop, type DropResult } from '../hooks/useDragAndDrop';
 import { getEvent } from '../services/event/eventService';
+import { getDestination } from '../services/master/destinationService';
 import { moveCarpoolMember, UNASSIGNED_ZONE_ID } from '../services/carpool/carpoolMember';
 import { formatDateWithWeekday } from '../utils/date';
 import type { Direction, Event } from '../types/event';
 
-const DIRECTION_TABS: { direction: Direction; label: string }[] = [
-  { direction: 'OUTWARD', label: '行き' },
-  { direction: 'RETURN', label: '帰り' },
-];
-
 /**
  * 配車画面（メイン）。
- * 「行き」「帰り」タブで選択中のdirectionに応じて配車結果を切り替える。
+ * 「行き」「帰り」の切り替えボタンで選択中のdirectionに応じて配車結果を切り替える。
  */
 export function CarpoolPage() {
   const { eventId } = useParams<{ eventId: string }>();
   const navigate = useNavigate();
   const [event, setEvent] = useState<Event | null>(null);
+  const [destinationName, setDestinationName] = useState('');
   const {
     direction,
     setDirection,
@@ -55,6 +54,15 @@ export function CarpoolPage() {
     }
     getEvent(eventId).then(setEvent);
   }, [eventId]);
+
+  useEffect(() => {
+    if (!event) {
+      return;
+    }
+    getDestination(event.destinationId).then((destination) =>
+      setDestinationName(destination?.name ?? '')
+    );
+  }, [event]);
 
   const handleDrop = ({ member, sourceZoneId, targetZoneId, targetAnchorKey }: DropResult) => {
     if (!eventId) {
@@ -98,72 +106,87 @@ export function CarpoolPage() {
           top: 0,
           zIndex: 10,
           background: 'var(--bg)',
-          padding: '14px 16px 16px',
+          padding: '14px 16px',
           borderBottom: '1px solid var(--border)',
           boxSizing: 'border-box',
         }}
       >
-        <div style={{ marginBottom: '12px' }}>
-          <Header
-            title={event ? `${formatDateWithWeekday(event.date)} ${event.name}` : '配車'}
-            backTo="/"
-          />
-        </div>
+        <Header
+          title="配車画面"
+          backTo="/"
+          trailing={
+            <OperationArea
+              direction={direction}
+              onEditAnswers={handleEditAnswersClick}
+              onShare={handleShareClick}
+            />
+          }
+        />
 
-        <div role="tablist" style={{ display: 'flex', gap: '8px' }}>
-          {DIRECTION_TABS.map((tab) => {
-            const selected = tab.direction === direction;
-            return (
-              <button
-                key={tab.direction}
-                type="button"
-                role="tab"
-                aria-selected={selected}
-                onClick={() => setDirection(tab.direction)}
-                style={{
-                  padding: '8px 20px',
-                  borderRadius: '999px',
-                  border: `1px solid ${selected ? 'var(--accent)' : 'var(--border)'}`,
-                  background: selected ? 'var(--accent-bg)' : 'transparent',
-                  color: selected ? 'var(--accent)' : 'var(--text)',
-                  fontSize: '14px',
-                  fontWeight: 700,
-                  fontFamily: 'var(--sans)',
-                  cursor: 'pointer',
-                }}
-              >
-                {tab.label}
-              </button>
-            );
-          })}
-        </div>
-
-        <div style={{ marginTop: '12px' }}>
-          <OperationArea
-            direction={direction}
-            onEditAnswers={handleEditAnswersClick}
-            onShare={handleShareClick}
-          />
-        </div>
-
-        {!loading && !error && hasWarning && (
-          <p
-            role="alert"
+        {event && (
+          <div
             style={{
-              margin: '12px 0 0',
-              padding: '8px 12px',
-              borderRadius: '6px',
-              border: '1px solid var(--negative-border)',
-              background: 'var(--negative-bg)',
-              color: 'var(--negative)',
-              fontSize: '13px',
-              fontWeight: 700,
-              fontFamily: 'var(--sans)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              marginTop: '10px',
+              paddingLeft: '2px',
             }}
           >
-            ⚠ {validationMessage}
-          </p>
+            <span
+              style={{
+                flexShrink: 0,
+                fontSize: '14px',
+                fontWeight: 500,
+                color: 'var(--text-h)',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {formatDateWithWeekday(event.date)}
+            </span>
+            <div
+              style={{
+                flex: 1,
+                minWidth: 0,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '2px',
+                textAlign: 'left',
+              }}
+            >
+              <span
+                style={{
+                  fontSize: '15px',
+                  fontWeight: 700,
+                  lineHeight: 1.35,
+                  color: 'var(--text-h)',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {event.name}
+              </span>
+              {destinationName && (
+                <span
+                  style={{
+                    fontSize: '13px',
+                    color: 'var(--text)',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {destinationName}
+                </span>
+              )}
+            </div>
+          </div>
         )}
+      </div>
+
+      <div style={{ padding: '12px 16px 4px', boxSizing: 'border-box' }}>
+        <DirectionToggle direction={direction} onChange={setDirection} />
       </div>
 
       <div
@@ -214,6 +237,12 @@ export function CarpoolPage() {
           )
         )}
       </div>
+
+      <CarpoolWarningPopup
+        message={
+          !loading && !error && hasWarning && !dragState ? validationMessage : null
+        }
+      />
 
       {dragState && (
         <div
