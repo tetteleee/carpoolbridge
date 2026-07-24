@@ -1,7 +1,6 @@
 import type { CSSProperties, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
-import appIcon from '../assets/app-icon.svg';
-import { ChevronLeftIcon } from './icons';
+import { AppIcon, ChevronLeftIcon } from './icons';
 
 interface HeaderProps {
   /** 画面タイトル。長い場合は1行で省略表示される */
@@ -66,7 +65,7 @@ export function Header({ title, showAppIcon, backTo, trailing }: HeaderProps) {
             background: 'rgba(61, 90, 128, 0.08)',
           }}
         >
-          <img src={appIcon} width={32} height={20} alt="" />
+          <AppIcon size={32} />
         </span>
       )}
       <h1

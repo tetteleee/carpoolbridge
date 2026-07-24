@@ -14,7 +14,7 @@ import type { Child, Family, PickupLocation } from '../../types/master';
 import { ChildSection } from './ChildSection';
 import { Button } from '../common/Button';
 import { getSchoolEntryYearOptions } from '../../utils/schoolGrade';
-import { HomeIcon } from '../icons';
+import { HomeIcon, LoadingIndicator } from '../icons';
 
 type EditableField = 'familyName' | 'coachName' | 'vehicleCapacity';
 
@@ -293,9 +293,9 @@ export function FamilySection({ ref }: FamilySectionProps) {
       )}
 
       {loading ? (
-        <p style={{ margin: 0, fontSize: '14px', color: 'var(--text)' }}>
-          読み込み中...
-        </p>
+        <div style={{ display: 'flex', justifyContent: 'center', padding: '24px 0' }}>
+          <LoadingIndicator />
+        </div>
       ) : (
         <div
           id="family-list"

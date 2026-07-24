@@ -8,8 +8,10 @@ import { memberKey } from '../services/carpool/carpoolMember';
 const LONG_PRESS_MS = 150;
 /** 長押し確定前にこの距離（px）を超えて指が動いた場合はタップ・スクロール操作とみなしキャンセルする */
 const MOVE_CANCEL_THRESHOLD_PX = 10;
-/** オートスクロールが発生する、画面上端・下端からの範囲（px）。ヘッダーの実高さには依存させない固定値 */
-const AUTO_SCROLL_EDGE_PX = 60;
+/** オートスクロール（上方向）が発生する、画面上端からの範囲（px）。sticky headerと重なる分、下端側より広めに取った固定値（ヘッダーの実高さには依存させない） */
+const AUTO_SCROLL_EDGE_TOP_PX = 100;
+/** オートスクロール（下方向）が発生する、画面下端からの範囲（px）。固定値（ヘッダーの実高さには依存させない） */
+const AUTO_SCROLL_EDGE_BOTTOM_PX = 60;
 /** オートスクロールの速度（1フレームあたりのスクロール量、px） */
 const AUTO_SCROLL_SPEED_PX = 12;
 
@@ -175,9 +177,9 @@ export function useDragAndDrop({ onDrop }: UseDragAndDropOptions): UseDragAndDro
 
   /** ポインターのY座標から、画面端に近ければオートスクロールを開始・継続し、離れれば停止する */
   const updateAutoScroll = (clientY: number) => {
-    if (clientY < AUTO_SCROLL_EDGE_PX) {
+    if (clientY < AUTO_SCROLL_EDGE_TOP_PX) {
       autoScrollDirectionRef.current = 'up';
-    } else if (clientY > window.innerHeight - AUTO_SCROLL_EDGE_PX) {
+    } else if (clientY > window.innerHeight - AUTO_SCROLL_EDGE_BOTTOM_PX) {
       autoScrollDirectionRef.current = 'down';
     } else {
       autoScrollDirectionRef.current = null;

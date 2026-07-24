@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Header } from '../components/Header';
+import { LoadingIndicator } from '../components/icons';
 import { CarCard } from '../components/carpool/CarCard';
 import { CarpoolWarningPopup } from '../components/carpool/CarpoolWarningPopup';
 import { DirectionToggle } from '../components/carpool/DirectionToggle';
@@ -209,9 +210,9 @@ export function CarpoolPage() {
             イベントIDが指定されていません
           </p>
         ) : loading ? (
-          <p style={{ margin: 0, fontSize: '14px', color: 'var(--text)' }}>
-            読み込み中...
-          </p>
+          <div style={{ display: 'flex', justifyContent: 'center', padding: '24px 0' }}>
+            <LoadingIndicator />
+          </div>
         ) : (
           !error && (
             <>

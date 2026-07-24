@@ -160,12 +160,79 @@ export function ShareIcon({ size = 18 }: IconProps) {
   );
 }
 
+/** 読み込み中インジケーター（3点パルス）。色は呼び出し元のtext colorを継承する */
+export function LoadingIndicator({ size = 6 }: IconProps) {
+  const dotStyle: CSSProperties = {
+    width: size,
+    height: size,
+    borderRadius: '50%',
+    background: 'currentColor',
+    animation: 'loading-dot-bounce 1.1s ease-in-out infinite',
+  };
+  return (
+    <span
+      role="status"
+      aria-label="読み込み中"
+      style={{ display: 'inline-flex', alignItems: 'center', gap: size * 0.7 }}
+    >
+      <span className="loading-dot" style={dotStyle} />
+      <span className="loading-dot" style={{ ...dotStyle, animationDelay: '0.12s' }} />
+      <span className="loading-dot" style={{ ...dotStyle, animationDelay: '0.24s' }} />
+    </span>
+  );
+}
+
 /** 閉じる（×）アイコン */
 export function CloseIcon({ size = 18 }: IconProps) {
   return (
     <svg {...baseProps(size)}>
       <line x1="5" y1="5" x2="19" y2="19" />
       <line x1="19" y1="5" x2="5" y2="19" />
+    </svg>
+  );
+}
+
+/** アプリロゴアイコン（sizeは幅基準、高さは元SVGの比率452:276で計算） */
+export function AppIcon({ size = 32 }: IconProps) {
+  const width = size;
+  const height = Math.round((size * 276) / 452);
+  return (
+    <svg width={width} height={height} viewBox="30 130 452 276" style={baseStyle} aria-hidden="true">
+      <defs>
+        <mask id="iconMask" maskUnits="userSpaceOnUse" x="0" y="0" width="512" height="512">
+          <g transform="translate(256 280) scale(1.18) translate(-256 -280)">
+            <path
+              d="M96 336
+                 C88 336 82 330 82 322
+                 L82 296
+                 C82 288 87 281 95 279
+                 L118 273
+                 L150 214
+                 C158 199 174 190 191 190
+                 L321 190
+                 C338 190 354 199 362 214
+                 L394 273
+                 L417 279
+                 C425 281 430 288 430 296
+                 L430 322
+                 C430 330 424 336 416 336
+                 Z"
+              fill="white"
+            />
+            <g fill="none" stroke="black" strokeLinecap="round">
+              <path d="M205 178 C240 220 240 300 205 340" strokeWidth="12" strokeDasharray="6 14" />
+              <path d="M307 178 C272 220 272 300 307 340" strokeWidth="12" strokeDasharray="6 14" />
+            </g>
+            <circle cx="152" cy="336" r="34" fill="black" />
+            <circle cx="152" cy="336" r="22" fill="white" />
+            <circle cx="152" cy="336" r="10" fill="black" />
+            <circle cx="360" cy="336" r="34" fill="black" />
+            <circle cx="360" cy="336" r="22" fill="white" />
+            <circle cx="360" cy="336" r="10" fill="black" />
+          </g>
+        </mask>
+      </defs>
+      <rect x="0" y="0" width="512" height="512" fill="#3d5a80" mask="url(#iconMask)" />
     </svg>
   );
 }

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { EventList } from '../components/EventList';
 import { Header } from '../components/Header';
 import { Button } from '../components/common/Button';
-import { SettingsIcon } from '../components/icons';
+import { LoadingIndicator, SettingsIcon } from '../components/icons';
 import { getEvents } from '../services/event/eventService';
 import { getDestinations } from '../services/master/destinationService';
 import type { Event } from '../types/event';
@@ -58,25 +58,30 @@ export function HomePage() {
           boxSizing: 'border-box',
         }}
       >
-        <Header title="イベント一覧" showAppIcon />
+        <Header
+          title="イベント一覧"
+          showAppIcon
+          trailing={
+            <Button
+              variant="secondary"
+              size="sm"
+              icon={<SettingsIcon size={16} />}
+              onClick={() => navigate('/master')}
+            >
+              マスタ管理
+            </Button>
+          }
+        />
       </div>
 
       <div
         style={{
           display: 'flex',
-          gap: '8px',
+          justifyContent: 'center',
           padding: '16px',
           boxSizing: 'border-box',
         }}
       >
-        <Button
-          variant="secondary"
-          size="sm"
-          icon={<SettingsIcon size={16} />}
-          onClick={() => navigate('/master')}
-        >
-          マスタ管理
-        </Button>
         <Button
           variant="primary"
           size="sm"
@@ -93,9 +98,9 @@ export function HomePage() {
       )}
 
       {loading ? (
-        <p style={{ margin: 0, padding: '0 16px 16px', fontSize: '14px', color: 'var(--text)' }}>
-          読み込み中...
-        </p>
+        <div style={{ display: 'flex', justifyContent: 'center', padding: '24px 16px' }}>
+          <LoadingIndicator />
+        </div>
       ) : (
         <EventList
           events={events}

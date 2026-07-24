@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import './App.css';
+import { LoadingIndicator } from './components/icons';
 import { useAuth } from './firebase/auth';
 import { checkStaffUserRegistration } from './services/auth/staffUserService';
 import { AuthGuard } from './routes/AuthGuard';
@@ -42,7 +43,7 @@ function App() {
           flexDirection: 'column',
         }}
       >
-        <p>読み込み中...</p>
+        <LoadingIndicator size={8} />
       </div>
     );
   }

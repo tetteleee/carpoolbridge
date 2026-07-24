@@ -117,6 +117,27 @@ p {
   margin: 0;
 }
 
+/* ローディングインジケーター（3点パルス）用アニメーション */
+@keyframes loading-dot-bounce {
+  0%,
+  60%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.35;
+  }
+  30% {
+    transform: translateY(-35%);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loading-dot {
+    animation: none !important;
+    opacity: 0.6;
+  }
+}
+
 code,
 .counter {
   font-family: var(--mono);

@@ -1,6 +1,6 @@
 import { useEffect, useImperativeHandle, useState } from 'react';
 import { Button } from '../common/Button';
-import { FlagIcon } from '../icons';
+import { FlagIcon, LoadingIndicator } from '../icons';
 import {
   createDestination,
   getDestinations,
@@ -138,9 +138,9 @@ export function DestinationSection({ ref }: DestinationSectionProps) {
       )}
 
       {loading ? (
-        <p style={{ margin: 0, fontSize: '14px', color: 'var(--text)' }}>
-          読み込み中...
-        </p>
+        <div style={{ display: 'flex', justifyContent: 'center', padding: '24px 0' }}>
+          <LoadingIndicator />
+        </div>
       ) : (
         <div
           id="destination-list"

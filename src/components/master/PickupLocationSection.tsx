@@ -1,6 +1,6 @@
 import { useEffect, useImperativeHandle, useState } from 'react';
 import { Button } from '../common/Button';
-import { MapPinIcon } from '../icons';
+import { LoadingIndicator, MapPinIcon } from '../icons';
 import {
   createPickupLocation,
   getPickupLocations,
@@ -136,9 +136,9 @@ export function PickupLocationSection({ ref }: PickupLocationSectionProps) {
       )}
 
       {loading ? (
-        <p style={{ margin: 0, fontSize: '14px', color: 'var(--text)' }}>
-          読み込み中...
-        </p>
+        <div style={{ display: 'flex', justifyContent: 'center', padding: '24px 0' }}>
+          <LoadingIndicator />
+        </div>
       ) : (
         <div
           id="pickup-location-list"

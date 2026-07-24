@@ -5,7 +5,7 @@ import { Button } from '../components/common/Button';
 import { FamilyResponseCard } from '../components/eventEdit/FamilyResponseCard';
 import { CarpoolRecreateDialog } from '../components/eventEdit/CarpoolRecreateDialog';
 import { DevSampleResponseButton } from '../components/eventEdit/DevSampleResponseButton';
-import { CarIcon } from '../components/icons';
+import { CarIcon, LoadingIndicator } from '../components/icons';
 import { getEvent } from '../services/event/eventService';
 import { getFamilies } from '../services/master/familyService';
 import { getChildrenByFamilyId } from '../services/master/childService';
@@ -207,9 +207,9 @@ export function EventEditPage() {
             イベントIDが指定されていません
           </p>
         ) : loading ? (
-          <p style={{ margin: 0, fontSize: '14px', color: 'var(--text)' }}>
-            読み込み中...
-          </p>
+          <div style={{ display: 'flex', justifyContent: 'center', padding: '24px 0' }}>
+            <LoadingIndicator />
+          </div>
         ) : !error && families.length === 0 ? (
           <p style={{ margin: 0, fontSize: '14px', color: 'var(--text)' }}>
             対象の家庭がありません

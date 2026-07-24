@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Header } from '../components/Header';
 import { Button } from '../components/common/Button';
-import { FlagIcon } from '../components/icons';
+import { FlagIcon, LoadingIndicator } from '../components/icons';
 import { createEvent } from '../services/event/eventService';
 import { getDestinations } from '../services/master/destinationService';
 import { getTodayDateString } from '../utils/date';
@@ -162,9 +162,7 @@ export function EventCreatePage() {
             目的地
           </span>
           {loading ? (
-            <span style={{ fontSize: '14px', color: 'var(--text)' }}>
-              読み込み中...
-            </span>
+            <LoadingIndicator />
           ) : destinations.length === 0 ? (
             <span style={{ fontSize: '14px', color: 'var(--text)' }}>
               登録済みの目的地がありません。先にマスタ管理画面で登録してください
