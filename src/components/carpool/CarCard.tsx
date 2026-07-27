@@ -19,7 +19,7 @@ export interface CarCardData {
   routeLocationNames: string[];
   /** 車を出す家庭自身の参加コーチの人カードID（family.id）。該当コーチがいない場合はnull */
   expectedCoachPersonId: string | null;
-  /** 乗車メンバー（実体を持たない運転者（保護者）は含めない） */
+  /** 乗車メンバー（子供・コーチ） */
   members: PersonCardData[];
 }
 
@@ -31,9 +31,9 @@ export function isCoachSeatOccupied(car: CarCardData): boolean {
   );
 }
 
-/** 乗車人数を算出する（参加コーチが乗車メンバーに含まれない場合のみ、実体を持たない運転者の1名を加算） */
+/** 乗車人数を算出する（乗車メンバー数そのもの） */
 export function computeOccupantCount(car: CarCardData): number {
-  return car.members.length + (isCoachSeatOccupied(car) ? 0 : 1);
+  return car.members.length;
 }
 
 interface CarCardProps {

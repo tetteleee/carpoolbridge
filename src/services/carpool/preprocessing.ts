@@ -24,11 +24,11 @@ export interface Vehicle {
   driverPickupLocationId: string;
   /** ドライバーの集合場所（アルゴリズム用座標オブジェクト） */
   driverPickupLocation: Location;
-  /** 有効定員（家庭に参加コーチが紐づく場合を除き、運転者分をあらかじめ1減算済み） */
+  /** 有効定員（車両の定員そのもの） */
   remainingCapacity: number;
   /** 経由予定の集合場所IDセット（O(1)検索用） */
   pickupLocationIds: Set<string>;
-  /** 乗車メンバー（実体を持たない運転者（保護者）は含めない） */
+  /** 乗車メンバー（子供・コーチ） */
   members: CarpoolMember[];
 }
 
@@ -51,9 +51,6 @@ export interface DrivingCandidate {
   driverOutward: boolean | null;
   /** 帰り車出し可否。未回答はnull */
   driverReturn: boolean | null;
-  /** 家庭に参加するコーチが紐づいているかどうか（乗車メンバーとして既に座席を占めるため、
-   * 有効定員算出時に運転者用の追加席を予約するかどうかの判定に使用） */
-  hasParticipatingCoach: boolean;
 }
 
 /**
@@ -78,7 +75,7 @@ export interface Passenger {
 export interface Group {
   /** 所属家庭ID */
   familyId: string;
-  /** 必要席数（構成員の合計人数。実体を持たない運転者（保護者）は含まないが、家庭に参加コーチがいる場合はそのコーチ自身の1名を含む） */
+  /** 必要席数（構成員の合計人数。家庭に参加コーチがいる場合はそのコーチ自身の1名を含む） */
   size: number;
   /** 集合場所ID（永続化・同値比較用） */
   pickupLocationId: string;
@@ -110,10 +107,7 @@ export function validatePickupLocations(locations: PickupLocation[]): void {
 /**
  * 対象方向（行き/帰り）の車出しフラグが true である車両を抽出し、
  * 有効定員（remainingCapacity）を算出して初期化します。
- * 家庭に参加コーチが紐づく場合、そのコーチ自身が乗車メンバーとして既に1名分の
- * 座席を占めるため運転者用の追加席は予約しない（remainingCapacity = capacity）。
- * コーチが存在しない、または参加しない家庭のみ、実体を持たない運転者（保護者）の
- * ための1席をあらかじめ減算する（remainingCapacity = capacity - 1）。
+ * 有効定員は車両の定員（vehicleCapacity）そのものとする。
  *
  * @param candidates 車出し候補の家庭一覧
  * @param direction 対象方向（行き/帰り）
@@ -134,7 +128,7 @@ export function initializeVehicles(
       driverName: candidate.driverName,
       driverPickupLocationId: candidate.driverPickupLocationId,
       driverPickupLocation: candidate.driverPickupLocation,
-      remainingCapacity: candidate.vehicleCapacity - (candidate.hasParticipatingCoach ? 0 : 1),
+      remainingCapacity: candidate.vehicleCapacity,
       pickupLocationIds: new Set<string>(),
       members: [],
     }));

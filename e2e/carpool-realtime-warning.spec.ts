@@ -13,7 +13,7 @@ test('人カードの移動により未配車→定員超過へ警告内容が�
   const destinationRef = await db.collection('destinations').add({ name: '目的地A', latitude: 35.1, longitude: 139.1 });
 
   const familyDriver = await db.collection('families').add({
-    familyName: '鈴木家', coachName: null, vehicleCapacity: 2, pickupLocationId: locA.id,
+    familyName: '鈴木家', coachName: null, vehicleCapacity: 1, pickupLocationId: locA.id,
     isActive: true, createdAt: now, updatedAt: now,
   });
 
@@ -50,11 +50,11 @@ test('人カードの移動により未配車→定員超過へ警告内容が�
     children: [{ childId: childRiderB.id, isParticipating: true, noOutwardRide: false, noReturnRide: false }],
   });
 
-  // 定員2（運転者含む）の車に山田太郎のみ乗車済み（定員内）、田中次郎は未配車の状態を直接作成する
+  // 定員1（運転者本人を含む総定員）の車に山田太郎のみ乗車済み（定員内）、田中次郎は未配車の状態を直接作成する
   await eventRef.collection('carpools').add({
     direction: 'OUTWARD',
     driverFamilyId: familyDriver.id,
-    capacity: 2,
+    capacity: 1,
     members: [{ type: 'child', childId: childRiderA.id }],
   });
 
@@ -69,7 +69,7 @@ test('人カードの移動により未配車→定員超過へ警告内容が�
   await expect(page.getByText('未配車　1名')).toBeVisible();
   await expect(page.getByRole('alert')).toHaveText('未配車の子供がいます');
 
-  // 田中次郎を鈴木号（定員2・既に山田太郎が乗車済み）へドラッグ＆ドロップする
+  // 田中次郎を鈴木号（定員1・既に山田太郎が乗車済み）へドラッグ＆ドロップする
   const personCard = page.getByText('田中次郎').locator('..');
   const carCard = page.locator('[data-drop-zone-id]').filter({ hasText: '鈴木号' });
 
@@ -92,7 +92,7 @@ test('人カードの移動により未配車→定員超過へ警告内容が�
   await page.mouse.move(endX, endY, { steps: 5 });
   await page.mouse.up();
 
-  // 移動後：未配車は0名になり、鈴木号が定員超過（3/2）となるため
+  // 移動後：未配車は0名になり、鈴木号が定員超過（2/1）となるため
   // 画面を再読み込みすることなく警告内容が「定員超過の車があります」に切り替わる
   await expect(page.getByText('未配車')).toHaveCount(0);
   await expect(page.getByRole('alert')).toHaveText('定員超過の車があります');

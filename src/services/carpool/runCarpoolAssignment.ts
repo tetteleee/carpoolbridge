@@ -146,7 +146,6 @@ export async function runCarpoolAssignment(
       driverPickupLocation: toLocation(family.pickupLocationId),
       driverOutward: response.driverOutward,
       driverReturn: response.driverReturn,
-      hasParticipatingCoach,
     });
 
     for (const child of response.children) {

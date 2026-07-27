@@ -12,8 +12,10 @@ test('未配車エリアの人カードを長押しドラッグして車カー�
   const locA = await db.collection('pickupLocations').add({ name: '西公園', latitude: 35.0, longitude: 139.0 });
   const destinationRef = await db.collection('destinations').add({ name: '目的地A', latitude: 35.1, longitude: 139.1 });
 
+  // 定員0（コーチなし）の車を出す家庭。乗車メンバーがいない間は自動配車の対象にならず、
+  // 山田太郎は未配車のまま残る（未配車エリアからのドラッグ操作を検証するための前提）
   const familyDriver = await db.collection('families').add({
-    familyName: '鈴木家', coachName: null, vehicleCapacity: 1, pickupLocationId: locA.id,
+    familyName: '鈴木家', coachName: null, vehicleCapacity: 0, pickupLocationId: locA.id,
     isActive: true, createdAt: now, updatedAt: now,
   });
 
@@ -223,7 +225,7 @@ test('画面外（下方）の車カードへは、画面端までドラッグ�
   const driverFamilies = [];
   for (const name of driverNames) {
     const familyRef = await db.collection('families').add({
-      familyName: `${name}家`, coachName: null, vehicleCapacity: 1, pickupLocationId: locA.id,
+      familyName: `${name}家`, coachName: null, vehicleCapacity: 0, pickupLocationId: locA.id,
       isActive: true, createdAt: now, updatedAt: now,
     });
     driverFamilies.push(familyRef);
@@ -262,7 +264,7 @@ test('画面外（下方）の車カードへは、画面端までドラッグ�
   await page.getByRole('button', { name: '配車作成' }).click();
   await page.waitForURL(`**/events/${eventRef.id}/carpool`);
   await expect(page.getByText('読み込み中...')).toHaveCount(0);
-  // 各車は定員1（運転者のみ）のため、山田太郎は自動配車されず未配車のまま残る
+  // 各車は定員0のため、山田太郎は自動配車されず未配車のまま残る
   await expect(page.getByText('未配車　1名')).toBeVisible();
 
   // 一覧の並び順（家庭ID順とは限らない）に依存しないよう、DOM上で最後に描画された車カードを対象にする
