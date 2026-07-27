@@ -192,6 +192,17 @@ export function CloseIcon({ size = 18 }: IconProps) {
   );
 }
 
+/** 警告（三角形に！）アイコン */
+export function WarningIcon({ size = 18 }: IconProps) {
+  return (
+    <svg {...baseProps(size)}>
+      <polygon points="12 3 22 20 2 20" />
+      <line x1="12" y1="9" x2="12" y2="14" />
+      <line x1="12" y1="17" x2="12" y2="17.01" />
+    </svg>
+  );
+}
+
 /** アプリロゴアイコン（sizeは幅基準、高さは元SVGの比率452:276で計算） */
 export function AppIcon({ size = 32 }: IconProps) {
   const width = size;

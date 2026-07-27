@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { CloseIcon } from '../icons';
+import { CloseIcon, WarningIcon } from '../icons';
 
 interface CarpoolWarningPopupProps {
   /** 表示する警告メッセージ。nullの場合は非表示 */
@@ -49,9 +49,11 @@ export function CarpoolWarningPopup({ message }: CarpoolWarningPopupProps) {
           borderRadius: '12px',
           boxShadow: 'var(--shadow)',
           boxSizing: 'border-box',
+          color: 'var(--negative)',
           pointerEvents: 'auto',
         }}
       >
+        <WarningIcon size={14} />
         <p
           role="alert"
           style={{
@@ -60,11 +62,10 @@ export function CarpoolWarningPopup({ message }: CarpoolWarningPopupProps) {
             fontSize: '13px',
             fontWeight: 700,
             lineHeight: 1.45,
-            color: 'var(--negative)',
             fontFamily: 'var(--sans)',
           }}
         >
-          ⚠ {message}
+          {message}
         </p>
         <button
           type="button"
@@ -77,7 +78,6 @@ export function CarpoolWarningPopup({ message }: CarpoolWarningPopupProps) {
             padding: 0,
             border: 'none',
             background: 'transparent',
-            color: 'var(--negative)',
             opacity: 0.7,
             cursor: 'pointer',
             display: 'inline-flex',
