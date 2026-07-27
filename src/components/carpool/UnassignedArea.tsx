@@ -1,6 +1,7 @@
 import type { PointerEvent as ReactPointerEvent } from 'react';
 import { PersonCard, type PersonCardData } from './PersonCard';
 import { UNASSIGNED_ZONE_ID } from '../../services/carpool/carpoolMember';
+import { Card } from '../common/Card';
 
 /** 未配車エリアに表示する人カード1件分のデータ */
 export type UnassignedPerson = PersonCardData;
@@ -33,11 +34,11 @@ export function UnassignedArea({
   }
 
   return (
-    <section
+    <Card
+      as="section"
       data-drop-zone-id={UNASSIGNED_ZONE_ID}
       style={{
-        border: isDropTarget ? '2px dashed var(--drop-target-border)' : '1px dashed var(--border)',
-        borderRadius: '8px',
+        border: isDropTarget ? '2px dashed var(--drop-target-border)' : undefined,
         overflow: 'hidden',
         background: isDropTarget ? 'var(--drop-target-bg)' : undefined,
         userSelect: 'none',
@@ -76,6 +77,6 @@ export function UnassignedArea({
           </li>
         ))}
       </ul>
-    </section>
+    </Card>
   );
 }

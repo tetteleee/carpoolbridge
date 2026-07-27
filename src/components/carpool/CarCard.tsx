@@ -2,6 +2,7 @@ import type { PointerEvent as ReactPointerEvent } from 'react';
 import { CarIcon, MapPinIcon } from '../icons';
 import { PersonCard, type PersonCardData } from './PersonCard';
 import { memberKey } from '../../services/carpool/carpoolMember';
+import { Card } from '../common/Card';
 
 /**
  * 車カード1台分のデータ。
@@ -74,15 +75,15 @@ export function CarCard({
   const isOverCapacity = occupantCount > car.capacity;
 
   return (
-    <section
+    <Card
+      as="section"
       data-drop-zone-id={car.id}
       style={{
         border: isOverCapacity
           ? '3.0px solid var(--negative-border)'
           : isDropTarget
             ? '2px dashed var(--drop-target-border)'
-            : '1px solid var(--border)',
-        borderRadius: '8px',
+            : undefined,
         overflow: 'hidden',
         background: isDropTarget ? 'var(--drop-target-bg)' : undefined,
         userSelect: 'none',
@@ -185,6 +186,6 @@ export function CarCard({
           );
         })}
       </ul>
-    </section>
+    </Card>
   );
 }

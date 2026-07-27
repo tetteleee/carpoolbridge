@@ -1,5 +1,6 @@
 import { useEffect, useImperativeHandle, useState } from 'react';
 import { Button } from '../common/Button';
+import { Card } from '../common/Card';
 import { FlagIcon, LoadingIndicator } from '../icons';
 import {
   createDestination,
@@ -147,17 +148,13 @@ export function DestinationSection({ ref }: DestinationSectionProps) {
           style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}
         >
           {destinations.map((destination) => (
-            <div
+            <Card
               key={destination.id}
               style={{
                 display: 'flex',
                 flexDirection: 'column',
                 gap: '8px',
                 padding: '12px',
-                borderRadius: '16px',
-                border: '1px solid var(--border)',
-                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)',
-                boxSizing: 'border-box',
               }}
             >
               <label
@@ -262,7 +259,7 @@ export function DestinationSection({ ref }: DestinationSectionProps) {
                   />
                 </label>
               </div>
-            </div>
+            </Card>
           ))}
         </div>
       )}

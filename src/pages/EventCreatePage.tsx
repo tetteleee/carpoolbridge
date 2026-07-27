@@ -69,7 +69,7 @@ export function EventCreatePage() {
           position: 'sticky',
           top: 0,
           zIndex: 10,
-          background: 'var(--bg)',
+          background: 'var(--panel-bg)',
           padding: '14px 16px',
           borderBottom: '1px solid var(--border)',
           boxSizing: 'border-box',

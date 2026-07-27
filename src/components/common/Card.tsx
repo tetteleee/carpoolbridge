@@ -18,16 +18,32 @@ const variantStyle: Record<CardVariant, CSSProperties> = {
   compact: { borderRadius: '8px' },
 };
 
+/**
+ * 上下2枚の影を重ねて「浮いている」印象を作る。枠線は使わず、影だけで背景から
+ * カードを浮かせる（下側の影を強めにして光源が上にあるように見せる）。
+ */
 const baseStyle: CSSProperties = {
   boxSizing: 'border-box',
-  border: '1px solid var(--card-border)',
-  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)',
+  boxShadow: '0 -1px 2px rgba(0, 0, 0, 0.02), 0 6px 16px rgba(0, 0, 0, 0.10)',
   background: 'var(--bg)',
 };
 
 /**
- * アプリ共通のカード。枠線・角丸・影をここで一元管理する。
- * 個別の見た目差分（枠線色の変更・背景色の上書き等）はstyleで上書きする。
+ * `background: cond ? 'x' : undefined` のように呼び出し側が状態分岐で
+ * styleを書くと、値がundefinedでもキー自体は残るため、スプレッドで
+ * baseStyleの値を消してしまう（backgroundが透明になり背景色が透ける）。
+ * それを防ぐため、値がundefinedのキーはマージ対象から除く。
+ */
+function omitUndefined(style?: CSSProperties): CSSProperties {
+  if (!style) return {};
+  return Object.fromEntries(
+    Object.entries(style).filter(([, value]) => value !== undefined)
+  ) as CSSProperties;
+}
+
+/**
+ * アプリ共通のカード。角丸・影をここで一元管理する（枠線は使わない）。
+ * 個別の見た目差分（背景色の上書き等）はstyleで上書きする。
  */
 export function Card<E extends ElementType = 'div'>({
   as,
@@ -40,7 +56,7 @@ export function Card<E extends ElementType = 'div'>({
 
   return (
     <Component
-      style={{ ...baseStyle, ...variantStyle[variant], ...(style as CSSProperties) }}
+      style={{ ...baseStyle, ...variantStyle[variant], ...omitUndefined(style as CSSProperties) }}
       {...rest}
     >
       {children}

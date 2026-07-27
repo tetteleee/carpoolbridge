@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Button } from './common/Button';
+import { Card } from './common/Card';
 
 interface RequestAccessProps {
   uid: string;
@@ -47,7 +48,7 @@ export function RequestAccess({ uid }: RequestAccessProps) {
         boxSizing: 'border-box',
       }}
     >
-      <div
+      <Card
         id="request-access-card"
         style={{
           display: 'flex',
@@ -57,10 +58,6 @@ export function RequestAccess({ uid }: RequestAccessProps) {
           width: '100%',
           maxWidth: '480px',
           padding: '40px 32px',
-          borderRadius: '20px',
-          border: '1px solid var(--border)',
-          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)',
-          boxSizing: 'border-box',
         }}
       >
         <p
@@ -138,7 +135,7 @@ export function RequestAccess({ uid }: RequestAccessProps) {
         >
           {copied ? 'コピーしました' : 'コピー'}
         </Button>
-      </div>
+      </Card>
     </div>
   );
 }

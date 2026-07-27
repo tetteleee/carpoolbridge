@@ -4,6 +4,7 @@ import {
   getSchoolEntryYearOptions,
 } from '../../utils/schoolGrade';
 import { Button } from '../common/Button';
+import { Card } from '../common/Card';
 import { UserIcon } from '../icons';
 
 interface ChildSectionProps {
@@ -77,17 +78,13 @@ export function ChildSection({
         style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}
       >
         {childList.map((child) => (
-          <div
+          <Card
             key={child.id}
             style={{
               display: 'flex',
               flexDirection: 'column',
               gap: '8px',
               padding: '10px',
-              borderRadius: '14px',
-              border: '1px solid var(--border)',
-              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)',
-              boxSizing: 'border-box',
             }}
           >
             <label style={fieldLabelStyle}>
@@ -156,7 +153,7 @@ export function ChildSection({
                 {child.isActive ? 'ON' : 'OFF'}
               </button>
             </div>
-          </div>
+          </Card>
         ))}
       </div>
 
