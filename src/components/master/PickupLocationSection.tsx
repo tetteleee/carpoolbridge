@@ -14,6 +14,8 @@ type EditableField = 'name' | 'latitude' | 'longitude';
 export interface PickupLocationSectionHandle {
   /** 下書き内容をまとめてFirestoreへ反映する */
   save: () => Promise<void>;
+  /** 保存済み内容と比べて未保存の編集・追加があるか */
+  hasChanges: () => boolean;
 }
 
 interface PickupLocationSectionProps {
@@ -69,6 +71,17 @@ export function PickupLocationSection({ ref }: PickupLocationSectionProps) {
   };
 
   useImperativeHandle(ref, () => ({
+    hasChanges: () =>
+      newIds.size > 0 ||
+      locations.some((location) => {
+        const original = savedLocations.find((l) => l.id === location.id);
+        return (
+          original &&
+          (original.name !== location.name ||
+            original.latitude !== location.latitude ||
+            original.longitude !== location.longitude)
+        );
+      }),
     save: async () => {
       try {
         for (const location of locations) {

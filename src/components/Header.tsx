@@ -11,6 +11,8 @@ interface HeaderProps {
   showAppIcon?: boolean;
   /** サブ画面のみ指定。指定時はタイトル左に戻るボタン（アイコンのみ）を表示する */
   backTo?: string;
+  /** 指定時、戻るボタン押下時にnavigate(backTo)の代わりに呼び出す（未保存確認など、遷移前に割り込みたい画面用） */
+  onBackClick?: () => void;
   /** タイトル行右側に表示する任意要素（件数チップなど） */
   trailing?: ReactNode;
   /** 指定時、titleの代わりにタイトル欄へ表示する任意コンテンツ（日時＋タイトル＋場所の複数行表示など） */
@@ -39,6 +41,7 @@ export function Header({
   titleFontSize,
   showAppIcon,
   backTo,
+  onBackClick,
   trailing,
   titleContent,
 }: HeaderProps) {
@@ -55,7 +58,7 @@ export function Header({
       {backTo && (
         <button
           type="button"
-          onClick={() => navigate(backTo)}
+          onClick={() => (onBackClick ? onBackClick() : navigate(backTo))}
           aria-label="戻る"
           style={{
             ...iconButtonStyle,

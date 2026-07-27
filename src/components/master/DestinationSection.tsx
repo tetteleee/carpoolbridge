@@ -14,6 +14,8 @@ type EditableField = 'name' | 'latitude' | 'longitude';
 export interface DestinationSectionHandle {
   /** 下書き内容をまとめてFirestoreへ反映する */
   save: () => Promise<void>;
+  /** 保存済み内容と比べて未保存の編集・追加があるか */
+  hasChanges: () => boolean;
 }
 
 interface DestinationSectionProps {
@@ -69,6 +71,17 @@ export function DestinationSection({ ref }: DestinationSectionProps) {
   };
 
   useImperativeHandle(ref, () => ({
+    hasChanges: () =>
+      newIds.size > 0 ||
+      destinations.some((destination) => {
+        const original = savedDestinations.find((d) => d.id === destination.id);
+        return (
+          original &&
+          (original.name !== destination.name ||
+            original.latitude !== destination.latitude ||
+            original.longitude !== destination.longitude)
+        );
+      }),
     save: async () => {
       try {
         for (const destination of destinations) {

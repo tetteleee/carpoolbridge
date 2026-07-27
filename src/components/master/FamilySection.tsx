@@ -33,6 +33,8 @@ type ChildUpdatableFields = Partial<
 export interface FamilySectionHandle {
   /** 下書き内容をまとめてFirestoreへ反映する */
   save: () => Promise<void>;
+  /** 保存済み内容と比べて未保存の編集・追加があるか（家庭・子供いずれか） */
+  hasChanges: () => boolean;
 }
 
 interface FamilySectionProps {
@@ -166,6 +168,29 @@ export function FamilySection({ ref }: FamilySectionProps) {
   };
 
   useImperativeHandle(ref, () => ({
+    hasChanges: () =>
+      newIds.size > 0 ||
+      newChildIds.size > 0 ||
+      families.some((family) => {
+        const original = savedFamilies.find((f) => f.id === family.id);
+        return (
+          original &&
+          (original.familyName !== family.familyName ||
+            original.coachName !== family.coachName ||
+            original.vehicleCapacity !== family.vehicleCapacity ||
+            original.pickupLocationId !== family.pickupLocationId ||
+            original.isActive !== family.isActive)
+        );
+      }) ||
+      children.some((child) => {
+        const original = savedChildren.find((c) => c.id === child.id);
+        return (
+          original &&
+          (original.name !== child.name ||
+            original.schoolEntryYear !== child.schoolEntryYear ||
+            original.isActive !== child.isActive)
+        );
+      }),
     save: async () => {
       try {
         for (const family of families) {

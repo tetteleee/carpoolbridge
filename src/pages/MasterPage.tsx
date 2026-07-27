@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Header } from '../components/Header';
 import { Button } from '../components/common/Button';
 import {
@@ -14,6 +15,7 @@ import {
   type FamilySectionHandle,
 } from '../components/master/FamilySection';
 import { DevSampleDataButton } from '../components/master/DevSampleDataButton';
+import { UnsavedChangesDialog } from '../components/master/UnsavedChangesDialog';
 
 /**
  * マスタ管理画面。
@@ -22,12 +24,26 @@ import { DevSampleDataButton } from '../components/master/DevSampleDataButton';
  * まとめてFirestoreへ反映する。保存前に画面を離脱すれば下書きは破棄される。
  */
 export function MasterPage() {
+  const navigate = useNavigate();
   const pickupLocationRef = useRef<PickupLocationSectionHandle>(null);
   const destinationRef = useRef<DestinationSectionHandle>(null);
   const familyRef = useRef<FamilySectionHandle>(null);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [dataVersion, setDataVersion] = useState(0);
+  const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
+
+  const handleBackClick = () => {
+    const hasChanges =
+      pickupLocationRef.current?.hasChanges() ||
+      destinationRef.current?.hasChanges() ||
+      familyRef.current?.hasChanges();
+    if (hasChanges) {
+      setShowUnsavedDialog(true);
+      return;
+    }
+    navigate('/');
+  };
 
   const handleSave = async () => {
     setSaving(true);
@@ -66,7 +82,7 @@ export function MasterPage() {
           boxSizing: 'border-box',
         }}
       >
-        <Header title="マスタ管理" backTo="/" />
+        <Header title="マスタ管理" backTo="/" onBackClick={handleBackClick} />
       </div>
 
       <PickupLocationSection key={`pickup-${dataVersion}`} ref={pickupLocationRef} />
@@ -102,6 +118,12 @@ export function MasterPage() {
         style={{ border: 'none', borderTop: '1px solid var(--border)', margin: 0 }}
       />
       <DevSampleDataButton onSeeded={() => setDataVersion((v) => v + 1)} />
+
+      <UnsavedChangesDialog
+        open={showUnsavedDialog}
+        onCancel={() => setShowUnsavedDialog(false)}
+        onConfirm={() => navigate('/')}
+      />
     </div>
   );
 }
