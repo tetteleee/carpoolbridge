@@ -1,6 +1,7 @@
 import type { PointerEvent as ReactPointerEvent } from 'react';
-import { CarIcon, MapPinIcon } from '../icons';
+import { CarIcon } from '../icons';
 import { PersonCard, type PersonCardData } from './PersonCard';
+import { RouteLocationList } from './RouteLocationList';
 import { memberKey } from '../../services/carpool/carpoolMember';
 import { toCarName } from '../../utils/carName';
 import { Card } from '../common/Card';
@@ -94,7 +95,6 @@ export function CarCard({
           style={{
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'space-between',
             gap: '8px',
           }}
         >
@@ -103,6 +103,7 @@ export function CarCard({
               display: 'flex',
               alignItems: 'center',
               gap: '6px',
+              flexShrink: 0,
               fontSize: '14px',
               fontWeight: 700,
               color: 'var(--text-h)',
@@ -111,8 +112,10 @@ export function CarCard({
             <CarIcon size={18} />
             {toCarName(car.familyName)}
           </span>
+          <RouteLocationList locationNames={car.routeLocationNames} />
           <span
             style={{
+              flexShrink: 0,
               fontSize: '14px',
               fontWeight: 700,
               color: isOverCapacity ? 'var(--negative)' : 'var(--text-h)',
@@ -120,28 +123,6 @@ export function CarCard({
           >
             {occupantCount}/{car.capacity}
           </span>
-        </div>
-
-        <div
-          style={{
-            marginTop: '4px',
-            display: 'flex',
-            flexWrap: 'wrap',
-            alignItems: 'center',
-            gap: '4px 10px',
-            fontSize: '12px',
-            color: 'var(--text)',
-          }}
-        >
-          {car.routeLocationNames.map((locationName, index) => (
-            <span
-              key={index}
-              style={{ display: 'flex', alignItems: 'center', gap: '2px' }}
-            >
-              <MapPinIcon size={12} />
-              {locationName}
-            </span>
-          ))}
         </div>
       </div>
 
