@@ -17,6 +17,18 @@ interface ChildResponseRowProps {
   onChangeNoReturnRide: (value: boolean) => void;
 }
 
+const rowStyle: CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  gap: '8px',
+};
+
+const rowLabelStyle: CSSProperties = {
+  fontSize: '13px',
+  color: 'var(--text)',
+};
+
 const choiceButtonBaseStyle: CSSProperties = {
   minHeight: '44px',
   padding: '0 10px',
@@ -28,27 +40,6 @@ const choiceButtonBaseStyle: CSSProperties = {
   fontFamily: 'var(--sans)',
   whiteSpace: 'nowrap',
   cursor: 'pointer',
-};
-
-/** 「行き不要／帰り不要」用の縮小ボタン（参加ボタンより一回り小さくし、1行に収まりやすくする） */
-const rideOptionButtonStyle: CSSProperties = {
-  minHeight: '36px',
-  padding: '0 8px',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  borderRadius: '6px',
-  fontSize: '12px',
-  fontFamily: 'var(--sans)',
-  whiteSpace: 'nowrap',
-  cursor: 'pointer',
-};
-
-/** 折り返す場合に単位が崩れないよう、ボタン群をひとまとまりにするグループコンテナ */
-const buttonGroupStyle: CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: '6px',
 };
 
 const choicePositiveSelectedStyle: CSSProperties = {
@@ -72,27 +63,109 @@ const choiceUnselectedStyle: CSSProperties = {
   fontWeight: 400,
 };
 
-const dividerStyle: CSSProperties = {
-  width: '1px',
-  height: '28px',
-  background: 'var(--border)',
-  flexShrink: 0,
+const switchButtonStyle: CSSProperties = {
+  position: 'relative',
+  width: '40px',
+  minHeight: '44px',
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: '4px',
+  borderRadius: '10px',
+  border: '1px solid var(--border)',
+  background: 'var(--bg)',
+  fontFamily: 'var(--sans)',
+  cursor: 'pointer',
 };
 
-const unansweredDotStyle: CSSProperties = {
-  display: 'inline-block',
-  width: '8px',
-  height: '8px',
-  borderRadius: '999px',
-  background: 'var(--warning)',
-  flexShrink: 0,
+const switchLabelOnStyle: CSSProperties = {
+  fontSize: '10px',
+  fontWeight: 700,
+  color: 'var(--text)',
 };
+
+const switchLabelOffStyle: CSSProperties = {
+  fontSize: '10px',
+  fontWeight: 800,
+  color: 'var(--warning)',
+};
+
+const switchTrackStyle: CSSProperties = {
+  width: '24px',
+  height: '14px',
+  borderRadius: '7px',
+  position: 'relative',
+};
+
+const switchKnobStyle: CSSProperties = {
+  position: 'absolute',
+  top: '1px',
+  width: '12px',
+  height: '12px',
+  borderRadius: '50%',
+  background: '#fff',
+  boxShadow: '0 1px 2px rgba(0, 0, 0, 0.3)',
+};
+
+const switchOffDotStyle: CSSProperties = {
+  position: 'absolute',
+  top: '3px',
+  right: '4px',
+  width: '6px',
+  height: '6px',
+  borderRadius: '50%',
+  background: 'var(--warning)',
+};
+
+interface RideSwitchProps {
+  /** DOM要素のid */
+  id: string;
+  /** スイッチ上に表示する方向ラベル（「行」「帰」） */
+  label: string;
+  /** スクリーンリーダー向けの完全なラベル */
+  ariaLabel: string;
+  /** 行き（または帰り）の配車が不要かどうか（保存値そのもの） */
+  noRide: boolean;
+  disabled: boolean;
+  onChange: (noRide: boolean) => void;
+}
+
+/**
+ * 行き／帰りの送迎要否を表すミニスイッチ。
+ * ON＝送迎あり（既定・肯定表現）、OFF＝配車不要（現地集合・保護者お迎え等の例外）を表す。
+ * 「ONにすると不要になる」という否定的な対応にはしない（04_画面設計.md#7）。
+ */
+function RideSwitch({ id, label, ariaLabel, noRide, disabled, onChange }: RideSwitchProps) {
+  const rideOn = !noRide;
+  return (
+    <button
+      id={id}
+      type="button"
+      role="switch"
+      aria-checked={rideOn}
+      aria-label={ariaLabel}
+      disabled={disabled}
+      // トグル後の新しいnoRide値は、トグル前のrideOnの値と等しい
+      onClick={() => onChange(rideOn)}
+      style={{
+        ...switchButtonStyle,
+        opacity: disabled ? 0.4 : 1,
+        cursor: disabled ? 'default' : 'pointer',
+      }}
+    >
+      {!rideOn && <span aria-hidden="true" style={switchOffDotStyle} />}
+      <span style={rideOn ? switchLabelOnStyle : switchLabelOffStyle}>{label}</span>
+      <span style={{ ...switchTrackStyle, background: rideOn ? 'var(--positive)' : 'var(--border)' }}>
+        <span style={{ ...switchKnobStyle, left: rideOn ? '11px' : '1px' }} />
+      </span>
+    </button>
+  );
+}
 
 /**
  * イベント編集（回答入力）画面・家庭カード内の
- * 子供ごとの参加（3状態）・行き／帰りの配車不要ボタンを1行にまとめて表示する。
- * 「行き不要」「帰り不要」は参加が○のときだけ表示する（参加ボタンの右側に区切り線を挟んで並べる）。
- * 参加が○以外になっても noOutwardRide・noReturnRide の値自体は保持し、○に戻すと表示が復元される。
+ * 子供ごとの参加（3状態）・行き／帰りの送迎要否（ミニスイッチ）。
  * 値は呼び出し側（FamilyResponseCard）が保持し、変更の都度Firestoreへ自動保存される（T29）。
  */
 export function ChildResponseRow({
@@ -104,76 +177,69 @@ export function ChildResponseRow({
   onChangeNoOutwardRide,
   onChangeNoReturnRide,
 }: ChildResponseRowProps) {
-  const showRideOptions = isParticipating === true;
+  // 送迎要否スイッチは「参加」が○（true）の場合のみ意味を持つため、
+  // ○以外（✕・未回答）では操作不可にする。値自体は保持し、○に戻せば復元される。
+  const rideSwitchDisabled = isParticipating !== true;
 
   return (
     <div
       id={`child-response-frame-${childId}`}
-      style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}
+      style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}
     >
-      {isParticipating === null && (
-        <span
-          id={`child-participating-unanswered-dot-${childId}`}
-          aria-hidden="true"
-          style={unansweredDotStyle}
-        />
-      )}
-      <div style={buttonGroupStyle}>
-        <button
-          id={`child-participating-yes-${childId}`}
-          type="button"
-          aria-pressed={isParticipating === true}
-          onClick={() => onChangeIsParticipating(true)}
-          style={{
-            ...choiceButtonBaseStyle,
-            ...(isParticipating === true ? choicePositiveSelectedStyle : choiceUnselectedStyle),
-          }}
-        >
-          ○参加
-        </button>
-        <button
-          id={`child-participating-no-${childId}`}
-          type="button"
-          aria-pressed={isParticipating === false}
-          onClick={() => onChangeIsParticipating(false)}
-          style={{
-            ...choiceButtonBaseStyle,
-            ...(isParticipating === false ? choiceNegativeSelectedStyle : choiceUnselectedStyle),
-          }}
-        >
-          ✕不参加
-        </button>
-      </div>
+      <div style={rowStyle}>
+        <span style={rowLabelStyle}>参加</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{ display: 'flex', gap: '6px' }}>
+            <button
+              id={`child-participating-yes-${childId}`}
+              type="button"
+              aria-pressed={isParticipating === true}
+              onClick={() => onChangeIsParticipating(true)}
+              style={{
+                ...choiceButtonBaseStyle,
+                ...(isParticipating === true
+                  ? choicePositiveSelectedStyle
+                  : choiceUnselectedStyle),
+              }}
+            >
+              ○参加
+            </button>
+            <button
+              id={`child-participating-no-${childId}`}
+              type="button"
+              aria-pressed={isParticipating === false}
+              onClick={() => onChangeIsParticipating(false)}
+              style={{
+                ...choiceButtonBaseStyle,
+                ...(isParticipating === false
+                  ? choiceNegativeSelectedStyle
+                  : choiceUnselectedStyle),
+              }}
+            >
+              ✕不参加
+            </button>
+          </div>
 
-      {showRideOptions && (
-        <div style={buttonGroupStyle}>
-          <span aria-hidden="true" style={dividerStyle} />
-          <button
-            id={`no-outward-ride-${childId}`}
-            type="button"
-            aria-pressed={noOutwardRide}
-            onClick={() => onChangeNoOutwardRide(!noOutwardRide)}
-            style={{
-              ...rideOptionButtonStyle,
-              ...(noOutwardRide ? choicePositiveSelectedStyle : choiceUnselectedStyle),
-            }}
-          >
-            行き不要
-          </button>
-          <button
-            id={`no-return-ride-${childId}`}
-            type="button"
-            aria-pressed={noReturnRide}
-            onClick={() => onChangeNoReturnRide(!noReturnRide)}
-            style={{
-              ...rideOptionButtonStyle,
-              ...(noReturnRide ? choicePositiveSelectedStyle : choiceUnselectedStyle),
-            }}
-          >
-            帰り不要
-          </button>
+          <div style={{ display: 'flex', gap: '6px' }}>
+            <RideSwitch
+              id={`no-outward-ride-${childId}`}
+              label="行"
+              ariaLabel="行きの送迎"
+              noRide={noOutwardRide}
+              disabled={rideSwitchDisabled}
+              onChange={onChangeNoOutwardRide}
+            />
+            <RideSwitch
+              id={`no-return-ride-${childId}`}
+              label="帰"
+              ariaLabel="帰りの送迎"
+              noRide={noReturnRide}
+              disabled={rideSwitchDisabled}
+              onChange={onChangeNoReturnRide}
+            />
+          </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }

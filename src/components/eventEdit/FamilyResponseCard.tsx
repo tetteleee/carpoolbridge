@@ -183,8 +183,8 @@ export function FamilyResponseCard({
         driverOutward={current.driverOutward}
         driverReturn={current.driverReturn}
         capacityToday={current.capacityToday}
-        onChangeDriverOffer={(outward, ret) =>
-          applyPatch({ driverOutward: outward, driverReturn: ret })
+        onChangeDriverOffer={(driverOutward, driverReturn) =>
+          applyPatch({ driverOutward, driverReturn })
         }
         onChangeCapacityToday={(value) => applyPatch({ capacityToday: value })}
       />
@@ -215,7 +215,14 @@ export function FamilyResponseCard({
                 noOutwardRide={responseChild.noOutwardRide}
                 noReturnRide={responseChild.noReturnRide}
                 onChangeIsParticipating={(value) =>
-                  applyChildPatch(child.id, { isParticipating: value })
+                  applyChildPatch(
+                    child.id,
+                    // 参加（○）にした瞬間、行き・帰りの送迎は両方ON（送迎あり）を既定にする
+                    // （04_画面設計.md#7）。不参加（✕）にする場合は既存の送迎要否をそのまま保持する
+                    value === true
+                      ? { isParticipating: true, noOutwardRide: false, noReturnRide: false }
+                      : { isParticipating: value }
+                  )
                 }
                 onChangeNoOutwardRide={(value) =>
                   applyChildPatch(child.id, { noOutwardRide: value })

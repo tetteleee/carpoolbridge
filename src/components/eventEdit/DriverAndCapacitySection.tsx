@@ -1,5 +1,4 @@
 import type { CSSProperties } from 'react';
-import { CarIcon } from '../icons';
 
 interface DriverAndCapacitySectionProps {
   /** 対象家庭ID（DOM要素のid付与に使用） */
@@ -12,8 +11,8 @@ interface DriverAndCapacitySectionProps {
   driverReturn: boolean | null;
   /** 当日乗車可能人数の上書き。未変更はnull */
   capacityToday: number | null;
-  /** 車出し（行き・帰り）の変更。2値をまとめて渡す（片方だけの更新は行わない） */
-  onChangeDriverOffer: (outward: boolean, ret: boolean) => void;
+  /** 車出し（行き・帰り）の変更。1回の選択でdriverOutward／driverReturnを同時に確定する */
+  onChangeDriverOffer: (driverOutward: boolean, driverReturn: boolean) => void;
   /** 当日乗車可能人数の変更 */
   onChangeCapacityToday: (value: number) => void;
 }
@@ -57,48 +56,18 @@ const choiceNegativeSelectedStyle: CSSProperties = {
   fontWeight: 700,
 };
 
+const choiceAccentSelectedStyle: CSSProperties = {
+  border: '1px solid var(--accent-border)',
+  background: 'var(--accent-bg)',
+  color: 'var(--accent)',
+  fontWeight: 700,
+};
+
 const choiceUnselectedStyle: CSSProperties = {
   border: '1px solid var(--border)',
   background: 'var(--bg)',
   color: 'var(--text)',
   fontWeight: 400,
-};
-
-const dividerStyle: CSSProperties = {
-  width: '1px',
-  height: '28px',
-  background: 'var(--border)',
-  flexShrink: 0,
-};
-
-/** 「行きのみ／帰りのみ」用の縮小ボタン（○可・✕不可より一回り小さくし、1行に収まりやすくする） */
-const exceptionButtonStyle: CSSProperties = {
-  minHeight: '36px',
-  padding: '0 8px',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  borderRadius: '6px',
-  fontSize: '12px',
-  fontFamily: 'var(--sans)',
-  whiteSpace: 'nowrap',
-  cursor: 'pointer',
-};
-
-/** 折り返す場合に単位が崩れないよう、ボタン群をひとまとまりにするグループコンテナ */
-const buttonGroupStyle: CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: '6px',
-};
-
-const unansweredDotStyle: CSSProperties = {
-  display: 'inline-block',
-  width: '8px',
-  height: '8px',
-  borderRadius: '999px',
-  background: 'var(--warning)',
-  flexShrink: 0,
 };
 
 const stepperButtonStyle: CSSProperties = {
@@ -116,11 +85,129 @@ const stepperButtonStyle: CSSProperties = {
   cursor: 'pointer',
 };
 
+type DriverOfferKey = 'both' | 'none' | 'outwardOnly' | 'returnOnly';
+
+interface DriverOfferOptionDef {
+  key: DriverOfferKey;
+  label: string;
+  idSuffix: string;
+  selectedStyle: CSSProperties;
+  outward: boolean;
+  return: boolean;
+  /** 乗車可能人数0人の場合に選択不可にするか（＝いずれかの方向で運転が発生する選択肢か） */
+  requiresCapacity: boolean;
+}
+
+const DRIVER_OFFER_OPTIONS: DriverOfferOptionDef[] = [
+  {
+    key: 'both',
+    label: '可',
+    idSuffix: 'both',
+    selectedStyle: choicePositiveSelectedStyle,
+    outward: true,
+    return: true,
+    requiresCapacity: true,
+  },
+  {
+    key: 'none',
+    label: '不可',
+    idSuffix: 'none',
+    selectedStyle: choiceNegativeSelectedStyle,
+    outward: false,
+    return: false,
+    requiresCapacity: false,
+  },
+  {
+    key: 'outwardOnly',
+    label: '行きのみ',
+    idSuffix: 'outward-only',
+    selectedStyle: choiceAccentSelectedStyle,
+    outward: true,
+    return: false,
+    requiresCapacity: true,
+  },
+  {
+    key: 'returnOnly',
+    label: '帰りのみ',
+    idSuffix: 'return-only',
+    selectedStyle: choiceAccentSelectedStyle,
+    outward: false,
+    return: true,
+    requiresCapacity: true,
+  },
+];
+
+/**
+ * driverOutward／driverReturnの組み合わせを、画面上の4択（可／不可／行きのみ／帰りのみ）のキーに変換する。
+ * 未回答（ともにnull）や、旧UIで独立して答えられた片方だけnullの組み合わせなど、
+ * 4択のいずれにも一致しない場合はnull（未回答と同じ非選択表示）を返す。
+ */
+function resolveDriverOfferKey(
+  driverOutward: boolean | null,
+  driverReturn: boolean | null
+): DriverOfferKey | null {
+  const matched = DRIVER_OFFER_OPTIONS.find(
+    (option) => option.outward === driverOutward && option.return === driverReturn
+  );
+  return matched?.key ?? null;
+}
+
+interface DriverOfferSegmentsProps {
+  /** ボタン群のid付与に使用するid接頭辞 */
+  idPrefix: string;
+  driverOutward: boolean | null;
+  driverReturn: boolean | null;
+  onChange: (driverOutward: boolean, driverReturn: boolean) => void;
+  /** 乗車可能人数0人のため、運転が発生する選択肢（可／行きのみ／帰りのみ）を選択不可にするか */
+  capacityIsZero: boolean;
+}
+
+/**
+ * 車出し「可／不可／行きのみ／帰りのみ」の4択（排他選択）ボタン。
+ * driverOutward／driverReturnという独立した2項目を、画面上は1つの選択としてまとめて提示する
+ * （04_画面設計.md#7参照）。乗車可能人数が0人の場合、[不可]以外は選択不可にする
+ * （既に選択済みの場合は選択状態を維持したまま操作不可にする）。
+ */
+function DriverOfferSegments({
+  idPrefix,
+  driverOutward,
+  driverReturn,
+  onChange,
+  capacityIsZero,
+}: DriverOfferSegmentsProps) {
+  const selectedKey = resolveDriverOfferKey(driverOutward, driverReturn);
+
+  return (
+    <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+      {DRIVER_OFFER_OPTIONS.map((option) => {
+        const selected = option.key === selectedKey;
+        const disabled = option.requiresCapacity && capacityIsZero;
+        return (
+          <button
+            key={option.key}
+            id={`${idPrefix}-${option.idSuffix}`}
+            type="button"
+            aria-pressed={selected}
+            disabled={disabled}
+            onClick={() => onChange(option.outward, option.return)}
+            style={{
+              ...choiceButtonBaseStyle,
+              ...(selected ? option.selectedStyle : choiceUnselectedStyle),
+              opacity: disabled ? 0.4 : 1,
+              cursor: disabled ? 'default' : 'pointer',
+            }}
+          >
+            {option.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 /**
  * イベント編集（回答入力）画面・家庭カード内の
- * 車出し（行き／帰り）・乗車可能人数（capacityToday）の入力欄。
- * 車出しは「[○可][✕不可]」の1行に統合し、driverOutward・driverReturnをまとめて操作する。
- * [○可]が有効な間だけ、右側に区切り線を挟んで「行きのみ／帰りのみ」の例外ボタンを表示する（04_画面設計.md#7）。
+ * 車出し（可／不可／行きのみ／帰りのみ）・乗車可能人数（capacityToday）の入力欄。
  * 値は呼び出し側（FamilyResponseCard）が保持し、変更の都度Firestoreへ自動保存される（T29）。
  */
 export function DriverAndCapacitySection({
@@ -136,11 +223,6 @@ export function DriverAndCapacitySection({
   const displayCapacity = capacityToday ?? vehicleCapacity;
   const capacityIsZero = displayCapacity <= 0;
 
-  const anyYes = driverOutward === true || driverReturn === true;
-  const bothNo = driverOutward === false && driverReturn === false;
-  const outwardOnly = driverOutward === true && driverReturn === false;
-  const returnOnly = driverOutward === false && driverReturn === true;
-
   const handleDecrement = () => {
     onChangeCapacityToday(Math.max(0, displayCapacity - 1));
   };
@@ -154,82 +236,15 @@ export function DriverAndCapacitySection({
       id={`drive-offer-frame-${familyId}`}
       style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-        <CarIcon size={16} />
-        {driverOutward === null && driverReturn === null && (
-          <span
-            id={`driver-unanswered-dot-${familyId}`}
-            aria-hidden="true"
-            style={unansweredDotStyle}
-          />
-        )}
-        <div style={buttonGroupStyle}>
-          <button
-            id={`driver-both-${familyId}-possible`}
-            type="button"
-            aria-pressed={anyYes}
-            disabled={capacityIsZero}
-            onClick={() => onChangeDriverOffer(true, true)}
-            style={{
-              ...choiceButtonBaseStyle,
-              ...(anyYes ? choicePositiveSelectedStyle : choiceUnselectedStyle),
-              opacity: capacityIsZero ? 0.4 : 1,
-              cursor: capacityIsZero ? 'default' : 'pointer',
-            }}
-          >
-            ○可
-          </button>
-          <button
-            id={`driver-both-${familyId}-impossible`}
-            type="button"
-            aria-pressed={bothNo}
-            onClick={() => onChangeDriverOffer(false, false)}
-            style={{
-              ...choiceButtonBaseStyle,
-              ...(bothNo ? choiceNegativeSelectedStyle : choiceUnselectedStyle),
-            }}
-          >
-            ✕不可
-          </button>
-        </div>
-
-        {anyYes && (
-          <div style={buttonGroupStyle}>
-            <span aria-hidden="true" style={dividerStyle} />
-            <button
-              id={`driver-outward-only-${familyId}`}
-              type="button"
-              aria-pressed={outwardOnly}
-              disabled={capacityIsZero}
-              // 既に「行きのみ」が選択されていれば解除して両方○に戻す
-              onClick={() => onChangeDriverOffer(true, outwardOnly)}
-              style={{
-                ...exceptionButtonStyle,
-                ...(outwardOnly ? choicePositiveSelectedStyle : choiceUnselectedStyle),
-                opacity: capacityIsZero ? 0.4 : 1,
-                cursor: capacityIsZero ? 'default' : 'pointer',
-              }}
-            >
-              行きのみ
-            </button>
-            <button
-              id={`driver-return-only-${familyId}`}
-              type="button"
-              aria-pressed={returnOnly}
-              disabled={capacityIsZero}
-              // 既に「帰りのみ」が選択されていれば解除して両方○に戻す
-              onClick={() => onChangeDriverOffer(returnOnly, true)}
-              style={{
-                ...exceptionButtonStyle,
-                ...(returnOnly ? choicePositiveSelectedStyle : choiceUnselectedStyle),
-                opacity: capacityIsZero ? 0.4 : 1,
-                cursor: capacityIsZero ? 'default' : 'pointer',
-              }}
-            >
-              帰りのみ
-            </button>
-          </div>
-        )}
+      <div style={rowStyle}>
+        <span style={rowLabelStyle}>車出し</span>
+        <DriverOfferSegments
+          idPrefix={`driver-offer-${familyId}`}
+          driverOutward={driverOutward}
+          driverReturn={driverReturn}
+          onChange={onChangeDriverOffer}
+          capacityIsZero={capacityIsZero}
+        />
       </div>
 
       <div style={rowStyle}>
