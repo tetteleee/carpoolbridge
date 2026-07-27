@@ -78,6 +78,7 @@ export function CarpoolWarningPopup({ message }: CarpoolWarningPopupProps) {
             padding: 0,
             border: 'none',
             background: 'transparent',
+            color: 'var(--negative)',
             opacity: 0.7,
             cursor: 'pointer',
             display: 'inline-flex',
