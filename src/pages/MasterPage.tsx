@@ -56,7 +56,9 @@ export function MasterPage() {
     setSaving(false);
     if (results.some((result) => result.status === 'rejected')) {
       setSaveError('一部の保存に失敗しました。内容を確認してください');
+      return;
     }
+    navigate('/');
   };
 
   return (
@@ -82,7 +84,28 @@ export function MasterPage() {
           boxSizing: 'border-box',
         }}
       >
-        <Header title="マスタ管理" backTo="/" onBackClick={handleBackClick} />
+        <Header
+          title="マスタ管理"
+          backTo="/"
+          onBackClick={handleBackClick}
+          trailing={
+            <Button variant="primary" size="sm" onClick={handleSave} disabled={saving}>
+              {saving ? '保存中...' : '保存'}
+            </Button>
+          }
+        />
+        {saveError && (
+          <p
+            style={{
+              margin: '8px 0 0',
+              fontSize: '13px',
+              color: 'var(--negative)',
+              textAlign: 'center',
+            }}
+          >
+            {saveError}
+          </p>
+        )}
       </div>
 
       <PickupLocationSection key={`pickup-${dataVersion}`} ref={pickupLocationRef} />
@@ -94,25 +117,6 @@ export function MasterPage() {
         style={{ border: 'none', borderTop: '1px solid var(--border)', margin: 0 }}
       />
       <FamilySection key={`family-${dataVersion}`} ref={familyRef} />
-
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: '8px',
-          padding: '16px',
-        }}
-      >
-        {saveError && (
-          <p style={{ margin: 0, fontSize: '13px', color: 'var(--negative)' }}>
-            {saveError}
-          </p>
-        )}
-        <Button variant="primary" onClick={handleSave} disabled={saving}>
-          {saving ? '保存中...' : '保存'}
-        </Button>
-      </div>
 
       <hr
         style={{ border: 'none', borderTop: '1px solid var(--border)', margin: 0 }}
