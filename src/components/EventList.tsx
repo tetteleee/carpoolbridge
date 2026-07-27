@@ -145,7 +145,14 @@ export function EventList({
             )}
           </div>
 
-          <span style={{ flexShrink: 0, color: 'var(--text)' }}>
+          <span
+            style={{
+              flexShrink: 0,
+              display: 'inline-flex',
+              alignItems: 'center',
+              color: 'var(--text)',
+            }}
+          >
             <ChevronRightIcon size={18} />
           </span>
         </button>
