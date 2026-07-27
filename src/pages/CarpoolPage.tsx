@@ -116,8 +116,67 @@ export function CarpoolPage() {
       >
         <Header
           title={event ? event.name : ''}
-          titleFontSize="18px"
           backTo="/"
+          titleContent={
+            event && (
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '3px',
+                  flex: 1,
+                  minWidth: 0,
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', minWidth: 0 }}>
+                  <span
+                    style={{
+                      flexShrink: 0,
+                      fontSize: '13px',
+                      fontWeight: 600,
+                      color: 'var(--text)',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {formatDateWithWeekday(event.date)}
+                  </span>
+                  <span
+                    style={{
+                      flex: 1,
+                      minWidth: 0,
+                      fontSize: '16px',
+                      fontWeight: 700,
+                      color: 'var(--text-h)',
+                      textAlign: 'left',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                    }}
+                  >
+                    {event.name}
+                  </span>
+                </div>
+                {destinationName && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', minWidth: 0, color: 'var(--text)' }}>
+                    <MapPinIcon size={13} />
+                    <span
+                      style={{
+                        flex: 1,
+                        minWidth: 0,
+                        fontSize: '12.5px',
+                        textAlign: 'left',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {destinationName}
+                    </span>
+                  </div>
+                )}
+              </div>
+            )
+          }
           trailing={
             <OperationArea
               direction={direction}
@@ -126,57 +185,6 @@ export function CarpoolPage() {
             />
           }
         />
-
-        {event && (
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              marginTop: '10px',
-              paddingLeft: '2px',
-            }}
-          >
-            <span
-              style={{
-                flexShrink: 0,
-                fontSize: '14px',
-                fontWeight: 500,
-                color: 'var(--text-h)',
-                whiteSpace: 'nowrap',
-              }}
-            >
-              {formatDateWithWeekday(event.date)}
-            </span>
-            {destinationName && (
-              <div
-                style={{
-                  flex: 1,
-                  minWidth: 0,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                  color: 'var(--text)',
-                  textAlign: 'left',
-                }}
-              >
-                <MapPinIcon size={14} />
-                <span
-                  style={{
-                    flex: 1,
-                    minWidth: 0,
-                    fontSize: '13px',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                  }}
-                >
-                  {destinationName}
-                </span>
-              </div>
-            )}
-          </div>
-        )}
       </div>
 
       <div style={{ padding: '12px 16px 4px', boxSizing: 'border-box' }}>

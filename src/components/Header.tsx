@@ -13,6 +13,8 @@ interface HeaderProps {
   backTo?: string;
   /** タイトル行右側に表示する任意要素（件数チップなど） */
   trailing?: ReactNode;
+  /** 指定時、titleの代わりにタイトル欄へ表示する任意コンテンツ（日時＋タイトル＋場所の複数行表示など） */
+  titleContent?: ReactNode;
 }
 
 /** 戻るボタン・アプリアイコンで共通の円形ボタンスタイル（タップしやすい44px角） */
@@ -32,7 +34,14 @@ const iconButtonStyle: CSSProperties = {
  * 全画面共通のヘッダー本体（アプリアイコン or 戻るボタン＋タイトル＋任意の右側要素）。
  * position: sticky や padding、border-bottomなど外枠のスタイルは呼び出し側で用意する。
  */
-export function Header({ title, titleFontSize, showAppIcon, backTo, trailing }: HeaderProps) {
+export function Header({
+  title,
+  titleFontSize,
+  showAppIcon,
+  backTo,
+  trailing,
+  titleContent,
+}: HeaderProps) {
   const navigate = useNavigate();
 
   return (
@@ -70,23 +79,25 @@ export function Header({ title, titleFontSize, showAppIcon, backTo, trailing }: 
           <AppIcon size={32} />
         </span>
       )}
-      <h1
-        style={{
-          margin: 0,
-          flex: 1,
-          minWidth: 0,
-          fontSize: titleFontSize ?? '20px',
-          fontWeight: 700,
-          letterSpacing: '0.015em',
-          color: 'var(--text-h)',
-          textAlign: 'left',
-          whiteSpace: 'nowrap',
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-        }}
-      >
-        {title}
-      </h1>
+      {titleContent ?? (
+        <h1
+          style={{
+            margin: 0,
+            flex: 1,
+            minWidth: 0,
+            fontSize: titleFontSize ?? '20px',
+            fontWeight: 700,
+            letterSpacing: '0.015em',
+            color: 'var(--text-h)',
+            textAlign: 'left',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+          }}
+        >
+          {title}
+        </h1>
+      )}
       {trailing}
     </div>
   );
