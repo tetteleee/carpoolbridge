@@ -152,3 +152,22 @@ code {
   padding: 4px 8px;
   background: var(--code-bg);
 }
+
+/* イベント一覧のタップ時に四角いブラウザ標準ハイライトが出ないようにし、
+   カードの丸みに沿った控えめな押下フィードバックに差し替える */
+.event-card-body,
+.event-card-edit {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.event-card-body {
+  border-radius: 12px;
+}
+
+.event-card-body:active {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.event-card-edit:active {
+  background: rgba(0, 0, 0, 0.08);
+}
