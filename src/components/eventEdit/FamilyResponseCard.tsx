@@ -183,8 +183,9 @@ export function FamilyResponseCard({
         driverOutward={current.driverOutward}
         driverReturn={current.driverReturn}
         capacityToday={current.capacityToday}
-        onChangeDriverOutward={(value) => applyPatch({ driverOutward: value })}
-        onChangeDriverReturn={(value) => applyPatch({ driverReturn: value })}
+        onChangeDriverOffer={(outward, ret) =>
+          applyPatch({ driverOutward: outward, driverReturn: ret })
+        }
         onChangeCapacityToday={(value) => applyPatch({ capacityToday: value })}
       />
 

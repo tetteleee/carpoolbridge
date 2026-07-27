@@ -17,18 +17,6 @@ interface ChildResponseRowProps {
   onChangeNoReturnRide: (value: boolean) => void;
 }
 
-const rowStyle: CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'space-between',
-  gap: '8px',
-};
-
-const rowLabelStyle: CSSProperties = {
-  fontSize: '13px',
-  color: 'var(--text)',
-};
-
 const choiceButtonBaseStyle: CSSProperties = {
   minHeight: '44px',
   padding: '0 10px',
@@ -40,6 +28,27 @@ const choiceButtonBaseStyle: CSSProperties = {
   fontFamily: 'var(--sans)',
   whiteSpace: 'nowrap',
   cursor: 'pointer',
+};
+
+/** 「行き不要／帰り不要」用の縮小ボタン（参加ボタンより一回り小さくし、1行に収まりやすくする） */
+const rideOptionButtonStyle: CSSProperties = {
+  minHeight: '36px',
+  padding: '0 8px',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  borderRadius: '6px',
+  fontSize: '12px',
+  fontFamily: 'var(--sans)',
+  whiteSpace: 'nowrap',
+  cursor: 'pointer',
+};
+
+/** 折り返す場合に単位が崩れないよう、ボタン群をひとまとまりにするグループコンテナ */
+const buttonGroupStyle: CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: '6px',
 };
 
 const choicePositiveSelectedStyle: CSSProperties = {
@@ -63,22 +72,27 @@ const choiceUnselectedStyle: CSSProperties = {
   fontWeight: 400,
 };
 
-const checkboxRowStyle: CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: '6px',
-  fontSize: '13px',
-  color: 'var(--text)',
+const dividerStyle: CSSProperties = {
+  width: '1px',
+  height: '28px',
+  background: 'var(--border)',
+  flexShrink: 0,
 };
 
-const checkboxRowDisabledStyle: CSSProperties = {
-  ...checkboxRowStyle,
-  opacity: 0.5,
+const unansweredDotStyle: CSSProperties = {
+  display: 'inline-block',
+  width: '8px',
+  height: '8px',
+  borderRadius: '999px',
+  background: 'var(--warning)',
+  flexShrink: 0,
 };
 
 /**
  * イベント編集（回答入力）画面・家庭カード内の
- * 子供ごとの参加（3状態）・行き／帰りの配車不要チェックボックス。
+ * 子供ごとの参加（3状態）・行き／帰りの配車不要ボタンを1行にまとめて表示する。
+ * 「行き不要」「帰り不要」は参加が○のときだけ表示する（参加ボタンの右側に区切り線を挟んで並べる）。
+ * 参加が○以外になっても noOutwardRide・noReturnRide の値自体は保持し、○に戻すと表示が復元される。
  * 値は呼び出し側（FamilyResponseCard）が保持し、変更の都度Firestoreへ自動保存される（T29）。
  */
 export function ChildResponseRow({
@@ -90,76 +104,76 @@ export function ChildResponseRow({
   onChangeNoOutwardRide,
   onChangeNoReturnRide,
 }: ChildResponseRowProps) {
-  // 配車不要チェックは「参加」が○（true）の場合のみ意味を持つため、
-  // ○以外（✕・未回答）では操作不可にする。値自体は保持し、○に戻せば復元される。
-  const rideCheckboxDisabled = isParticipating !== true;
+  const showRideOptions = isParticipating === true;
 
   return (
     <div
       id={`child-response-frame-${childId}`}
-      style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}
+      style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}
     >
-      <div style={rowStyle}>
-        <span style={rowLabelStyle}>参加</span>
-        <div style={{ display: 'flex', gap: '6px' }}>
-          <button
-            id={`child-participating-yes-${childId}`}
-            type="button"
-            aria-pressed={isParticipating === true}
-            onClick={() => onChangeIsParticipating(true)}
-            style={{
-              ...choiceButtonBaseStyle,
-              ...(isParticipating === true
-                ? choicePositiveSelectedStyle
-                : choiceUnselectedStyle),
-            }}
-          >
-            ○参加
-          </button>
-          <button
-            id={`child-participating-no-${childId}`}
-            type="button"
-            aria-pressed={isParticipating === false}
-            onClick={() => onChangeIsParticipating(false)}
-            style={{
-              ...choiceButtonBaseStyle,
-              ...(isParticipating === false
-                ? choiceNegativeSelectedStyle
-                : choiceUnselectedStyle),
-            }}
-          >
-            ✕不参加
-          </button>
-        </div>
+      {isParticipating === null && (
+        <span
+          id={`child-participating-unanswered-dot-${childId}`}
+          aria-hidden="true"
+          style={unansweredDotStyle}
+        />
+      )}
+      <div style={buttonGroupStyle}>
+        <button
+          id={`child-participating-yes-${childId}`}
+          type="button"
+          aria-pressed={isParticipating === true}
+          onClick={() => onChangeIsParticipating(true)}
+          style={{
+            ...choiceButtonBaseStyle,
+            ...(isParticipating === true ? choicePositiveSelectedStyle : choiceUnselectedStyle),
+          }}
+        >
+          ○参加
+        </button>
+        <button
+          id={`child-participating-no-${childId}`}
+          type="button"
+          aria-pressed={isParticipating === false}
+          onClick={() => onChangeIsParticipating(false)}
+          style={{
+            ...choiceButtonBaseStyle,
+            ...(isParticipating === false ? choiceNegativeSelectedStyle : choiceUnselectedStyle),
+          }}
+        >
+          ✕不参加
+        </button>
       </div>
 
-      <label
-        style={rideCheckboxDisabled ? checkboxRowDisabledStyle : checkboxRowStyle}
-        htmlFor={`no-outward-ride-${childId}`}
-      >
-        <input
-          id={`no-outward-ride-${childId}`}
-          type="checkbox"
-          checked={noOutwardRide}
-          disabled={rideCheckboxDisabled}
-          onChange={(e) => onChangeNoOutwardRide(e.target.checked)}
-        />
-        行きの配車不要
-      </label>
-
-      <label
-        style={rideCheckboxDisabled ? checkboxRowDisabledStyle : checkboxRowStyle}
-        htmlFor={`no-return-ride-${childId}`}
-      >
-        <input
-          id={`no-return-ride-${childId}`}
-          type="checkbox"
-          checked={noReturnRide}
-          disabled={rideCheckboxDisabled}
-          onChange={(e) => onChangeNoReturnRide(e.target.checked)}
-        />
-        帰りの配車不要
-      </label>
+      {showRideOptions && (
+        <div style={buttonGroupStyle}>
+          <span aria-hidden="true" style={dividerStyle} />
+          <button
+            id={`no-outward-ride-${childId}`}
+            type="button"
+            aria-pressed={noOutwardRide}
+            onClick={() => onChangeNoOutwardRide(!noOutwardRide)}
+            style={{
+              ...rideOptionButtonStyle,
+              ...(noOutwardRide ? choicePositiveSelectedStyle : choiceUnselectedStyle),
+            }}
+          >
+            行き不要
+          </button>
+          <button
+            id={`no-return-ride-${childId}`}
+            type="button"
+            aria-pressed={noReturnRide}
+            onClick={() => onChangeNoReturnRide(!noReturnRide)}
+            style={{
+              ...rideOptionButtonStyle,
+              ...(noReturnRide ? choicePositiveSelectedStyle : choiceUnselectedStyle),
+            }}
+          >
+            帰り不要
+          </button>
+        </div>
+      )}
     </div>
   );
 }
