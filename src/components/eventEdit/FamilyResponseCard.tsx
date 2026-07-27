@@ -4,6 +4,7 @@ import type { Child, Family } from '../../types/master';
 import { getSchoolGrade } from '../../utils/schoolGrade';
 import { createResponse, updateResponse } from '../../services/event/responseService';
 import { HomeIcon, UserIcon } from '../icons';
+import { Card } from '../common/Card';
 import { ChildResponseRow } from './ChildResponseRow';
 import { CoachResponseRow } from './CoachResponseRow';
 import { DriverAndCapacitySection } from './DriverAndCapacitySection';
@@ -41,9 +42,6 @@ const memberBoxBaseStyle: CSSProperties = {
   flexDirection: 'column',
   gap: '6px',
   padding: '16px',
-  borderRadius: '8px',
-  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)',
-  boxSizing: 'border-box',
 };
 
 /** 子供カードの内側ボックス（役割色：背景＋枠線＋左帯） */
@@ -154,17 +152,14 @@ export function FamilyResponseCard({
   };
 
   return (
-    <section
+    <Card
+      as="section"
       id={`family-response-card-${family.id}`}
       style={{
         display: 'flex',
         flexDirection: 'column',
         gap: '12px',
         padding: '16px',
-        borderRadius: '16px',
-        border: '1px solid var(--border)',
-        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)',
-        boxSizing: 'border-box',
       }}
     >
       <h2
@@ -205,7 +200,7 @@ export function FamilyResponseCard({
             buildInitialResponseChild(child.id);
 
           return (
-            <div key={child.id} style={childMemberBoxStyle}>
+            <Card key={child.id} variant="compact" style={childMemberBoxStyle}>
               <span style={memberNameStyle}>
                 <UserIcon size={14} />
                 {child.name}
@@ -228,12 +223,12 @@ export function FamilyResponseCard({
                   applyChildPatch(child.id, { noReturnRide: value })
                 }
               />
-            </div>
+            </Card>
           );
         })}
 
         {hasCoach && (
-          <div style={coachMemberBoxStyle}>
+          <Card variant="compact" style={coachMemberBoxStyle}>
             <span style={memberNameStyle}>
               <UserIcon size={14} />
               {family.coachName}
@@ -246,7 +241,7 @@ export function FamilyResponseCard({
               coachParticipating={current.coachParticipating}
               onChange={(value) => applyPatch({ coachParticipating: value })}
             />
-          </div>
+          </Card>
         )}
       </div>
 
@@ -257,6 +252,6 @@ export function FamilyResponseCard({
         remarks={current.remarks}
         onChange={(value) => applyPatch({ remarks: value })}
       />
-    </section>
+    </Card>
   );
 }

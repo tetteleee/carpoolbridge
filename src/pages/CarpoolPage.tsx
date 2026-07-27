@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Header } from '../components/Header';
+import { EventHeaderTitle } from '../components/EventHeaderTitle';
 import { Button } from '../components/common/Button';
-import { LoadingIndicator, MapPinIcon, SummaryIcon } from '../components/icons';
+import { LoadingIndicator, SummaryIcon } from '../components/icons';
 import { CarCard } from '../components/carpool/CarCard';
 import { CarpoolEmptyState } from '../components/carpool/CarpoolEmptyState';
 import { CarpoolSummaryBar } from '../components/carpool/CarpoolSummaryBar';
@@ -111,7 +112,7 @@ export function CarpoolPage() {
           position: 'sticky',
           top: 0,
           zIndex: 10,
-          background: 'var(--bg)',
+          background: 'var(--panel-bg)',
           borderBottom: '1px solid var(--border)',
           boxSizing: 'border-box',
         }}
@@ -119,8 +120,16 @@ export function CarpoolPage() {
         <div style={{ padding: '14px 16px', boxSizing: 'border-box' }}>
           <Header
             title={event ? event.name : ''}
-            titleFontSize="18px"
             backTo="/"
+            titleContent={
+              event && (
+                <EventHeaderTitle
+                  date={formatDateWithWeekday(event.date)}
+                  title={event.name}
+                  location={destinationName || undefined}
+                />
+              )
+            }
             trailing={
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <Button
@@ -149,57 +158,6 @@ export function CarpoolPage() {
               </div>
             }
           />
-
-          {event && (
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                marginTop: '10px',
-                paddingLeft: '2px',
-              }}
-            >
-              <span
-                style={{
-                  flexShrink: 0,
-                  fontSize: '14px',
-                  fontWeight: 500,
-                  color: 'var(--text-h)',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                {formatDateWithWeekday(event.date)}
-              </span>
-              {destinationName && (
-                <div
-                  style={{
-                    flex: 1,
-                    minWidth: 0,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '4px',
-                    color: 'var(--text)',
-                    textAlign: 'left',
-                  }}
-                >
-                  <MapPinIcon size={14} />
-                  <span
-                    style={{
-                      flex: 1,
-                      minWidth: 0,
-                      fontSize: '13px',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    {destinationName}
-                  </span>
-                </div>
-              )}
-            </div>
-          )}
         </div>
 
         <div style={{ padding: '0 16px 12px', boxSizing: 'border-box' }}>

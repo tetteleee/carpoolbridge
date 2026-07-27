@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Header } from '../components/Header';
+import { EventHeaderTitle } from '../components/EventHeaderTitle';
 import { Button } from '../components/common/Button';
 import { FamilyResponseCard } from '../components/eventEdit/FamilyResponseCard';
 import { CarpoolRecreateDialog } from '../components/eventEdit/CarpoolRecreateDialog';
 import { DevSampleResponseButton } from '../components/eventEdit/DevSampleResponseButton';
 import { CarIcon, LoadingIndicator } from '../components/icons';
 import { getEvent } from '../services/event/eventService';
+import { getDestination } from '../services/master/destinationService';
 import { getFamilies } from '../services/master/familyService';
 import { getChildrenByFamilyId } from '../services/master/childService';
 import { getResponses } from '../services/event/responseService';
@@ -43,6 +45,7 @@ export function EventEditPage() {
   const { eventId } = useParams<{ eventId: string }>();
   const navigate = useNavigate();
   const [event, setEvent] = useState<Event | null>(null);
+  const [destinationName, setDestinationName] = useState('');
   const [families, setFamilies] = useState<Family[]>([]);
   const [childrenByFamilyId, setChildrenByFamilyId] = useState<
     Record<string, Child[]>
@@ -92,6 +95,15 @@ export function EventEditPage() {
       .catch(() => setError('データの取得に失敗しました'))
       .finally(() => setLoading(false));
   }, [eventId]);
+
+  useEffect(() => {
+    if (!event) {
+      return;
+    }
+    getDestination(event.destinationId).then((destination) =>
+      setDestinationName(destination?.name ?? '')
+    );
+  }, [event]);
 
   const runCreation = async (targetEventId: string) => {
     setCreatingCarpools(true);
@@ -175,15 +187,24 @@ export function EventEditPage() {
           position: 'sticky',
           top: 0,
           zIndex: 10,
-          background: 'var(--bg)',
+          background: 'var(--panel-bg)',
           padding: '14px 16px',
           borderBottom: '1px solid var(--border)',
           boxSizing: 'border-box',
         }}
       >
         <Header
-          title={event ? `${formatDateWithWeekday(event.date)} ${event.name}` : '回答入力'}
+          title={event ? event.name : '回答入力'}
           backTo={eventId ? `/events/${eventId}/carpool` : undefined}
+          titleContent={
+            event && (
+              <EventHeaderTitle
+                date={formatDateWithWeekday(event.date)}
+                title={event.name}
+                location={destinationName || undefined}
+              />
+            )
+          }
         />
       </div>
 

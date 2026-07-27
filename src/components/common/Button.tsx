@@ -21,7 +21,7 @@ const variantStyle: Record<ButtonVariant, CSSProperties> = {
     boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)',
   },
   secondary: {
-    background: 'transparent',
+    background: 'var(--bg)',
     color: 'var(--text-h)',
     border: '1px solid var(--border)',
     borderRadius: '8px',

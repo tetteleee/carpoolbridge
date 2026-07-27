@@ -52,7 +52,7 @@ export function HomePage() {
           position: 'sticky',
           top: 0,
           zIndex: 10,
-          background: 'var(--bg)',
+          background: 'var(--panel-bg)',
           padding: '16px 16px 20px',
           borderBottom: '1px solid var(--border)',
           boxSizing: 'border-box',
@@ -106,6 +106,7 @@ export function HomePage() {
           events={events}
           destinationNameById={destinationNameById}
           onEventClick={(eventId) => navigate(`/events/${eventId}/carpool`)}
+          onEditClick={(eventId) => navigate(`/events/${eventId}/edit-info`)}
         />
       )}
     </div>

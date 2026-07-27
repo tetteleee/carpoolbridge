@@ -13,6 +13,7 @@ import { getPickupLocations } from '../../services/master/pickupLocationService'
 import type { Child, Family, PickupLocation } from '../../types/master';
 import { ChildSection } from './ChildSection';
 import { Button } from '../common/Button';
+import { Card } from '../common/Card';
 import { getSchoolEntryYearOptions } from '../../utils/schoolGrade';
 import { HomeIcon, LoadingIndicator } from '../icons';
 
@@ -302,17 +303,13 @@ export function FamilySection({ ref }: FamilySectionProps) {
           style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}
         >
           {families.map((family) => (
-            <div
+            <Card
               key={family.id}
               style={{
                 display: 'flex',
                 flexDirection: 'column',
                 gap: '8px',
                 padding: '12px',
-                borderRadius: '16px',
-                border: '1px solid var(--border)',
-                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)',
-                boxSizing: 'border-box',
               }}
             >
               <label
@@ -490,7 +487,7 @@ export function FamilySection({ ref }: FamilySectionProps) {
                 onActiveToggle={handleChildActiveToggle}
                 onAdd={() => handleChildAdd(family.id)}
               />
-            </div>
+            </Card>
           ))}
         </div>
       )}

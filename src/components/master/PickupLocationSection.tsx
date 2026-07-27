@@ -1,5 +1,6 @@
 import { useEffect, useImperativeHandle, useState } from 'react';
 import { Button } from '../common/Button';
+import { Card } from '../common/Card';
 import { LoadingIndicator, MapPinIcon } from '../icons';
 import {
   createPickupLocation,
@@ -145,17 +146,13 @@ export function PickupLocationSection({ ref }: PickupLocationSectionProps) {
           style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}
         >
           {locations.map((location) => (
-            <div
+            <Card
               key={location.id}
               style={{
                 display: 'flex',
                 flexDirection: 'column',
                 gap: '8px',
                 padding: '12px',
-                borderRadius: '16px',
-                border: '1px solid var(--border)',
-                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)',
-                boxSizing: 'border-box',
               }}
             >
               <label
@@ -260,7 +257,7 @@ export function PickupLocationSection({ ref }: PickupLocationSectionProps) {
                   />
                 </label>
               </div>
-            </div>
+            </Card>
           ))}
         </div>
       )}

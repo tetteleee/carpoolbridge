@@ -4,7 +4,7 @@
   --bg: #fff;
   --border: #e5e4e7;
   --code-bg: #f4f3ec;
-  --panel-bg: #f4f3ec;
+  --panel-bg: #f9f8f4;
 
   /* 役割カラー（子供・コーチ・保護者）。背景＋枠線＋左帯の3点セットで使う */
   --child-bg: #f5ead8;
@@ -51,7 +51,7 @@
   letter-spacing: 0.18px;
   color-scheme: light;
   color: var(--text);
-  background: var(--bg);
+  background: var(--panel-bg);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;

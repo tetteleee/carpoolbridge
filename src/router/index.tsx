@@ -3,6 +3,7 @@ import { HomePage } from '../pages/HomePage';
 import { MasterPage } from '../pages/MasterPage';
 import { EventCreatePage } from '../pages/EventCreatePage';
 import { EventEditPage } from '../pages/EventEditPage';
+import { EventInfoEditPage } from '../pages/EventInfoEditPage';
 import { CarpoolPage } from '../pages/CarpoolPage';
 
 /**
@@ -16,6 +17,7 @@ export function AppRoutes() {
       <Route path="/master" element={<MasterPage />} />
       <Route path="/events/new" element={<EventCreatePage />} />
       <Route path="/events/:eventId/edit" element={<EventEditPage />} />
+      <Route path="/events/:eventId/edit-info" element={<EventInfoEditPage />} />
       <Route path="/events/:eventId/carpool" element={<CarpoolPage />} />
     </Routes>
   );
