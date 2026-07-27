@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Header } from '../components/Header';
-import { LoadingIndicator } from '../components/icons';
+import { LoadingIndicator, MapPinIcon } from '../components/icons';
 import { CarCard } from '../components/carpool/CarCard';
 import { CarpoolWarningPopup } from '../components/carpool/CarpoolWarningPopup';
 import { DirectionToggle } from '../components/carpool/DirectionToggle';
@@ -113,7 +113,8 @@ export function CarpoolPage() {
         }}
       >
         <Header
-          title="配車画面"
+          title={event ? event.name : ''}
+          titleFontSize="18px"
           backTo="/"
           trailing={
             <OperationArea
@@ -129,7 +130,7 @@ export function CarpoolPage() {
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '12px',
+              gap: '8px',
               marginTop: '10px',
               paddingLeft: '2px',
             }}
@@ -145,34 +146,24 @@ export function CarpoolPage() {
             >
               {formatDateWithWeekday(event.date)}
             </span>
-            <div
-              style={{
-                flex: 1,
-                minWidth: 0,
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '2px',
-                textAlign: 'left',
-              }}
-            >
-              <span
+            {destinationName && (
+              <div
                 style={{
-                  fontSize: '15px',
-                  fontWeight: 700,
-                  lineHeight: 1.35,
-                  color: 'var(--text-h)',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
+                  flex: 1,
+                  minWidth: 0,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  color: 'var(--text)',
+                  textAlign: 'left',
                 }}
               >
-                {event.name}
-              </span>
-              {destinationName && (
+                <MapPinIcon size={14} />
                 <span
                   style={{
+                    flex: 1,
+                    minWidth: 0,
                     fontSize: '13px',
-                    color: 'var(--text)',
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
                     whiteSpace: 'nowrap',
@@ -180,8 +171,8 @@ export function CarpoolPage() {
                 >
                   {destinationName}
                 </span>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         )}
       </div>

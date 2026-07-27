@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react';
 import { Button } from '../common/Button';
 import { EditIcon, ShareIcon } from '../icons';
 import type { Direction } from '../../types/event';
@@ -10,6 +11,16 @@ interface OperationAreaProps {
   /** 「共有」ボタン押下時に呼び出す、LINE共有画面への遷移処理 */
   onShare: (direction: Direction) => void;
 }
+
+/** 回答編集・共有ボタン共通の見た目（グレー枠のアイコンのみボタン） */
+const iconButtonStyle: CSSProperties = {
+  width: '34px',
+  height: '34px',
+  padding: 0,
+  minHeight: 0,
+  borderColor: '#D1D5DB',
+  color: '#6B7280',
+};
 
 /**
  * 配車画面（メイン）の操作エリア。
@@ -27,17 +38,18 @@ export function OperationArea({
       <Button
         variant="secondary"
         size="sm"
-        icon={<EditIcon size={16} />}
+        aria-label="回答編集"
         onClick={onEditAnswers}
+        style={iconButtonStyle}
       >
-        回答編集
+        <EditIcon size={16} />
       </Button>
       <Button
         variant="secondary"
         size="sm"
         aria-label="共有"
         onClick={() => onShare(direction)}
-        style={{ padding: '8px', width: '36px' }}
+        style={iconButtonStyle}
       >
         <ShareIcon size={16} />
       </Button>

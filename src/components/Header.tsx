@@ -5,6 +5,8 @@ import { AppIcon, ChevronLeftIcon } from './icons';
 interface HeaderProps {
   /** 画面タイトル。長い場合は1行で省略表示される */
   title: string;
+  /** タイトルのフォントサイズ。未指定時は既定の20px */
+  titleFontSize?: string;
   /** ルート画面（ホーム）のみ指定。指定時はタイトル左にアプリアイコンを表示する */
   showAppIcon?: boolean;
   /** サブ画面のみ指定。指定時はタイトル左に戻るボタン（アイコンのみ）を表示する */
@@ -30,7 +32,7 @@ const iconButtonStyle: CSSProperties = {
  * 全画面共通のヘッダー本体（アプリアイコン or 戻るボタン＋タイトル＋任意の右側要素）。
  * position: sticky や padding、border-bottomなど外枠のスタイルは呼び出し側で用意する。
  */
-export function Header({ title, showAppIcon, backTo, trailing }: HeaderProps) {
+export function Header({ title, titleFontSize, showAppIcon, backTo, trailing }: HeaderProps) {
   const navigate = useNavigate();
 
   return (
@@ -73,7 +75,7 @@ export function Header({ title, showAppIcon, backTo, trailing }: HeaderProps) {
           margin: 0,
           flex: 1,
           minWidth: 0,
-          fontSize: '20px',
+          fontSize: titleFontSize ?? '20px',
           fontWeight: 700,
           letterSpacing: '0.015em',
           color: 'var(--text-h)',
