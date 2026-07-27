@@ -58,7 +58,7 @@ const choiceNegativeSelectedStyle: CSSProperties = {
 
 const choiceUnselectedStyle: CSSProperties = {
   border: '1px solid var(--border)',
-  background: 'transparent',
+  background: 'var(--bg)',
   color: 'var(--text)',
   fontWeight: 400,
 };
