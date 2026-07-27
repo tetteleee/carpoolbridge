@@ -213,6 +213,17 @@ export function WarningIcon({ size = 18 }: IconProps) {
   );
 }
 
+/** サマリー（棒グラフ）アイコン */
+export function SummaryIcon({ size = 18 }: IconProps) {
+  return (
+    <svg {...baseProps(size)}>
+      <line x1="5" y1="20" x2="5" y2="12" />
+      <line x1="12" y1="20" x2="12" y2="6" />
+      <line x1="19" y1="20" x2="19" y2="15" />
+    </svg>
+  );
+}
+
 /** アプリロゴアイコン（sizeは幅基準、高さは元SVGの比率452:276で計算） */
 export function AppIcon({ size = 32 }: IconProps) {
   const width = size;
