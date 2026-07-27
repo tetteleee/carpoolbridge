@@ -40,7 +40,7 @@ export function CarpoolWarningPopup({ message }: CarpoolWarningPopupProps) {
       <div
         style={{
           display: 'flex',
-          alignItems: 'flex-start',
+          alignItems: 'center',
           gap: '8px',
           padding: '10px 12px',
           background: 'var(--bg)',
