@@ -144,7 +144,7 @@ export function CarpoolPage() {
                     padding: 0,
                     minHeight: 0,
                     borderColor: isSummaryVisible ? 'var(--accent-border)' : '#D1D5DB',
-                    background: isSummaryVisible ? 'var(--accent-bg)' : 'transparent',
+                    background: isSummaryVisible ? 'var(--accent-bg)' : '#FFFFFF',
                     color: isSummaryVisible ? 'var(--accent)' : '#6B7280',
                   }}
                 >
