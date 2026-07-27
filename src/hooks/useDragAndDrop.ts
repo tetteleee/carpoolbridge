@@ -269,6 +269,13 @@ export function useDragAndDrop({ onDrop }: UseDragAndDropOptions): UseDragAndDro
         return;
       }
 
+      // マウス操作はカード全体がドラッグ起点のため、長押し確定前に
+      // ネイティブテキスト選択が始まらないようここで止める
+      // （タッチ／ペンはドラッグハンドルのtouch-action: noneで別途対応済み）
+      if (event.pointerType === 'mouse') {
+        event.preventDefault();
+      }
+
       resetAll();
 
       pendingRef.current = { x: event.clientX, y: event.clientY, pointerId: event.pointerId };

@@ -85,6 +85,8 @@ export function CarCard({
         borderRadius: '8px',
         overflow: 'hidden',
         background: isDropTarget ? 'var(--drop-target-bg)' : undefined,
+        userSelect: 'none',
+        WebkitUserSelect: 'none',
       }}
     >
       <div

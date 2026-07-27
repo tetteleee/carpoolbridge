@@ -40,6 +40,8 @@ export function UnassignedArea({
         borderRadius: '8px',
         overflow: 'hidden',
         background: isDropTarget ? 'var(--drop-target-bg)' : undefined,
+        userSelect: 'none',
+        WebkitUserSelect: 'none',
       }}
     >
       <h2
