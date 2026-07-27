@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import { CarIcon } from '../icons';
 
 interface DriverAndCapacitySectionProps {
   /** 対象家庭ID（DOM要素のid付与に使用） */
@@ -231,7 +232,9 @@ export function DriverAndCapacitySection({
       style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}
     >
       <div style={rowStyle}>
-        <span style={rowLabelStyle}>車出し</span>
+        <span aria-label="車出し" role="img" style={{ display: 'flex', color: 'var(--text)' }}>
+          <CarIcon size={18} />
+        </span>
         <DriverOfferSegments
           idPrefix={`driver-offer-${familyId}`}
           driverOutward={driverOutward}

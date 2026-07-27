@@ -12,13 +12,7 @@ interface CoachResponseRowProps {
 const rowStyle: CSSProperties = {
   display: 'flex',
   alignItems: 'center',
-  justifyContent: 'space-between',
   gap: '8px',
-};
-
-const rowLabelStyle: CSSProperties = {
-  fontSize: '13px',
-  color: 'var(--text)',
 };
 
 /** iOSセグメントコントロール風の外枠（トラック）。中に選択肢のピルボタンを並べる */
@@ -72,7 +66,6 @@ export function CoachResponseRow({
       style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}
     >
       <div style={rowStyle}>
-        <span style={rowLabelStyle}>参加</span>
         <div style={segmentTrackStyle}>
           <button
             id={`coach-participating-yes-${familyId}`}
