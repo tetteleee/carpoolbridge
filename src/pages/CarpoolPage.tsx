@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Header } from '../components/Header';
-import { LoadingIndicator, MapPinIcon } from '../components/icons';
+import { EventHeaderTitle } from '../components/EventHeaderTitle';
+import { LoadingIndicator } from '../components/icons';
 import { CarCard } from '../components/carpool/CarCard';
 import { CarpoolEmptyState } from '../components/carpool/CarpoolEmptyState';
 import { CarpoolWarningPopup } from '../components/carpool/CarpoolWarningPopup';
@@ -119,62 +120,11 @@ export function CarpoolPage() {
           backTo="/"
           titleContent={
             event && (
-              <div
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '3px',
-                  flex: 1,
-                  minWidth: 0,
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', minWidth: 0 }}>
-                  <span
-                    style={{
-                      flexShrink: 0,
-                      fontSize: '13px',
-                      fontWeight: 600,
-                      color: 'var(--text)',
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    {formatDateWithWeekday(event.date)}
-                  </span>
-                  <span
-                    style={{
-                      flex: 1,
-                      minWidth: 0,
-                      fontSize: '16px',
-                      fontWeight: 700,
-                      color: 'var(--text-h)',
-                      textAlign: 'left',
-                      whiteSpace: 'nowrap',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                    }}
-                  >
-                    {event.name}
-                  </span>
-                </div>
-                {destinationName && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', minWidth: 0, color: 'var(--text)' }}>
-                    <MapPinIcon size={13} />
-                    <span
-                      style={{
-                        flex: 1,
-                        minWidth: 0,
-                        fontSize: '12.5px',
-                        textAlign: 'left',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      {destinationName}
-                    </span>
-                  </div>
-                )}
-              </div>
+              <EventHeaderTitle
+                date={formatDateWithWeekday(event.date)}
+                title={event.name}
+                location={destinationName || undefined}
+              />
             )
           }
           trailing={
