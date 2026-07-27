@@ -25,30 +25,42 @@ const rowStyle: CSSProperties = {
   gap: '8px',
 };
 
+/** 車出し行専用。車アイコン＋セグメントコントロールを並べ、セグメント側が残り幅いっぱいに広がる */
+const driverOfferRowStyle: CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: '8px',
+};
+
 const rowLabelStyle: CSSProperties = {
   fontSize: '13px',
   color: 'var(--text)',
 };
 
-/** iOSセグメントコントロール風の外枠（トラック）。中に選択肢のピルボタンを並べる */
+/** iOSセグメントコントロール風の外枠（トラック）。中に選択肢のピルボタンを並べる。
+ * 残り幅いっぱいに広がり（flex:1）、4つの選択肢ボタンへ均等に幅を配分する */
 const segmentTrackStyle: CSSProperties = {
-  display: 'inline-flex',
+  display: 'flex',
+  flex: 1,
+  minWidth: 0,
   background: 'var(--border)',
   borderRadius: '12px',
   padding: '3px',
   gap: '2px',
 };
 
-/** セグメントコントロール内の各選択肢ボタン（未選択時は枠なし・透明） */
+/** セグメントコントロール内の各選択肢ボタン。flex:1で4つとも横幅を揃える（未選択時は枠なし・透明） */
 const segmentButtonBaseStyle: CSSProperties = {
+  flex: 1,
+  minWidth: 0,
   border: 'none',
   background: 'transparent',
   minHeight: '38px',
-  padding: '0 12px',
+  padding: '0 4px',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  gap: '4px',
+  gap: '3px',
   borderRadius: '9px',
   fontSize: '13px',
   fontFamily: 'var(--sans)',
@@ -240,8 +252,12 @@ export function DriverAndCapacitySection({
       id={`drive-offer-frame-${familyId}`}
       style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}
     >
-      <div style={rowStyle}>
-        <span aria-label="車出し" role="img" style={{ display: 'flex', color: 'var(--text)' }}>
+      <div style={driverOfferRowStyle}>
+        <span
+          aria-label="車出し"
+          role="img"
+          style={{ display: 'flex', flexShrink: 0, color: 'var(--text)' }}
+        >
           <CarIcon size={18} />
         </span>
         <DriverOfferSegments
