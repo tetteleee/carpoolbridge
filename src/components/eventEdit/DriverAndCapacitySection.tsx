@@ -29,45 +29,38 @@ const rowLabelStyle: CSSProperties = {
   color: 'var(--text)',
 };
 
-const choiceButtonBaseStyle: CSSProperties = {
-  minHeight: '44px',
-  padding: '0 10px',
+/** iOSセグメントコントロール風の外枠（トラック）。中に選択肢のピルボタンを並べる */
+const segmentTrackStyle: CSSProperties = {
+  display: 'inline-flex',
+  background: 'var(--border)',
+  borderRadius: '12px',
+  padding: '3px',
+  gap: '2px',
+};
+
+/** セグメントコントロール内の各選択肢ボタン（未選択時は枠なし・透明） */
+const segmentButtonBaseStyle: CSSProperties = {
+  border: 'none',
+  background: 'transparent',
+  minHeight: '38px',
+  padding: '0 12px',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  borderRadius: '6px',
+  borderRadius: '9px',
   fontSize: '13px',
   fontFamily: 'var(--sans)',
   whiteSpace: 'nowrap',
   cursor: 'pointer',
-};
-
-const choicePositiveSelectedStyle: CSSProperties = {
-  border: '1px solid var(--positive-border)',
-  background: 'var(--positive-bg)',
-  color: 'var(--positive)',
-  fontWeight: 700,
-};
-
-const choiceNegativeSelectedStyle: CSSProperties = {
-  border: '1px solid var(--negative-border)',
-  background: 'var(--negative-bg)',
-  color: 'var(--negative)',
-  fontWeight: 700,
-};
-
-const choiceAccentSelectedStyle: CSSProperties = {
-  border: '1px solid var(--accent-border)',
-  background: 'var(--accent-bg)',
-  color: 'var(--accent)',
-  fontWeight: 700,
-};
-
-const choiceUnselectedStyle: CSSProperties = {
-  border: '1px solid var(--border)',
-  background: 'var(--bg)',
   color: 'var(--text)',
   fontWeight: 400,
+};
+
+/** 選択中のセグメントは白背景で浮き上がらせ、色は選択肢の意味（可＝positive等）で変える */
+const segmentSelectedStyle: CSSProperties = {
+  background: 'var(--bg)',
+  boxShadow: '0 1px 2px rgba(0, 0, 0, 0.15)',
+  fontWeight: 700,
 };
 
 const stepperButtonStyle: CSSProperties = {
@@ -91,7 +84,8 @@ interface DriverOfferOptionDef {
   key: DriverOfferKey;
   label: string;
   idSuffix: string;
-  selectedStyle: CSSProperties;
+  /** 選択時の文字色（可＝positive／不可＝negative／行きのみ・帰りのみ＝accent） */
+  selectedColor: string;
   outward: boolean;
   return: boolean;
   /** 乗車可能人数0人の場合に選択不可にするか（＝いずれかの方向で運転が発生する選択肢か） */
@@ -103,7 +97,7 @@ const DRIVER_OFFER_OPTIONS: DriverOfferOptionDef[] = [
     key: 'both',
     label: '可',
     idSuffix: 'both',
-    selectedStyle: choicePositiveSelectedStyle,
+    selectedColor: 'var(--positive)',
     outward: true,
     return: true,
     requiresCapacity: true,
@@ -112,7 +106,7 @@ const DRIVER_OFFER_OPTIONS: DriverOfferOptionDef[] = [
     key: 'none',
     label: '不可',
     idSuffix: 'none',
-    selectedStyle: choiceNegativeSelectedStyle,
+    selectedColor: 'var(--negative)',
     outward: false,
     return: false,
     requiresCapacity: false,
@@ -121,7 +115,7 @@ const DRIVER_OFFER_OPTIONS: DriverOfferOptionDef[] = [
     key: 'outwardOnly',
     label: '行きのみ',
     idSuffix: 'outward-only',
-    selectedStyle: choiceAccentSelectedStyle,
+    selectedColor: 'var(--accent)',
     outward: true,
     return: false,
     requiresCapacity: true,
@@ -130,7 +124,7 @@ const DRIVER_OFFER_OPTIONS: DriverOfferOptionDef[] = [
     key: 'returnOnly',
     label: '帰りのみ',
     idSuffix: 'return-only',
-    selectedStyle: choiceAccentSelectedStyle,
+    selectedColor: 'var(--accent)',
     outward: false,
     return: true,
     requiresCapacity: true,
@@ -178,7 +172,7 @@ function DriverOfferSegments({
   const selectedKey = resolveDriverOfferKey(driverOutward, driverReturn);
 
   return (
-    <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+    <div style={segmentTrackStyle}>
       {DRIVER_OFFER_OPTIONS.map((option) => {
         const selected = option.key === selectedKey;
         const disabled = option.requiresCapacity && capacityIsZero;
@@ -191,8 +185,8 @@ function DriverOfferSegments({
             disabled={disabled}
             onClick={() => onChange(option.outward, option.return)}
             style={{
-              ...choiceButtonBaseStyle,
-              ...(selected ? option.selectedStyle : choiceUnselectedStyle),
+              ...segmentButtonBaseStyle,
+              ...(selected ? { ...segmentSelectedStyle, color: option.selectedColor } : {}),
               opacity: disabled ? 0.4 : 1,
               cursor: disabled ? 'default' : 'pointer',
             }}

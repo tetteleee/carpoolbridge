@@ -29,38 +29,38 @@ const rowLabelStyle: CSSProperties = {
   color: 'var(--text)',
 };
 
-const choiceButtonBaseStyle: CSSProperties = {
-  minHeight: '44px',
+/** iOSセグメントコントロール風の外枠（トラック）。中に選択肢のピルボタンを並べる */
+const segmentTrackStyle: CSSProperties = {
+  display: 'inline-flex',
+  background: 'var(--border)',
+  borderRadius: '12px',
+  padding: '3px',
+  gap: '2px',
+};
+
+/** セグメントコントロール内の各選択肢ボタン（未選択時は枠なし・透明） */
+const segmentButtonBaseStyle: CSSProperties = {
+  border: 'none',
+  background: 'transparent',
+  minHeight: '38px',
   padding: '0 10px',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  borderRadius: '6px',
+  borderRadius: '9px',
   fontSize: '13px',
   fontFamily: 'var(--sans)',
   whiteSpace: 'nowrap',
   cursor: 'pointer',
-};
-
-const choicePositiveSelectedStyle: CSSProperties = {
-  border: '1px solid var(--positive-border)',
-  background: 'var(--positive-bg)',
-  color: 'var(--positive)',
-  fontWeight: 700,
-};
-
-const choiceNegativeSelectedStyle: CSSProperties = {
-  border: '1px solid var(--negative-border)',
-  background: 'var(--negative-bg)',
-  color: 'var(--negative)',
-  fontWeight: 700,
-};
-
-const choiceUnselectedStyle: CSSProperties = {
-  border: '1px solid var(--border)',
-  background: 'var(--bg)',
   color: 'var(--text)',
   fontWeight: 400,
+};
+
+/** 選択中のセグメントは白背景で浮き上がらせ、色は選択肢の意味（参加＝positive等）で変える */
+const segmentSelectedStyle: CSSProperties = {
+  background: 'var(--bg)',
+  boxShadow: '0 1px 2px rgba(0, 0, 0, 0.15)',
+  fontWeight: 700,
 };
 
 const switchButtonStyle: CSSProperties = {
@@ -189,17 +189,17 @@ export function ChildResponseRow({
       <div style={rowStyle}>
         <span style={rowLabelStyle}>参加</span>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <div style={{ display: 'flex', gap: '6px' }}>
+          <div style={segmentTrackStyle}>
             <button
               id={`child-participating-yes-${childId}`}
               type="button"
               aria-pressed={isParticipating === true}
               onClick={() => onChangeIsParticipating(true)}
               style={{
-                ...choiceButtonBaseStyle,
+                ...segmentButtonBaseStyle,
                 ...(isParticipating === true
-                  ? choicePositiveSelectedStyle
-                  : choiceUnselectedStyle),
+                  ? { ...segmentSelectedStyle, color: 'var(--positive)' }
+                  : {}),
               }}
             >
               ○参加
@@ -210,10 +210,10 @@ export function ChildResponseRow({
               aria-pressed={isParticipating === false}
               onClick={() => onChangeIsParticipating(false)}
               style={{
-                ...choiceButtonBaseStyle,
+                ...segmentButtonBaseStyle,
                 ...(isParticipating === false
-                  ? choiceNegativeSelectedStyle
-                  : choiceUnselectedStyle),
+                  ? { ...segmentSelectedStyle, color: 'var(--negative)' }
+                  : {}),
               }}
             >
               ✕不参加
