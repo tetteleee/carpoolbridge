@@ -51,6 +51,7 @@ export function RemarksSection({
         id={`remarks-input-${familyId}`}
         value={remarks}
         onChange={(e) => onChange(e.target.value)}
+        rows={1}
         style={textareaStyle}
       />
     </div>
