@@ -1,4 +1,4 @@
-import type { CSSProperties } from 'react';
+import { useLayoutEffect, useRef, type CSSProperties } from 'react';
 
 interface RemarksSectionProps {
   /** 対象家庭ID（DOM要素のid付与に使用） */
@@ -31,7 +31,8 @@ const textareaStyle: CSSProperties = {
   color: 'var(--text-h)',
   background: 'transparent',
   boxSizing: 'border-box',
-  resize: 'vertical',
+  resize: 'none',
+  overflow: 'hidden',
 };
 
 /**
@@ -44,11 +45,22 @@ export function RemarksSection({
   remarks,
   onChange,
 }: RemarksSectionProps) {
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // 改行や折り返しで入力内容が増えた分だけ枠の高さを自動で広げる
+  useLayoutEffect(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = `${el.scrollHeight}px`;
+  }, [remarks]);
+
   return (
     <div id={`remarks-frame-${familyId}`} style={frameStyle}>
       <span style={labelStyle}>備考</span>
       <textarea
         id={`remarks-input-${familyId}`}
+        ref={textareaRef}
         value={remarks}
         onChange={(e) => onChange(e.target.value)}
         rows={1}
