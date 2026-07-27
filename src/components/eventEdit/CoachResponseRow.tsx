@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import { CheckIcon, CloseIcon } from '../icons';
 
 interface CoachResponseRowProps {
   /** 対象家庭ID（DOM要素のid付与に使用） */
@@ -12,47 +13,42 @@ interface CoachResponseRowProps {
 const rowStyle: CSSProperties = {
   display: 'flex',
   alignItems: 'center',
-  justifyContent: 'space-between',
   gap: '8px',
 };
 
-const rowLabelStyle: CSSProperties = {
-  fontSize: '13px',
-  color: 'var(--text)',
+/** iOSセグメントコントロール風の外枠（トラック）。中に選択肢のピルボタンを並べる */
+const segmentTrackStyle: CSSProperties = {
+  display: 'inline-flex',
+  background: 'var(--border)',
+  borderRadius: '12px',
+  padding: '3px',
+  gap: '2px',
 };
 
-const choiceButtonBaseStyle: CSSProperties = {
-  minHeight: '44px',
+/** セグメントコントロール内の各選択肢ボタン（未選択時は枠なし・透明） */
+const segmentButtonBaseStyle: CSSProperties = {
+  border: 'none',
+  background: 'transparent',
+  minHeight: '38px',
   padding: '0 10px',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  borderRadius: '6px',
+  gap: '4px',
+  borderRadius: '9px',
   fontSize: '13px',
   fontFamily: 'var(--sans)',
   whiteSpace: 'nowrap',
   cursor: 'pointer',
-};
-
-const choicePositiveSelectedStyle: CSSProperties = {
-  border: '1px solid var(--positive-border)',
-  background: 'var(--positive-bg)',
-  color: 'var(--positive)',
-  fontWeight: 700,
-};
-
-const choiceNegativeSelectedStyle: CSSProperties = {
-  border: '1px solid var(--negative-border)',
-  background: 'var(--negative-bg)',
-  color: 'var(--negative)',
-  fontWeight: 700,
-};
-
-const choiceUnselectedStyle: CSSProperties = {
-  border: '1px solid var(--border)',
-  background: 'var(--bg)',
   color: 'var(--text)',
   fontWeight: 400,
+};
+
+/** 選択中のセグメントは白背景で浮き上がらせ、色は選択肢の意味（参加＝positive等）で変える */
+const segmentSelectedStyle: CSSProperties = {
+  background: 'var(--bg)',
+  boxShadow: '0 1px 2px rgba(0, 0, 0, 0.15)',
+  fontWeight: 700,
 };
 
 /**
@@ -72,21 +68,21 @@ export function CoachResponseRow({
       style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}
     >
       <div style={rowStyle}>
-        <span style={rowLabelStyle}>参加</span>
-        <div style={{ display: 'flex', gap: '6px' }}>
+        <div style={segmentTrackStyle}>
           <button
             id={`coach-participating-yes-${familyId}`}
             type="button"
             aria-pressed={coachParticipating === true}
             onClick={() => onChange(true)}
             style={{
-              ...choiceButtonBaseStyle,
+              ...segmentButtonBaseStyle,
               ...(coachParticipating === true
-                ? choicePositiveSelectedStyle
-                : choiceUnselectedStyle),
+                ? { ...segmentSelectedStyle, color: 'var(--positive)' }
+                : {}),
             }}
           >
-            ○参加
+            {coachParticipating === true && <CheckIcon size={14} />}
+            参加
           </button>
           <button
             id={`coach-participating-no-${familyId}`}
@@ -94,13 +90,14 @@ export function CoachResponseRow({
             aria-pressed={coachParticipating === false}
             onClick={() => onChange(false)}
             style={{
-              ...choiceButtonBaseStyle,
+              ...segmentButtonBaseStyle,
               ...(coachParticipating === false
-                ? choiceNegativeSelectedStyle
-                : choiceUnselectedStyle),
+                ? { ...segmentSelectedStyle, color: 'var(--negative)' }
+                : {}),
             }}
           >
-            ✕不参加
+            {coachParticipating === false && <CloseIcon size={14} />}
+            不参加
           </button>
         </div>
       </div>

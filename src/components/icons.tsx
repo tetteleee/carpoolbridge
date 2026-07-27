@@ -99,6 +99,15 @@ export function CarIcon({ size = 18 }: IconProps) {
   );
 }
 
+/** チェックマーク（選択済みを示す）アイコン */
+export function CheckIcon({ size = 18 }: IconProps) {
+  return (
+    <svg {...baseProps(size)}>
+      <polyline points="5 12 10 17 19 7" />
+    </svg>
+  );
+}
+
 /** 右向きシェブロン（詳細遷移を示す）アイコン */
 export function ChevronRightIcon({ size = 18 }: IconProps) {
   return (
