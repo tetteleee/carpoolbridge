@@ -26,6 +26,9 @@
   --negative: #c2410c;
   --negative-bg: rgba(194, 65, 12, 0.08);
   --negative-border: rgba(194, 65, 12, 0.35);
+  --warning: #b45309;
+  --warning-bg: rgba(180, 83, 9, 0.1);
+  --warning-border: rgba(180, 83, 9, 0.4);
   --social-bg: rgba(244, 243, 236, 0.5);
   --shadow:
     rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;

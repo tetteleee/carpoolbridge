@@ -60,15 +60,15 @@ test('回答入力画面の各項目を変更すると、都度Firestoreへ自�
   // 「保存」ボタンが存在しないことを確認する
   await expect(page.getByRole('button', { name: '保存' })).toHaveCount(0);
 
-  // 1件目の変更（車出し・行き）でResponseドキュメントが新規作成される
-  await page.click(`#driver-outward-${familyRef.id}-possible`);
+  // 1件目の変更（車出し・行きのみ）でResponseドキュメントが新規作成される
+  await page.click(`#driver-offer-${familyRef.id}-outward-only`);
   await expect
     .poll(async () => (await responseDocRef.get()).exists)
     .toBe(true);
 
   let saved = (await responseDocRef.get()).data();
   expect(saved?.driverOutward).toBe(true);
-  expect(saved?.driverReturn).toBeNull();
+  expect(saved?.driverReturn).toBe(false);
   expect(saved?.capacityToday).toBeNull();
   expect(saved?.coachParticipating).toBeNull();
   expect(saved?.remarks).toBe('');
@@ -76,7 +76,8 @@ test('回答入力画面の各項目を変更すると、都度Firestoreへ自�
     { childId: childRef.id, isParticipating: null, noOutwardRide: false, noReturnRide: false },
   ]);
 
-  // 2件目以降の変更は既存ドキュメントの部分更新となり、他の項目は保持される
+  // 2件目以降の変更は既存ドキュメントの部分更新となり、他の項目は保持される。
+  // 「参加」を○にした瞬間、行き・帰りの送迎スイッチは両方ON（送迎あり＝noOutwardRide/noReturnRideともfalse）になる
   await page.click(`#child-participating-yes-${childRef.id}`);
   await expect
     .poll(async () => (await responseDocRef.get()).data()?.children)
@@ -86,6 +87,7 @@ test('回答入力画面の各項目を変更すると、都度Firestoreへ自�
   saved = (await responseDocRef.get()).data();
   expect(saved?.driverOutward).toBe(true);
 
+  // 行きの送迎スイッチをOFF（不要）にする
   await page.click(`#no-outward-ride-${childRef.id}`);
   await expect
     .poll(async () => (await responseDocRef.get()).data()?.children)
@@ -111,7 +113,7 @@ test('回答入力画面の各項目を変更すると、都度Firestoreへ自�
 
   // リロード後も自動保存済みの内容が初期表示に反映される（「戻る」後の再訪と同等の確認）
   await page.reload();
-  await expect(page.locator(`#driver-outward-${familyRef.id}-possible`)).toHaveAttribute(
+  await expect(page.locator(`#driver-offer-${familyRef.id}-outward-only`)).toHaveAttribute(
     'aria-pressed',
     'true'
   );
@@ -119,7 +121,16 @@ test('回答入力画面の各項目を変更すると、都度Firestoreへ自�
     'aria-pressed',
     'true'
   );
-  await expect(page.locator(`#no-outward-ride-${childRef.id}`)).toBeChecked();
+  // 行きの送迎スイッチはOFF（不要）のまま＝aria-checkedはfalse
+  await expect(page.locator(`#no-outward-ride-${childRef.id}`)).toHaveAttribute(
+    'aria-checked',
+    'false'
+  );
+  // 帰りの送迎スイッチは未操作のためON（送迎あり）のまま＝aria-checkedはtrue
+  await expect(page.locator(`#no-return-ride-${childRef.id}`)).toHaveAttribute(
+    'aria-checked',
+    'true'
+  );
   await expect(page.locator(`#coach-participating-yes-${familyRef.id}`)).toHaveAttribute(
     'aria-pressed',
     'true'

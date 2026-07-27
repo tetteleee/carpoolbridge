@@ -17,10 +17,6 @@ function randomTriState(): boolean | null {
   return false;
 }
 
-function randomBoolean(): boolean {
-  return Math.random() < 0.5;
-}
-
 function randomRemarks(): string {
   return SAMPLE_REMARKS[Math.floor(Math.random() * SAMPLE_REMARKS.length)];
 }
@@ -37,24 +33,42 @@ function randomCapacityToday(vehicleCapacity: number): number | null {
 }
 
 /**
- * 車出し可否（driverOutward・driverReturn）をランダムに生成する。
+ * 車出し可否（driverOutward・driverReturn）を、画面上の4択
+ * （可／不可／行きのみ／帰りのみ、いずれも未回答の場合はnull）からランダムに1つ選び生成する。
  * 画面設計（04_画面設計.md#7）の制約に合わせ、当日の乗車可能人数が0人の場合は
- * 「可」を選ばないようにする。
+ * 運転が発生する選択肢（可／行きのみ／帰りのみ）を選ばないようにする。
  */
-function randomDriverField(effectiveCapacity: number): boolean | null {
-  const value = randomTriState();
-  if (value === true && effectiveCapacity <= 0) {
-    return false;
+function randomDriverOffer(effectiveCapacity: number): { driverOutward: boolean | null; driverReturn: boolean | null } {
+  if (effectiveCapacity <= 0) {
+    const r = Math.random();
+    if (r < 0.5) return { driverOutward: null, driverReturn: null };
+    return { driverOutward: false, driverReturn: false };
   }
-  return value;
+
+  const options: { driverOutward: boolean | null; driverReturn: boolean | null }[] = [
+    { driverOutward: null, driverReturn: null },
+    { driverOutward: true, driverReturn: true },
+    { driverOutward: false, driverReturn: false },
+    { driverOutward: true, driverReturn: false },
+    { driverOutward: false, driverReturn: true },
+  ];
+  return options[Math.floor(Math.random() * options.length)];
 }
 
+/** 送迎不要（例外）が発生する確率。現地集合・保護者お迎え等は稀なケースのため低めに設定する */
+const NO_RIDE_PROBABILITY = 0.15;
+
 function randomResponseChild(childId: string): ResponseChild {
+  const isParticipating = randomTriState();
+  // 送迎要否スイッチは「参加」が○の場合のみ意味を持つため、それ以外は既定値（送迎あり＝false）のままにする
+  if (isParticipating !== true) {
+    return { childId, isParticipating, noOutwardRide: false, noReturnRide: false };
+  }
   return {
     childId,
-    isParticipating: randomTriState(),
-    noOutwardRide: randomBoolean(),
-    noReturnRide: randomBoolean(),
+    isParticipating,
+    noOutwardRide: Math.random() < NO_RIDE_PROBABILITY,
+    noReturnRide: Math.random() < NO_RIDE_PROBABILITY,
   };
 }
 
@@ -72,10 +86,11 @@ function buildRandomResponse(
 ): Response {
   const capacityToday = randomCapacityToday(vehicleCapacity);
   const effectiveCapacity = capacityToday ?? vehicleCapacity;
+  const { driverOutward, driverReturn } = randomDriverOffer(effectiveCapacity);
 
   return {
-    driverOutward: randomDriverField(effectiveCapacity),
-    driverReturn: randomDriverField(effectiveCapacity),
+    driverOutward,
+    driverReturn,
     capacityToday,
     coachParticipating: hasCoach ? randomTriState() : null,
     remarks: randomRemarks(),
