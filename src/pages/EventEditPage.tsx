@@ -145,13 +145,6 @@ export function EventEditPage() {
     await runCreation(eventId);
   };
 
-  const handleBackClick = () => {
-    if (!eventId) {
-      return;
-    }
-    navigate(`/events/${eventId}/carpool`);
-  };
-
   /**
    * サンプル回答生成（開発用機能）の完了後、最新の回答を再取得して画面に反映する。
    * FamilyResponseCardは初回描画時のpropsを内部状態の初期値として保持するため、
@@ -205,6 +198,21 @@ export function EventEditPage() {
               />
             )
           }
+          trailing={
+            eventId &&
+            !loading &&
+            !error && (
+              <Button
+                variant="primary"
+                size="sm"
+                icon={<CarIcon size={16} />}
+                onClick={handleCreateCarpoolClick}
+                disabled={creatingCarpools}
+              >
+                {creatingCarpools ? '作成中' : '配車'}
+              </Button>
+            )
+          }
         />
       </div>
 
@@ -220,6 +228,19 @@ export function EventEditPage() {
         {error && (
           <p style={{ margin: 0, fontSize: '13px', color: 'var(--negative)' }}>
             {error}
+          </p>
+        )}
+
+        {carpoolMessage && (
+          <p
+            style={{
+              margin: 0,
+              fontSize: '13px',
+              color: carpoolMessage.isError ? 'var(--negative)' : 'var(--text)',
+              textAlign: 'center',
+            }}
+          >
+            {carpoolMessage.text}
           </p>
         )}
 
@@ -245,51 +266,6 @@ export function EventEditPage() {
               response={responsesByFamilyId[family.id]}
             />
           ))
-        )}
-
-        {eventId && !loading && !error && (
-          <div
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: '8px',
-              paddingTop: '8px',
-            }}
-          >
-            {carpoolMessage && (
-              <p
-                style={{
-                  margin: 0,
-                  fontSize: '13px',
-                  color: carpoolMessage.isError ? 'var(--negative)' : 'var(--text)',
-                }}
-              >
-                {carpoolMessage.text}
-              </p>
-            )}
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                width: '100%',
-                gap: '12px',
-              }}
-            >
-              <Button variant="secondary" onClick={handleBackClick}>
-                戻る
-              </Button>
-              <Button
-                variant="primary"
-                icon={<CarIcon size={18} />}
-                onClick={handleCreateCarpoolClick}
-                disabled={creatingCarpools}
-              >
-                {creatingCarpools ? '配車作成中...' : '配車作成'}
-              </Button>
-            </div>
-          </div>
         )}
 
         {eventId && !loading && !error && (
