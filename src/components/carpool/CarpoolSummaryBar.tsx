@@ -12,10 +12,10 @@ interface CarpoolSummaryBarProps {
 const chipBaseStyle = {
   display: 'inline-flex',
   alignItems: 'center',
-  height: '26px',
-  padding: '0 8px',
+  height: '24px',
+  padding: '0 6px',
   borderRadius: '999px',
-  fontSize: '11.5px',
+  fontSize: '11px',
   fontWeight: 700,
   whiteSpace: 'nowrap',
 } as const;
@@ -34,8 +34,8 @@ export function CarpoolSummaryBar({ carCards, unassignedCount }: CarpoolSummaryB
         display: 'flex',
         flexWrap: 'wrap',
         alignItems: 'center',
-        gap: '5px',
-        padding: '8px 16px',
+        gap: '4px',
+        padding: '8px 12px',
         background: 'var(--bg)',
         boxSizing: 'border-box',
       }}
@@ -70,17 +70,17 @@ export function CarpoolSummaryBar({ carCards, unassignedCount }: CarpoolSummaryB
             key={car.id}
             style={{
               ...chipBaseStyle,
-              gap: '4px',
-              padding: '0 8px 0 6px',
+              gap: '3px',
+              padding: '0 6px 0 5px',
               background: isOverCapacity ? 'var(--negative-bg)' : 'var(--panel-bg)',
               border: `1px solid ${isOverCapacity ? 'var(--negative-border)' : 'var(--border)'}`,
               color: isOverCapacity ? 'var(--negative)' : 'var(--text-h)',
             }}
           >
-            <CarIcon size={11} />
+            <CarIcon size={10} />
             <span
               style={{
-                padding: '0 5px',
+                padding: '0 4px',
                 borderLeft: `3px solid ${accentColor}`,
                 lineHeight: 1,
                 color: 'var(--text-h)',
@@ -96,12 +96,12 @@ export function CarpoolSummaryBar({ carCards, unassignedCount }: CarpoolSummaryB
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '1px',
-                fontSize: '10.5px',
+                fontSize: '10px',
                 fontWeight: 600,
                 color: 'var(--text)',
               }}
             >
-              <MapPinIcon size={10} />
+              <MapPinIcon size={9} />
               {car.routeLocationNames.length}
             </span>
           </span>
