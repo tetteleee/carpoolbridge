@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Header } from '../components/Header';
 import { LoadingIndicator, MapPinIcon } from '../components/icons';
 import { CarCard } from '../components/carpool/CarCard';
+import { CarpoolEmptyState } from '../components/carpool/CarpoolEmptyState';
 import { CarpoolWarningPopup } from '../components/carpool/CarpoolWarningPopup';
 import { DirectionToggle } from '../components/carpool/DirectionToggle';
 import { OperationArea } from '../components/carpool/OperationArea';
@@ -37,6 +38,7 @@ export function CarpoolPage() {
   const {
     unassignedPeople,
     carCards,
+    hasNoResponses,
     loading: boardDataLoading,
     error: boardDataError,
   } = useCarpoolBoardData(eventId, direction, carpools);
@@ -206,26 +208,30 @@ export function CarpoolPage() {
           </div>
         ) : (
           !error && (
-            <>
-              <UnassignedArea
-                people={unassignedPeople}
-                isDropTarget={dragState !== null && hoveredZoneId === UNASSIGNED_ZONE_ID}
-                draggingPersonId={dragState?.personId ?? null}
-                onPersonPointerDown={(person) =>
-                  createPointerDownHandler(person, UNASSIGNED_ZONE_ID)
-                }
-              />
-              {carCards.map((car) => (
-                <CarCard
-                  key={car.id}
-                  car={car}
-                  isDropTarget={dragState !== null && hoveredZoneId === car.id}
+            hasNoResponses ? (
+              <CarpoolEmptyState onEditAnswers={handleEditAnswersClick} />
+            ) : (
+              <>
+                <UnassignedArea
+                  people={unassignedPeople}
+                  isDropTarget={dragState !== null && hoveredZoneId === UNASSIGNED_ZONE_ID}
                   draggingPersonId={dragState?.personId ?? null}
-                  insertionAnchorKey={hoveredZoneId === car.id ? insertionAnchorKey : null}
-                  onPersonPointerDown={(person) => createPointerDownHandler(person, car.id)}
+                  onPersonPointerDown={(person) =>
+                    createPointerDownHandler(person, UNASSIGNED_ZONE_ID)
+                  }
                 />
-              ))}
-            </>
+                {carCards.map((car) => (
+                  <CarCard
+                    key={car.id}
+                    car={car}
+                    isDropTarget={dragState !== null && hoveredZoneId === car.id}
+                    draggingPersonId={dragState?.personId ?? null}
+                    insertionAnchorKey={hoveredZoneId === car.id ? insertionAnchorKey : null}
+                    onPersonPointerDown={(person) => createPointerDownHandler(person, car.id)}
+                  />
+                ))}
+              </>
+            )
           )
         )}
       </div>

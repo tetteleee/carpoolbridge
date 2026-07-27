@@ -17,6 +17,8 @@ interface UseCarpoolBoardDataResult {
   unassignedPeople: UnassignedPerson[];
   /** 選択中タブ（行き／帰り）の車カード一覧 */
   carCards: CarCardData[];
+  /** 対象イベントの回答が1件もないかどうか（一部家庭のみ未回答の場合は含まない） */
+  hasNoResponses: boolean;
   /** マスタ・回答データの取得中かどうか */
   loading: boolean;
   /** マスタ・回答データの取得に失敗した場合のエラーメッセージ */
@@ -256,5 +258,7 @@ export function useCarpoolBoardData(
     });
   }, [masterData, carpools]);
 
-  return { unassignedPeople, carCards, loading, error };
+  const hasNoResponses = masterData !== null && masterData.responseByFamilyId.size === 0;
+
+  return { unassignedPeople, carCards, hasNoResponses, loading, error };
 }
