@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import { CheckIcon, CloseIcon } from '../icons';
 
 interface ChildResponseRowProps {
   /** 対象子供ID（DOM要素のid付与に使用） */
@@ -41,6 +42,7 @@ const segmentButtonBaseStyle: CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
+  gap: '4px',
   borderRadius: '9px',
   fontSize: '13px',
   fontFamily: 'var(--sans)',
@@ -195,7 +197,8 @@ export function ChildResponseRow({
                   : {}),
               }}
             >
-              ○参加
+              {isParticipating === true && <CheckIcon size={14} />}
+              参加
             </button>
             <button
               id={`child-participating-no-${childId}`}
@@ -209,7 +212,8 @@ export function ChildResponseRow({
                   : {}),
               }}
             >
-              ✕不参加
+              {isParticipating === false && <CloseIcon size={14} />}
+              不参加
             </button>
           </div>
 

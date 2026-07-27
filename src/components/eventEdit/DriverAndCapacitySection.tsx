@@ -1,5 +1,5 @@
-import type { CSSProperties } from 'react';
-import { CarIcon } from '../icons';
+import type { ComponentType, CSSProperties } from 'react';
+import { CarIcon, CheckIcon, CloseIcon, ChevronLeftIcon, ChevronRightIcon } from '../icons';
 
 interface DriverAndCapacitySectionProps {
   /** 対象家庭ID（DOM要素のid付与に使用） */
@@ -48,6 +48,7 @@ const segmentButtonBaseStyle: CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
+  gap: '4px',
   borderRadius: '9px',
   fontSize: '13px',
   fontFamily: 'var(--sans)',
@@ -87,6 +88,8 @@ interface DriverOfferOptionDef {
   idSuffix: string;
   /** 選択時の文字色（可＝positive／不可＝negative／行きのみ・帰りのみ＝accent） */
   selectedColor: string;
+  /** 選択時にラベルの前に表示するアイコン（未選択時はアイコンを表示しない） */
+  SelectedIcon: ComponentType<{ size?: number }>;
   outward: boolean;
   return: boolean;
   /** 乗車可能人数0人の場合に選択不可にするか（＝いずれかの方向で運転が発生する選択肢か） */
@@ -99,6 +102,7 @@ const DRIVER_OFFER_OPTIONS: DriverOfferOptionDef[] = [
     label: '可',
     idSuffix: 'both',
     selectedColor: 'var(--positive)',
+    SelectedIcon: CheckIcon,
     outward: true,
     return: true,
     requiresCapacity: true,
@@ -108,6 +112,7 @@ const DRIVER_OFFER_OPTIONS: DriverOfferOptionDef[] = [
     label: '不可',
     idSuffix: 'none',
     selectedColor: 'var(--negative)',
+    SelectedIcon: CloseIcon,
     outward: false,
     return: false,
     requiresCapacity: false,
@@ -117,6 +122,7 @@ const DRIVER_OFFER_OPTIONS: DriverOfferOptionDef[] = [
     label: '行きのみ',
     idSuffix: 'outward-only',
     selectedColor: 'var(--accent)',
+    SelectedIcon: ChevronRightIcon,
     outward: true,
     return: false,
     requiresCapacity: true,
@@ -126,6 +132,7 @@ const DRIVER_OFFER_OPTIONS: DriverOfferOptionDef[] = [
     label: '帰りのみ',
     idSuffix: 'return-only',
     selectedColor: 'var(--accent)',
+    SelectedIcon: ChevronLeftIcon,
     outward: false,
     return: true,
     requiresCapacity: true,
@@ -177,6 +184,7 @@ function DriverOfferSegments({
       {DRIVER_OFFER_OPTIONS.map((option) => {
         const selected = option.key === selectedKey;
         const disabled = option.requiresCapacity && capacityIsZero;
+        const SelectedIcon = option.SelectedIcon;
         return (
           <button
             key={option.key}
@@ -192,6 +200,7 @@ function DriverOfferSegments({
               cursor: disabled ? 'default' : 'pointer',
             }}
           >
+            {selected && <SelectedIcon size={14} />}
             {option.label}
           </button>
         );
