@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Header } from '../components/Header';
-import { LoadingIndicator, MapPinIcon } from '../components/icons';
+import { Button } from '../components/common/Button';
+import { LoadingIndicator, MapPinIcon, SummaryIcon } from '../components/icons';
 import { CarCard } from '../components/carpool/CarCard';
 import { CarpoolEmptyState } from '../components/carpool/CarpoolEmptyState';
+import { CarpoolSummaryBar } from '../components/carpool/CarpoolSummaryBar';
 import { CarpoolWarningPopup } from '../components/carpool/CarpoolWarningPopup';
 import { DirectionToggle } from '../components/carpool/DirectionToggle';
 import { OperationArea } from '../components/carpool/OperationArea';
@@ -43,6 +45,7 @@ export function CarpoolPage() {
     error: boardDataError,
   } = useCarpoolBoardData(eventId, direction, carpools);
   const [moveError, setMoveError] = useState<string | null>(null);
+  const [isSummaryVisible, setIsSummaryVisible] = useState(true);
   const { hasWarning, message: validationMessage } = useCarpoolValidation(
     carCards,
     unassignedPeople
@@ -109,78 +112,113 @@ export function CarpoolPage() {
           top: 0,
           zIndex: 10,
           background: 'var(--bg)',
-          padding: '14px 16px',
           borderBottom: '1px solid var(--border)',
           boxSizing: 'border-box',
         }}
       >
-        <Header
-          title={event ? event.name : ''}
-          titleFontSize="18px"
-          backTo="/"
-          trailing={
-            <OperationArea
-              direction={direction}
-              onEditAnswers={handleEditAnswersClick}
-              onShare={handleShareClick}
-            />
-          }
-        />
+        <div style={{ padding: '14px 16px', boxSizing: 'border-box' }}>
+          <Header
+            title={event ? event.name : ''}
+            titleFontSize="18px"
+            backTo="/"
+            trailing={
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  aria-label={isSummaryVisible ? 'サマリーを非表示' : 'サマリーを表示'}
+                  aria-pressed={isSummaryVisible}
+                  onClick={() => setIsSummaryVisible((visible) => !visible)}
+                  style={{
+                    width: '34px',
+                    height: '34px',
+                    padding: 0,
+                    minHeight: 0,
+                    borderColor: isSummaryVisible ? 'var(--accent-border)' : '#D1D5DB',
+                    background: isSummaryVisible ? 'var(--accent-bg)' : 'transparent',
+                    color: isSummaryVisible ? 'var(--accent)' : '#6B7280',
+                  }}
+                >
+                  <SummaryIcon size={16} />
+                </Button>
+                <OperationArea
+                  direction={direction}
+                  onEditAnswers={handleEditAnswersClick}
+                  onShare={handleShareClick}
+                />
+              </div>
+            }
+          />
 
-        {event && (
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              marginTop: '10px',
-              paddingLeft: '2px',
-            }}
-          >
-            <span
+          {event && (
+            <div
               style={{
-                flexShrink: 0,
-                fontSize: '14px',
-                fontWeight: 500,
-                color: 'var(--text-h)',
-                whiteSpace: 'nowrap',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                marginTop: '10px',
+                paddingLeft: '2px',
               }}
             >
-              {formatDateWithWeekday(event.date)}
-            </span>
-            {destinationName && (
-              <div
+              <span
                 style={{
-                  flex: 1,
-                  minWidth: 0,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                  color: 'var(--text)',
-                  textAlign: 'left',
+                  flexShrink: 0,
+                  fontSize: '14px',
+                  fontWeight: 500,
+                  color: 'var(--text-h)',
+                  whiteSpace: 'nowrap',
                 }}
               >
-                <MapPinIcon size={14} />
-                <span
+                {formatDateWithWeekday(event.date)}
+              </span>
+              {destinationName && (
+                <div
                   style={{
                     flex: 1,
                     minWidth: 0,
-                    fontSize: '13px',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    color: 'var(--text)',
+                    textAlign: 'left',
                   }}
                 >
-                  {destinationName}
-                </span>
-              </div>
-            )}
+                  <MapPinIcon size={14} />
+                  <span
+                    style={{
+                      flex: 1,
+                      minWidth: 0,
+                      fontSize: '13px',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {destinationName}
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        <div style={{ padding: '0 16px 12px', boxSizing: 'border-box' }}>
+          <DirectionToggle direction={direction} onChange={setDirection} />
+        </div>
+
+        {!loading && !error && !hasNoResponses && (
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateRows: isSummaryVisible ? '1fr' : '0fr',
+              transition: 'grid-template-rows 0.2s ease',
+            }}
+          >
+            <div style={{ overflow: 'hidden' }}>
+              <CarpoolSummaryBar carCards={carCards} unassignedCount={unassignedPeople.length} />
+            </div>
           </div>
         )}
-      </div>
-
-      <div style={{ padding: '12px 16px 4px', boxSizing: 'border-box' }}>
-        <DirectionToggle direction={direction} onChange={setDirection} />
       </div>
 
       <div

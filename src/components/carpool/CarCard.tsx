@@ -2,6 +2,7 @@ import type { PointerEvent as ReactPointerEvent } from 'react';
 import { CarIcon, MapPinIcon } from '../icons';
 import { PersonCard, type PersonCardData } from './PersonCard';
 import { memberKey } from '../../services/carpool/carpoolMember';
+import { toCarName } from '../../utils/carName';
 
 /**
  * 車カード1台分のデータ。
@@ -48,13 +49,6 @@ interface CarCardProps {
   onPersonPointerDown?: (
     person: PersonCardData
   ) => (event: ReactPointerEvent<Element>) => void;
-}
-
-/**
- * 家庭名から車名を算出する（例：山田家→山田号）。
- */
-function toCarName(familyName: string): string {
-  return `${familyName.replace(/家$/, '')}号`;
 }
 
 /**
