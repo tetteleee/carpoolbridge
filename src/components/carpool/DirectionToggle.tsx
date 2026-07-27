@@ -61,7 +61,7 @@ export function DirectionToggle({ direction, onChange }: DirectionToggleProps) {
               flex: 1,
               border: 'none',
               background: 'transparent',
-              padding: '9px 0',
+              padding: '5px 0',
               borderRadius: '999px',
               fontSize: '14px',
               fontWeight: 700,
