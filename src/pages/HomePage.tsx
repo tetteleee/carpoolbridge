@@ -106,6 +106,7 @@ export function HomePage() {
           events={events}
           destinationNameById={destinationNameById}
           onEventClick={(eventId) => navigate(`/events/${eventId}/carpool`)}
+          onEditClick={(eventId) => navigate(`/events/${eventId}/edit-info`)}
         />
       )}
     </div>

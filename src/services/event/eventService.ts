@@ -5,6 +5,7 @@ import {
   getDoc,
   getDocs,
   serverTimestamp,
+  updateDoc,
 } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { firestorePaths } from '../../constants';
@@ -53,4 +54,22 @@ export async function getEvent(eventId: string): Promise<Event | null> {
     return null;
   }
   return { id: docSnap.id, ...docSnap.data() } as Event;
+}
+
+/**
+ * イベントのイベント名・日付・目的地を更新します。
+ * Response（回答）データは対象外です。
+ *
+ * @param eventId 更新対象のドキュメントID
+ * @param data 更新するフィールド（name・date・destinationId）
+ */
+export async function updateEvent(
+  eventId: string,
+  data: Pick<Event, 'name' | 'date' | 'destinationId'>
+): Promise<void> {
+  const docRef = doc(db, firestorePaths.eventDocument(eventId));
+  await updateDoc(docRef, {
+    ...data,
+    updatedAt: serverTimestamp(),
+  });
 }
