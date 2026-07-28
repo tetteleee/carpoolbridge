@@ -174,3 +174,14 @@ code {
 .event-card-edit:active {
   background: rgba(0, 0, 0, 0.08);
 }
+
+/* マスタ管理ハブ画面のメニュー行も同様に、タップ時の四角い標準ハイライトを消し、
+   カードの丸みに沿った押下フィードバックに差し替える */
+.master-menu-row {
+  -webkit-tap-highlight-color: transparent;
+  border-radius: 16px;
+}
+
+.master-menu-row:active {
+  background: rgba(0, 0, 0, 0.05);
+}

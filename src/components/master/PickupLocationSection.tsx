@@ -1,7 +1,7 @@
 import { useEffect, useImperativeHandle, useState } from 'react';
 import { Button } from '../common/Button';
 import { Card } from '../common/Card';
-import { LoadingIndicator, MapPinIcon } from '../icons';
+import { LoadingIndicator } from '../icons';
 import {
   createPickupLocation,
   getPickupLocations,
@@ -130,19 +130,6 @@ export function PickupLocationSection({ ref }: PickupLocationSectionProps) {
         boxSizing: 'border-box',
       }}
     >
-      <h2
-        style={{
-          margin: 0,
-          fontSize: '18px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '6px',
-        }}
-      >
-        <MapPinIcon size={18} />
-        集合場所
-      </h2>
-
       {error && (
         <p style={{ margin: 0, fontSize: '13px', color: 'var(--negative)' }}>
           {error}

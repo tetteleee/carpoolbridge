@@ -1,65 +1,69 @@
-import { useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Header } from '../components/Header';
-import { Button } from '../components/common/Button';
-import {
-  PickupLocationSection,
-  type PickupLocationSectionHandle,
-} from '../components/master/PickupLocationSection';
-import {
-  DestinationSection,
-  type DestinationSectionHandle,
-} from '../components/master/DestinationSection';
-import {
-  FamilySection,
-  type FamilySectionHandle,
-} from '../components/master/FamilySection';
+import { Card } from '../components/common/Card';
 import { DevSampleDataButton } from '../components/master/DevSampleDataButton';
-import { UnsavedChangesDialog } from '../components/master/UnsavedChangesDialog';
+import { getPickupLocations } from '../services/master/pickupLocationService';
+import { getDestinations } from '../services/master/destinationService';
+import { getFamilies } from '../services/master/familyService';
+import { ChevronRightIcon, FlagIcon, HomeIcon, LoadingIndicator, MapPinIcon } from '../components/icons';
+
+interface MenuItem {
+  path: string;
+  label: string;
+  icon: React.ReactNode;
+  count: number | null;
+}
 
 /**
- * マスタ管理画面。
- * 集合場所・目的地・家庭の各セクションを縦積みで表示する。
- * 各セクションの編集・追加内容は下書きにとどめ、画面共通の保存ボタン押下時に
- * まとめてFirestoreへ反映する。保存前に画面を離脱すれば下書きは破棄される。
+ * マスタ管理画面（ハブ画面）。
+ * 集合場所・目的地・家庭の各編集画面への入口となるメニューを表示する。
+ * この画面自体には編集項目・保存操作を持たない。
+ * ref: docs/04_画面設計.md#10 マスタ管理 10.1 マスタ管理（ハブ画面）
  */
 export function MasterPage() {
   const navigate = useNavigate();
-  const pickupLocationRef = useRef<PickupLocationSectionHandle>(null);
-  const destinationRef = useRef<DestinationSectionHandle>(null);
-  const familyRef = useRef<FamilySectionHandle>(null);
-  const [saving, setSaving] = useState(false);
-  const [saveError, setSaveError] = useState<string | null>(null);
+  const [counts, setCounts] = useState<{
+    pickupLocations: number;
+    destinations: number;
+    families: number;
+  } | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [dataVersion, setDataVersion] = useState(0);
-  const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
 
-  const handleBackClick = () => {
-    const hasChanges =
-      pickupLocationRef.current?.hasChanges() ||
-      destinationRef.current?.hasChanges() ||
-      familyRef.current?.hasChanges();
-    if (hasChanges) {
-      setShowUnsavedDialog(true);
-      return;
-    }
-    navigate('/');
-  };
+  useEffect(() => {
+    setCounts(null);
+    Promise.all([getPickupLocations(), getDestinations(), getFamilies()])
+      .then(([pickupLocations, destinations, families]) => {
+        setCounts({
+          pickupLocations: pickupLocations.length,
+          destinations: destinations.length,
+          families: families.length,
+        });
+      })
+      .catch(() => setError('登録件数の取得に失敗しました'));
+  }, [dataVersion]);
 
-  const handleSave = async () => {
-    setSaving(true);
-    setSaveError(null);
-    const results = await Promise.allSettled([
-      pickupLocationRef.current?.save(),
-      destinationRef.current?.save(),
-      familyRef.current?.save(),
-    ]);
-    setSaving(false);
-    if (results.some((result) => result.status === 'rejected')) {
-      setSaveError('一部の保存に失敗しました。内容を確認してください');
-      return;
-    }
-    navigate('/');
-  };
+  const menuItems: MenuItem[] = [
+    {
+      path: '/master/pickup-locations',
+      label: '集合場所',
+      icon: <MapPinIcon size={18} />,
+      count: counts?.pickupLocations ?? null,
+    },
+    {
+      path: '/master/destinations',
+      label: '目的地',
+      icon: <FlagIcon size={18} />,
+      count: counts?.destinations ?? null,
+    },
+    {
+      path: '/master/families',
+      label: '家庭',
+      icon: <HomeIcon size={18} />,
+      count: counts?.families ?? null,
+    },
+  ];
 
   return (
     <div
@@ -84,50 +88,103 @@ export function MasterPage() {
           boxSizing: 'border-box',
         }}
       >
-        <Header
-          title="マスタ管理"
-          backTo="/"
-          onBackClick={handleBackClick}
-          trailing={
-            <Button variant="primary" size="sm" onClick={handleSave} disabled={saving}>
-              {saving ? '保存中...' : '保存'}
-            </Button>
-          }
-        />
-        {saveError && (
-          <p
-            style={{
-              margin: '8px 0 0',
-              fontSize: '13px',
-              color: 'var(--negative)',
-              textAlign: 'center',
-            }}
-          >
-            {saveError}
-          </p>
-        )}
+        <Header title="マスタ管理" backTo="/" />
       </div>
 
-      <PickupLocationSection key={`pickup-${dataVersion}`} ref={pickupLocationRef} />
-      <hr
-        style={{ border: 'none', borderTop: '1px solid var(--border)', margin: 0 }}
-      />
-      <DestinationSection key={`destination-${dataVersion}`} ref={destinationRef} />
-      <hr
-        style={{ border: 'none', borderTop: '1px solid var(--border)', margin: 0 }}
-      />
-      <FamilySection key={`family-${dataVersion}`} ref={familyRef} />
+      <div
+        id="master-menu"
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '12px',
+          padding: '16px',
+          boxSizing: 'border-box',
+        }}
+      >
+        {error && (
+          <p style={{ margin: 0, fontSize: '13px', color: 'var(--negative)' }}>
+            {error}
+          </p>
+        )}
+
+        {menuItems.map((item) => (
+          <Card key={item.path} style={{ padding: 0 }}>
+            <button
+              type="button"
+              className="master-menu-row"
+              onClick={() => navigate(item.path)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                width: '100%',
+                padding: '14px 16px',
+                border: 'none',
+                background: 'transparent',
+                font: 'inherit',
+                color: 'inherit',
+                textAlign: 'left',
+                cursor: 'pointer',
+                boxSizing: 'border-box',
+              }}
+            >
+              <span
+                style={{
+                  flexShrink: 0,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '34px',
+                  height: '34px',
+                  borderRadius: '10px',
+                  background: 'var(--accent-bg)',
+                  color: 'var(--accent)',
+                }}
+              >
+                {item.icon}
+              </span>
+
+              <span
+                style={{
+                  flex: 1,
+                  fontSize: '15px',
+                  fontWeight: 700,
+                  color: 'var(--text-h)',
+                }}
+              >
+                {item.label}
+              </span>
+
+              <span
+                style={{
+                  flexShrink: 0,
+                  fontSize: '13px',
+                  color: 'var(--text)',
+                  minWidth: '32px',
+                  textAlign: 'right',
+                }}
+              >
+                {item.count === null ? <LoadingIndicator /> : `${item.count}件`}
+              </span>
+
+              <span
+                style={{
+                  flexShrink: 0,
+                  display: 'inline-flex',
+                  color: 'var(--text)',
+                }}
+              >
+                <ChevronRightIcon size={18} />
+              </span>
+            </button>
+          </Card>
+        ))}
+      </div>
 
       <hr
         style={{ border: 'none', borderTop: '1px solid var(--border)', margin: 0 }}
       />
       <DevSampleDataButton onSeeded={() => setDataVersion((v) => v + 1)} />
-
-      <UnsavedChangesDialog
-        open={showUnsavedDialog}
-        onCancel={() => setShowUnsavedDialog(false)}
-        onConfirm={() => navigate('/')}
-      />
     </div>
   );
 }

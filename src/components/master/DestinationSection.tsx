@@ -1,7 +1,7 @@
 import { useEffect, useImperativeHandle, useState } from 'react';
 import { Button } from '../common/Button';
 import { Card } from '../common/Card';
-import { FlagIcon, LoadingIndicator } from '../icons';
+import { LoadingIndicator } from '../icons';
 import {
   createDestination,
   getDestinations,
@@ -132,19 +132,6 @@ export function DestinationSection({ ref }: DestinationSectionProps) {
         boxSizing: 'border-box',
       }}
     >
-      <h2
-        style={{
-          margin: 0,
-          fontSize: '18px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '6px',
-        }}
-      >
-        <FlagIcon size={18} />
-        目的地
-      </h2>
-
       {error && (
         <p style={{ margin: 0, fontSize: '13px', color: 'var(--negative)' }}>
           {error}

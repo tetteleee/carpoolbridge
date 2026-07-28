@@ -1,6 +1,9 @@
 import { Routes, Route } from 'react-router-dom';
 import { HomePage } from '../pages/HomePage';
 import { MasterPage } from '../pages/MasterPage';
+import { PickupLocationEditPage } from '../pages/PickupLocationEditPage';
+import { DestinationEditPage } from '../pages/DestinationEditPage';
+import { FamilyEditPage } from '../pages/FamilyEditPage';
 import { EventCreatePage } from '../pages/EventCreatePage';
 import { EventEditPage } from '../pages/EventEditPage';
 import { EventInfoEditPage } from '../pages/EventInfoEditPage';
@@ -15,6 +18,9 @@ export function AppRoutes() {
     <Routes>
       <Route path="/" element={<HomePage />} />
       <Route path="/master" element={<MasterPage />} />
+      <Route path="/master/pickup-locations" element={<PickupLocationEditPage />} />
+      <Route path="/master/destinations" element={<DestinationEditPage />} />
+      <Route path="/master/families" element={<FamilyEditPage />} />
       <Route path="/events/new" element={<EventCreatePage />} />
       <Route path="/events/:eventId/edit" element={<EventEditPage />} />
       <Route path="/events/:eventId/edit-info" element={<EventInfoEditPage />} />

@@ -15,7 +15,7 @@ import { ChildSection } from './ChildSection';
 import { Button } from '../common/Button';
 import { Card } from '../common/Card';
 import { getSchoolEntryYearOptions } from '../../utils/schoolGrade';
-import { HomeIcon, LoadingIndicator } from '../icons';
+import { LoadingIndicator } from '../icons';
 
 type EditableField = 'familyName' | 'coachName' | 'vehicleCapacity';
 
@@ -299,19 +299,6 @@ export function FamilySection({ ref }: FamilySectionProps) {
         boxSizing: 'border-box',
       }}
     >
-      <h2
-        style={{
-          margin: 0,
-          fontSize: '18px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '6px',
-        }}
-      >
-        <HomeIcon size={18} />
-        家庭
-      </h2>
-
       {error && (
         <p style={{ margin: 0, fontSize: '13px', color: 'var(--negative)' }}>
           {error}
