@@ -8,9 +8,9 @@ import { memberKey } from '../services/carpool/carpoolMember';
 const LONG_PRESS_MS = 150;
 /** 長押し確定前にこの距離（px）を超えて指が動いた場合はタップ・スクロール操作とみなしキャンセルする */
 const MOVE_CANCEL_THRESHOLD_PX = 10;
-/** オートスクロール（上方向）が発生する、画面上端からの範囲（px）。sticky headerと重なる分、下端側より広めに取った固定値（ヘッダーの実高さには依存させない） */
-const AUTO_SCROLL_EDGE_TOP_PX = 100;
-/** オートスクロール（下方向）が発生する、画面下端からの範囲（px）。固定値（ヘッダーの実高さには依存させない） */
+/** オートスクロール（上方向）が発生する、画面上端からの範囲（px）のデフォルト値。呼び出し元がtopEdgePxを指定しない場合に使用する */
+const DEFAULT_AUTO_SCROLL_EDGE_TOP_PX = 100;
+/** オートスクロール（下方向）が発生する、画面下端からの範囲（px）。固定値 */
 const AUTO_SCROLL_EDGE_BOTTOM_PX = 60;
 /** オートスクロールの速度（1フレームあたりのスクロール量、px） */
 const AUTO_SCROLL_SPEED_PX = 12;
@@ -42,6 +42,12 @@ export interface DropResult {
 interface UseDragAndDropOptions {
   /** ドロップが確定した時に呼び出す（移動元・移動先のドロップゾーンが異なる場合のみ呼び出される） */
   onDrop: (result: DropResult) => void;
+  /**
+   * オートスクロール（上方向）が発生する、画面上端からの範囲（px）。
+   * sticky header（サマリー表示の有無で高さが変わる）の実高さに追従させるため、
+   * 呼び出し元から都度渡せるようにする。省略時はDEFAULT_AUTO_SCROLL_EDGE_TOP_PXを使う。
+   */
+  topEdgePx?: number;
 }
 
 interface UseDragAndDropResult {
@@ -127,7 +133,7 @@ function resolveDropTarget(x: number, y: number, excludeKey: string): DropTarget
  * ドラッグ開始をキャンセルする。ドラッグ可能な範囲は人カード全体とする
  * （呼び出し元がPersonCardのルート要素にonPointerDownを設定する）。
  */
-export function useDragAndDrop({ onDrop }: UseDragAndDropOptions): UseDragAndDropResult {
+export function useDragAndDrop({ onDrop, topEdgePx }: UseDragAndDropOptions): UseDragAndDropResult {
   const [dragState, setDragState] = useState<DragState | null>(null);
   const [hoveredZoneId, setHoveredZoneId] = useState<string | null>(null);
   const [insertionAnchorKey, setInsertionAnchorKey] = useState<string | null>(null);
@@ -141,6 +147,10 @@ export function useDragAndDrop({ onDrop }: UseDragAndDropOptions): UseDragAndDro
   // オートスクロールの現在の方向。稼働中はrequestAnimationFrameのループを回し続ける
   const autoScrollDirectionRef = useRef<'up' | 'down' | null>(null);
   const autoScrollFrameRef = useRef<number | null>(null);
+  // ドラッグ中のイベントハンドラーはwindowに一度だけ登録するクロージャーのため、
+  // 再レンダリングごとに変わるtopEdgePxをrefに反映して参照する
+  const topEdgePxRef = useRef(topEdgePx ?? DEFAULT_AUTO_SCROLL_EDGE_TOP_PX);
+  topEdgePxRef.current = topEdgePx ?? DEFAULT_AUTO_SCROLL_EDGE_TOP_PX;
 
   const clearLongPressTimer = () => {
     if (longPressTimerRef.current !== null) {
@@ -177,7 +187,7 @@ export function useDragAndDrop({ onDrop }: UseDragAndDropOptions): UseDragAndDro
 
   /** ポインターのY座標から、画面端に近ければオートスクロールを開始・継続し、離れれば停止する */
   const updateAutoScroll = (clientY: number) => {
-    if (clientY < AUTO_SCROLL_EDGE_TOP_PX) {
+    if (clientY < topEdgePxRef.current) {
       autoScrollDirectionRef.current = 'up';
     } else if (clientY > window.innerHeight - AUTO_SCROLL_EDGE_BOTTOM_PX) {
       autoScrollDirectionRef.current = 'down';
