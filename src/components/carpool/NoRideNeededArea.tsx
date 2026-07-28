@@ -52,7 +52,7 @@ export function NoRideNeededArea({ people }: NoRideNeededAreaProps) {
           borderBottom: '1px solid var(--border)',
         }}
       >
-        現地集合・保護者お迎えなど、送迎が不要な設定になっている参加者です。
+        現地集合・保護者お迎えなど、送迎が不要な参加者です。
       </p>
 
       <ul
