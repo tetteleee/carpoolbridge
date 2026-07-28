@@ -95,7 +95,11 @@ export function PersonCard({ person, onPointerDown, isDragging = false }: Person
       </span>
       <span style={{ fontWeight: 700, color: 'var(--text-h)' }}>
         {person.name}
-        {person.grade && `(${person.grade})`}
+        {person.grade && (
+          <span style={{ fontWeight: 400, fontSize: '12px', color: 'var(--text)' }}>
+            {' '}({person.grade})
+          </span>
+        )}
       </span>
       <span
         style={{
