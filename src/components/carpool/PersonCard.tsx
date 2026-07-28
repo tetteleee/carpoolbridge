@@ -91,10 +91,14 @@ export function PersonCard({ person, onPointerDown, isDragging = false, draggabl
           justifyContent: 'center',
           flexShrink: 0,
           color: 'var(--text)',
+          position: 'relative',
+          zIndex: 1,
           // タッチ操作の当たり判定を広げるため、見た目を変えずにmargin/paddingで
-          // タップ領域のみ拡大する（親のpadding: 10px 12px の範囲内に収まるよう10pxとしている）
-          margin: '-10px',
-          padding: '10px',
+          // タップ領域のみ拡大する。三本線は左端にあり指が届きにくいため、右方向だけ
+          // さらに広く取る（非対称）。右側の拡大分は隣の名前テキストの領域と重なるが、
+          // z-indexで手前に出しているため、その範囲を触ってもドラッグハンドルとして反応する。
+          margin: '-10px -34px -10px -10px',
+          padding: '10px 34px 10px 10px',
           touchAction: draggable && onPointerDown ? 'none' : undefined,
           opacity: draggable ? 1 : 0.55,
         }}
