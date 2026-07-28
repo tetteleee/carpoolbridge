@@ -108,12 +108,20 @@ export function EventEditPage() {
   const runCreation = async (targetEventId: string) => {
     setCreatingCarpools(true);
     setCarpoolMessage(null);
-    const result = await createCarpoolsForBothDirections(targetEventId);
-    setCreatingCarpools(false);
-    if (result.success) {
-      navigate(`/events/${targetEventId}/carpool`);
-    } else {
-      setCarpoolMessage({ text: result.message, isError: true });
+    try {
+      const result = await createCarpoolsForBothDirections(targetEventId);
+      if (result.success) {
+        navigate(`/events/${targetEventId}/carpool`);
+      } else {
+        setCarpoolMessage({ text: result.message, isError: true });
+      }
+    } catch {
+      setCarpoolMessage({
+        text: '配車の作成に失敗しました。もう一度お試しください。',
+        isError: true,
+      });
+    } finally {
+      setCreatingCarpools(false);
     }
   };
 
@@ -138,10 +146,19 @@ export function EventEditPage() {
     if (!eventId) {
       return;
     }
-    setCreatingCarpools(true);
-    setCarpoolMessage(null);
-    await deleteAllCarpools(eventId);
     setRecreateDialogOpen(false);
+    setCarpoolMessage(null);
+    setCreatingCarpools(true);
+    try {
+      await deleteAllCarpools(eventId);
+    } catch {
+      setCreatingCarpools(false);
+      setCarpoolMessage({
+        text: '既存の配車結果の削除に失敗しました。もう一度お試しください。',
+        isError: true,
+      });
+      return;
+    }
     await runCreation(eventId);
   };
 
