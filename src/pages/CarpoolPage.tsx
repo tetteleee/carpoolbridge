@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Header } from '../components/Header';
 import { EventHeaderTitle } from '../components/EventHeaderTitle';
@@ -21,6 +21,13 @@ import { getDestination } from '../services/master/destinationService';
 import { moveCarpoolMember, UNASSIGNED_ZONE_ID } from '../services/carpool/carpoolMember';
 import { formatDateWithWeekday } from '../utils/date';
 import type { Direction, Event } from '../types/event';
+
+/**
+ * オートスクロール開始位置（画面上端からの距離）を、sticky header（ヘッダー＋トグル＋サマリー）の
+ * 実高さに、指がヘッダー付近に入った時点で早めに反応させるための余白を足した値とする。
+ * サマリー表示・非表示で高さが変わるため、固定値ではなくResizeObserverで実測する。
+ */
+const AUTO_SCROLL_TOP_BUFFER_PX = 20;
 
 /**
  * 配車画面（メイン）。
@@ -54,6 +61,25 @@ export function CarpoolPage() {
     unassignedPeople
   );
 
+  // sticky header（ヘッダー＋トグル＋サマリー）の実高さを測り、オートスクロール開始位置に反映する
+  const stickyHeaderRef = useRef<HTMLDivElement>(null);
+  const [stickyHeaderHeight, setStickyHeaderHeight] = useState(0);
+
+  useEffect(() => {
+    const element = stickyHeaderRef.current;
+    if (!element) {
+      return;
+    }
+    const observer = new ResizeObserver((entries) => {
+      const entry = entries[0];
+      if (entry) {
+        setStickyHeaderHeight(entry.contentRect.height);
+      }
+    });
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
+
   const loading = carpoolsLoading || boardDataLoading;
   const error = carpoolsError ?? boardDataError ?? moveError;
 
@@ -85,6 +111,7 @@ export function CarpoolPage() {
 
   const { dragState, hoveredZoneId, insertionAnchorKey, createPointerDownHandler } = useDragAndDrop({
     onDrop: handleDrop,
+    topEdgePx: stickyHeaderHeight + AUTO_SCROLL_TOP_BUFFER_PX,
   });
 
   const handleEditAnswersClick = () => {
@@ -110,6 +137,7 @@ export function CarpoolPage() {
       }}
     >
       <div
+        ref={stickyHeaderRef}
         style={{
           position: 'sticky',
           top: 0,
