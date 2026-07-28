@@ -7,6 +7,7 @@ import { getChildrenByFamilyId } from '../services/master/childService';
 import { getPickupLocations } from '../services/master/pickupLocationService';
 import { getResponses } from '../services/event/responseService';
 import {
+  isChildNoRideNeededForDirection,
   isChildRidingForDirection,
   isCoachParticipating,
   type EligibilityMasterData,
@@ -20,6 +21,8 @@ import type { Family, PickupLocation } from '../types/master';
 interface UseCarpoolBoardDataResult {
   /** 選択中タブ（行き／帰り）の未配車の人カード一覧 */
   unassignedPeople: UnassignedPerson[];
+  /** 選択中タブ（行き／帰り）の配車不要（参加かつ送迎不要）の人カード一覧 */
+  noRideNeededPeople: PersonCardData[];
   /** 選択中タブ（行き／帰り）の車カード一覧 */
   carCards: CarCardData[];
   /** 対象イベントの回答が1件もないかどうか（一部家庭のみ未回答の場合は含まない） */
@@ -149,6 +152,35 @@ function buildEligibleMembers(masterData: BoardMasterData, direction: Direction)
 }
 
 /**
+ * 対象方向において「参加かつ送迎不要」（配車不要エリアの対象）となる子供一覧を算出する。
+ * コーチには送迎要否の概念がないため対象外とする。
+ * ref: docs/04_画面設計.md#8 配車不要エリア
+ */
+function buildNoRideNeededMembers(masterData: BoardMasterData, direction: Direction): CarpoolMember[] {
+  const members: CarpoolMember[] = [];
+
+  for (const [familyId, response] of masterData.responseByFamilyId) {
+    const family = masterData.familyById.get(familyId);
+    if (!family || !family.isActive) {
+      continue;
+    }
+
+    for (const child of response.children) {
+      const childMaster = masterData.childById.get(child.childId);
+      if (
+        childMaster?.isActive &&
+        childMaster.familyId === familyId &&
+        isChildNoRideNeededForDirection(child, direction)
+      ) {
+        members.push({ type: 'child', childId: child.childId });
+      }
+    }
+  }
+
+  return members;
+}
+
+/**
  * 配車画面（メイン）の未配車エリア・車カードに表示する実データを算出するフック。
  * ref: docs/04_画面設計.md#8 未配車エリア・車カード, docs/05_データ設計.md#8,#9
  *
@@ -260,6 +292,16 @@ export function useCarpoolBoardData(
       .filter((person): person is PersonCardData => person !== null);
   }, [masterData, carpools, direction]);
 
+  const noRideNeededPeople = useMemo<PersonCardData[]>(() => {
+    if (!masterData) {
+      return [];
+    }
+
+    return buildNoRideNeededMembers(masterData, direction)
+      .map((member) => toPersonCardData(member, masterData))
+      .filter((person): person is PersonCardData => person !== null);
+  }, [masterData, direction]);
+
   const carCards = useMemo<CarCardData[]>(() => {
     if (!masterData) {
       return [];
@@ -283,5 +325,5 @@ export function useCarpoolBoardData(
 
   const hasNoResponses = masterData !== null && masterData.responseByFamilyId.size === 0;
 
-  return { unassignedPeople, carCards, hasNoResponses, loading, error };
+  return { unassignedPeople, noRideNeededPeople, carCards, hasNoResponses, loading, error };
 }

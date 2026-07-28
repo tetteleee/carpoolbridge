@@ -1,4 +1,4 @@
-import { CarIcon, MapPinIcon, UserIcon } from '../icons';
+import { CarIcon, FlagIcon, MapPinIcon, UserIcon } from '../icons';
 import { computeOccupantCount, type CarCardData } from './CarCard';
 import { toCarName } from '../../utils/carName';
 
@@ -7,6 +7,8 @@ interface CarpoolSummaryBarProps {
   carCards: CarCardData[];
   /** 選択中タブ（行き／帰り）の未配車人数 */
   unassignedCount: number;
+  /** 選択中タブ（行き／帰り）の配車不要人数 */
+  noRideNeededCount: number;
 }
 
 const chipBaseStyle = {
@@ -27,7 +29,7 @@ const chipBaseStyle = {
  * ヘッダー・行き／帰りタブと一体でsticky表示されることを前提に、帯自体の背景は
  * 本文と同じ色とし、チップにのみ薄い背景色をつけて視認性を確保する（浮いて見えないように）。
  */
-export function CarpoolSummaryBar({ carCards, unassignedCount }: CarpoolSummaryBarProps) {
+export function CarpoolSummaryBar({ carCards, unassignedCount, noRideNeededCount }: CarpoolSummaryBarProps) {
   return (
     <div
       style={{
@@ -107,6 +109,22 @@ export function CarpoolSummaryBar({ carCards, unassignedCount }: CarpoolSummaryB
           </span>
         );
       })}
+
+      {noRideNeededCount > 0 && (
+        <span
+          style={{
+            ...chipBaseStyle,
+            gap: '3px',
+            fontWeight: 600,
+            background: 'var(--panel-bg)',
+            border: '1px solid var(--border)',
+            color: 'var(--text)',
+          }}
+        >
+          <FlagIcon size={12} />
+          {noRideNeededCount}
+        </span>
+      )}
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import type { PointerEvent as ReactPointerEvent } from 'react';
-import { DragHandleIcon, MapPinIcon } from '../icons';
+import { DragHandleIcon, FlagIcon, MapPinIcon } from '../icons';
 import type { CarpoolMember } from '../../types/event';
 
 /**
@@ -25,6 +25,12 @@ interface PersonCardProps {
   onPointerDown?: (event: ReactPointerEvent<Element>) => void;
   /** このカードがドラッグ中かどうか（T43。ドラッグ中は薄く表示する） */
   isDragging?: boolean;
+  /**
+   * ドラッグ＆ドロップの対象かどうか（T62）。falseの場合、ドラッグハンドル（≡）の代わりに
+   * 旗アイコンを表示し、そもそも移動できないカードであることを見た目でも示す
+   * （配車不要エリア等、ドラッグ＆ドロップ対象外の一覧で使用する）。
+   */
+  draggable?: boolean;
 }
 
 /**
@@ -39,7 +45,7 @@ interface PersonCardProps {
  * ハンドル部分のみtouch-action: noneとすることで、カード本体からは縦スクロールでき、
  * ハンドルからは確実に長押しドラッグを開始できるようにしている。
  */
-export function PersonCard({ person, onPointerDown, isDragging = false }: PersonCardProps) {
+export function PersonCard({ person, onPointerDown, isDragging = false, draggable = true }: PersonCardProps) {
   const isCoach = person.grade === null;
 
   const handleCardPointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
@@ -76,8 +82,8 @@ export function PersonCard({ person, onPointerDown, isDragging = false }: Person
       }}
     >
       <span
-        aria-label="ドラッグハンドル"
-        onPointerDown={handleHandlePointerDown}
+        aria-label={draggable ? 'ドラッグハンドル' : '配車不要'}
+        onPointerDown={draggable ? handleHandlePointerDown : undefined}
         style={{
           display: 'flex',
           alignItems: 'center',
@@ -88,10 +94,11 @@ export function PersonCard({ person, onPointerDown, isDragging = false }: Person
           // タップ領域のみ拡大する（親のpadding: 10px 12px の範囲内に収まるよう10pxとしている）
           margin: '-10px',
           padding: '10px',
-          touchAction: onPointerDown ? 'none' : undefined,
+          touchAction: draggable && onPointerDown ? 'none' : undefined,
+          opacity: draggable ? 1 : 0.55,
         }}
       >
-        <DragHandleIcon size={16} />
+        {draggable ? <DragHandleIcon size={16} /> : <FlagIcon size={16} />}
       </span>
       <span style={{ fontWeight: 700, color: 'var(--text-h)' }}>
         {person.name}

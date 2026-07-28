@@ -31,6 +31,23 @@ export function isChildRidingForDirection(child: ResponseChild, direction: Direc
   return direction === 'OUTWARD' ? !child.noOutwardRide : !child.noReturnRide;
 }
 
+/**
+ * 対象方向において、子供が「参加かつ送迎不要」（配車不要エリアの対象）かどうかを判定する。
+ * isChildRidingForDirectionがfalseを返す理由には「未回答」「不参加」「参加かつ送迎不要」の
+ * 3通りがあり、これらを区別するために別関数として用意する
+ * （未回答・不参加の子供を配車不要エリアに混在させないため）。
+ * ref: docs/04_画面設計.md#8 配車不要エリア
+ */
+export function isChildNoRideNeededForDirection(
+  child: ResponseChild,
+  direction: Direction
+): boolean {
+  if (child.isParticipating !== true) {
+    return false;
+  }
+  return direction === 'OUTWARD' ? child.noOutwardRide : child.noReturnRide;
+}
+
 /** 家庭に参加するコーチが紐づいているかどうか（車出し可否に関わらず判定） */
 export function isCoachParticipating(
   family: Family | undefined,

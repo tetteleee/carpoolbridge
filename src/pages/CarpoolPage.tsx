@@ -9,6 +9,7 @@ import { CarpoolEmptyState } from '../components/carpool/CarpoolEmptyState';
 import { CarpoolSummaryBar } from '../components/carpool/CarpoolSummaryBar';
 import { CarpoolWarningPopup } from '../components/carpool/CarpoolWarningPopup';
 import { DirectionToggle } from '../components/carpool/DirectionToggle';
+import { NoRideNeededArea } from '../components/carpool/NoRideNeededArea';
 import { OperationArea } from '../components/carpool/OperationArea';
 import { UnassignedArea } from '../components/carpool/UnassignedArea';
 import { useCarpoolDirection } from '../hooks/useCarpoolDirection';
@@ -40,6 +41,7 @@ export function CarpoolPage() {
   } = useCarpoolDirection(eventId);
   const {
     unassignedPeople,
+    noRideNeededPeople,
     carCards,
     hasNoResponses,
     loading: boardDataLoading,
@@ -173,7 +175,11 @@ export function CarpoolPage() {
             }}
           >
             <div style={{ overflow: 'hidden' }}>
-              <CarpoolSummaryBar carCards={carCards} unassignedCount={unassignedPeople.length} />
+              <CarpoolSummaryBar
+                carCards={carCards}
+                unassignedCount={unassignedPeople.length}
+                noRideNeededCount={noRideNeededPeople.length}
+              />
             </div>
           </div>
         )}
@@ -226,6 +232,7 @@ export function CarpoolPage() {
                     onPersonPointerDown={(person) => createPointerDownHandler(person, car.id)}
                   />
                 ))}
+                <NoRideNeededArea people={noRideNeededPeople} />
               </>
             )
           )
