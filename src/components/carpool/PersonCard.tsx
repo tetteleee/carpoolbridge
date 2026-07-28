@@ -36,7 +36,7 @@ interface PersonCardProps {
 /**
  * 配車画面（メイン）の人カード。
  * 未配車エリア・車カードのどちらの中でも同じ見た目・情報構成で表示する。
- * 学年の有無で子供・コーチを判定し、色分けで区別する。
+ * 乗車メンバー種別（member.type）で子供・コーチを判定し、色分けで区別する。
  *
  * ドラッグ起点はデバイスにより異なる（ref: docs/04_画面設計.md#ドラッグ＆ドロップ）。
  * マウスはカード全体、タッチ／ペンはドラッグハンドル（≡）部分のみとする。
@@ -46,7 +46,8 @@ interface PersonCardProps {
  * ハンドルからは確実に長押しドラッグを開始できるようにしている。
  */
 export function PersonCard({ person, onPointerDown, isDragging = false, draggable = true }: PersonCardProps) {
-  const isCoach = person.grade === null;
+  // 学年（person.grade）は対象学年外の子供もnullになりうるため、コーチ判定には使わない（04_画面設計.md#色分けルール）
+  const isCoach = person.member.type === 'coach';
 
   const handleCardPointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
     if (!onPointerDown || event.pointerType !== 'mouse') {
