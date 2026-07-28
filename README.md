@@ -81,6 +81,30 @@ SEED_SOURCE=local npm run seed
 - マスタ管理画面の「サンプルデータ投入」ボタンはこの切り替えの対象外です
   （常にコミット済みサンプルデータを投入します）。
 
+#### CSVからseedData.local.jsonを生成する
+
+`seedData.local.json`を手書きすると、`familyId`・`pickupLocationId`等のID紐づけが
+手間になるため、名前ベースで書けるCSVから生成するスクリプトを用意しています。
+
+```bash
+npm run seed:from-csv
+```
+
+- 使い方
+  1. `scripts/seed/csv/*.sample.csv`をコピーして、`.sample`を外したファイルを作る
+     （例: `families.sample.csv` → `families.csv`）
+  2. Excel・Googleスプレッドシート等でCSVとして中身を編集する。家庭・子ども・イベントの
+     紐づけはIDではなく「名前」（`pickupLocationName`・`familyName`・`destinationName`）で
+     入力する
+  3. `npm run seed:from-csv`を実行する → `src/services/dev/seedData.local.json`を生成・上書きする
+  4. `npm run seed:local`でFirestoreへ投入する
+- CSVの列構成はサンプルファイルを参照してください。
+- `id`は名前をもとにスクリプトが自動採番するため入力不要です。同じ名前が重複している、
+  存在しない名前を参照している等の入力ミスはエラーで停止し、該当行を教えてくれます。
+- `events.csv`は省略可能です（未作成の場合はイベント0件で出力します。日付は都度変わるため
+  画面から作成してもかまいません）。
+- CSV本体（`*.sample.csv`を除く）は個人情報に近いデータになりうるため`.gitignore`済みです。
+
 **注意：開発段階限定の機能です。現時点ではDev/Prod用のFirebaseプロジェクトが分離されて
 いないため、実行すると実際のFirebaseプロジェクトに対して全削除・再投入が行われます。
 運用開始後にこのスクリプトをそのまま使うと、実際に入力された家族・子ども・イベント等の

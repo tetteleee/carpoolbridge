@@ -27,6 +27,8 @@ dist-ssr/
 
 # 個人情報に近いローカル専用テストデータ（誤コミット防止）
 src/services/dev/seedData.local.json
+scripts/seed/csv/*.csv
+!scripts/seed/csv/*.sample.csv
 
 # Playwright
 /playwright-report/
