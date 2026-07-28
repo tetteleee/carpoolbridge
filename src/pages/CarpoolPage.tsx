@@ -44,7 +44,7 @@ export function CarpoolPage() {
     hasNoResponses,
     loading: boardDataLoading,
     error: boardDataError,
-  } = useCarpoolBoardData(eventId, direction, carpools);
+  } = useCarpoolBoardData(eventId, direction, carpools, refreshCarpools);
   const [moveError, setMoveError] = useState<string | null>(null);
   const [isSummaryVisible, setIsSummaryVisible] = useState(true);
   const { hasWarning, message: validationMessage } = useCarpoolValidation(

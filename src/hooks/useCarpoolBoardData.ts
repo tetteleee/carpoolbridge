@@ -6,11 +6,16 @@ import { getFamilies } from '../services/master/familyService';
 import { getChildrenByFamilyId } from '../services/master/childService';
 import { getPickupLocations } from '../services/master/pickupLocationService';
 import { getResponses } from '../services/event/responseService';
-import { isChildRidingForDirection } from '../services/carpool/eligibility';
+import {
+  isChildRidingForDirection,
+  isCoachParticipating,
+  type EligibilityMasterData,
+} from '../services/carpool/eligibility';
+import { reconcileIneligibleMembers } from '../services/carpool/reconcileCarpoolMembers';
 import { memberKey } from '../services/carpool/carpoolMember';
 import { getSchoolGrade } from '../utils/schoolGrade';
-import type { Carpool, CarpoolMember, Direction, Response } from '../types/event';
-import type { Child, Family, PickupLocation } from '../types/master';
+import type { Carpool, CarpoolMember, Direction } from '../types/event';
+import type { Family, PickupLocation } from '../types/master';
 
 interface UseCarpoolBoardDataResult {
   /** 選択中タブ（行き／帰り）の未配車の人カード一覧 */
@@ -26,10 +31,7 @@ interface UseCarpoolBoardDataResult {
 }
 
 /** 表示用データ変換に必要なマスタ・回答データ */
-interface BoardMasterData {
-  familyById: Map<string, Family>;
-  childById: Map<string, Child>;
-  responseByFamilyId: Map<string, Response>;
+interface BoardMasterData extends EligibilityMasterData {
   pickupLocationById: Map<string, PickupLocation>;
 }
 
@@ -37,11 +39,6 @@ interface BoardMasterData {
 function toGradeLabel(schoolEntryYear: number): string | null {
   const grade = getSchoolGrade(schoolEntryYear);
   return grade === null ? null : `小${grade}`;
-}
-
-/** 家庭に参加するコーチが紐づいているかどうか（車出し可否に関わらず判定） */
-function hasParticipatingCoach(family: Family | undefined, response: Response | undefined): boolean {
-  return !!family && family.coachName !== null && response?.coachParticipating === true;
 }
 
 /** 乗車メンバー（CarpoolMember）の集合場所IDを取得する。対応するマスタが見つからない場合はnull */
@@ -143,7 +140,7 @@ function buildEligibleMembers(masterData: BoardMasterData, direction: Direction)
       }
     }
 
-    if (hasParticipatingCoach(family, response)) {
+    if (isCoachParticipating(family, response)) {
       members.push({ type: 'coach', familyId });
     }
   }
@@ -162,11 +159,14 @@ function buildEligibleMembers(masterData: BoardMasterData, direction: Direction)
  * @param eventId 対象のイベントID
  * @param direction 選択中タブ（行き／帰り）
  * @param carpools 選択中タブの配車結果（T20経由で取得済みのもの）
+ * @param onCarpoolsReconciled 回答変更により対象外になったメンバーをCarpoolから取り除いた場合に呼び出す
+ *   （呼び出し側でcarpoolsを再取得させ、除去結果を画面へ反映させるために使用する）
  */
 export function useCarpoolBoardData(
   eventId: string | undefined,
   direction: Direction,
-  carpools: Carpool[]
+  carpools: Carpool[],
+  onCarpoolsReconciled: () => void
 ): UseCarpoolBoardDataResult {
   const [masterData, setMasterData] = useState<BoardMasterData | null>(null);
   const [loading, setLoading] = useState(false);
@@ -222,6 +222,29 @@ export function useCarpoolBoardData(
     };
   }, [eventId]);
 
+  /**
+   * 回答変更後の配車結果自動整合（回答編集画面で不参加等に変更された人を、
+   * 配車画面を開いたタイミングでCarpoolから自動的に取り除く）。
+   * ref: 04_画面設計.md#8 配車画面（メイン）
+   */
+  useEffect(() => {
+    if (!eventId || !masterData || carpools.length === 0) {
+      return;
+    }
+
+    let ignore = false;
+
+    reconcileIneligibleMembers(eventId, direction, carpools, masterData).then((changed) => {
+      if (!ignore && changed) {
+        onCarpoolsReconciled();
+      }
+    });
+
+    return () => {
+      ignore = true;
+    };
+  }, [eventId, direction, carpools, masterData, onCarpoolsReconciled]);
+
   const unassignedPeople = useMemo<UnassignedPerson[]>(() => {
     if (!masterData) {
       return [];
@@ -250,7 +273,7 @@ export function useCarpoolBoardData(
         familyName: family?.familyName ?? '',
         capacity: carpool.capacity,
         routeLocationNames: buildRouteLocationNames(carpool, masterData),
-        expectedCoachPersonId: hasParticipatingCoach(family, response) ? (family as Family).id : null,
+        expectedCoachPersonId: isCoachParticipating(family, response) ? (family as Family).id : null,
         members: carpool.members
           .map((member) => toPersonCardData(member, masterData))
           .filter((person): person is PersonCardData => person !== null),
