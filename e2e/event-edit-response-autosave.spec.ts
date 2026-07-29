@@ -29,7 +29,7 @@ test('回答入力画面の各項目を変更すると、都度Firestoreへ自�
     createdAt: now,
     updatedAt: now,
   });
-  const childRef = await db.collection('children').add({
+  const playerRef = await db.collection('players').add({
     familyId: familyRef.id,
     name: '太郎',
     schoolEntryYear: 2020,
@@ -72,27 +72,27 @@ test('回答入力画面の各項目を変更すると、都度Firestoreへ自�
   expect(saved?.capacityToday).toBeNull();
   expect(saved?.coachParticipating).toBeNull();
   expect(saved?.remarks).toBe('');
-  expect(saved?.children).toEqual([
-    { childId: childRef.id, isParticipating: null, noOutwardRide: false, noReturnRide: false },
+  expect(saved?.players).toEqual([
+    { playerId: playerRef.id, isParticipating: null, noOutwardRide: false, noReturnRide: false },
   ]);
 
   // 2件目以降の変更は既存ドキュメントの部分更新となり、他の項目は保持される。
   // 「参加」を○にした瞬間、行き・帰りの送迎スイッチは両方ON（送迎あり＝noOutwardRide/noReturnRideともfalse）になる
-  await page.click(`#child-participating-yes-${childRef.id}`);
+  await page.click(`#player-participating-yes-${playerRef.id}`);
   await expect
-    .poll(async () => (await responseDocRef.get()).data()?.children)
+    .poll(async () => (await responseDocRef.get()).data()?.players)
     .toEqual([
-      { childId: childRef.id, isParticipating: true, noOutwardRide: false, noReturnRide: false },
+      { playerId: playerRef.id, isParticipating: true, noOutwardRide: false, noReturnRide: false },
     ]);
   saved = (await responseDocRef.get()).data();
   expect(saved?.driverOutward).toBe(true);
 
   // 行きの送迎スイッチをOFF（不要）にする
-  await page.click(`#no-outward-ride-${childRef.id}`);
+  await page.click(`#no-outward-ride-${playerRef.id}`);
   await expect
-    .poll(async () => (await responseDocRef.get()).data()?.children)
+    .poll(async () => (await responseDocRef.get()).data()?.players)
     .toEqual([
-      { childId: childRef.id, isParticipating: true, noOutwardRide: true, noReturnRide: false },
+      { playerId: playerRef.id, isParticipating: true, noOutwardRide: true, noReturnRide: false },
     ]);
 
   await page.click(`#coach-participating-yes-${familyRef.id}`);
@@ -117,17 +117,17 @@ test('回答入力画面の各項目を変更すると、都度Firestoreへ自�
     'aria-pressed',
     'true'
   );
-  await expect(page.locator(`#child-participating-yes-${childRef.id}`)).toHaveAttribute(
+  await expect(page.locator(`#player-participating-yes-${playerRef.id}`)).toHaveAttribute(
     'aria-pressed',
     'true'
   );
   // 行きの送迎スイッチはOFF（不要）のまま＝aria-checkedはfalse
-  await expect(page.locator(`#no-outward-ride-${childRef.id}`)).toHaveAttribute(
+  await expect(page.locator(`#no-outward-ride-${playerRef.id}`)).toHaveAttribute(
     'aria-checked',
     'false'
   );
   // 帰りの送迎スイッチは未操作のためON（送迎あり）のまま＝aria-checkedはtrue
-  await expect(page.locator(`#no-return-ride-${childRef.id}`)).toHaveAttribute(
+  await expect(page.locator(`#no-return-ride-${playerRef.id}`)).toHaveAttribute(
     'aria-checked',
     'true'
   );

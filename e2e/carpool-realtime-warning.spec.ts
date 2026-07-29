@@ -21,7 +21,7 @@ test('人カードの移動により未配車→定員超過へ警告内容が�
     familyName: '山田家', coachName: null, vehicleCapacity: 0, pickupLocationId: locA.id,
     isActive: true, createdAt: now, updatedAt: now,
   });
-  const childRiderA = await db.collection('children').add({
+  const playerRiderA = await db.collection('players').add({
     familyId: familyRiderA.id, name: '山田太郎', schoolEntryYear: 2019, isActive: true, createdAt: now, updatedAt: now,
   });
 
@@ -29,7 +29,7 @@ test('人カードの移動により未配車→定員超過へ警告内容が�
     familyName: '田中家', coachName: null, vehicleCapacity: 0, pickupLocationId: locA.id,
     isActive: true, createdAt: now, updatedAt: now,
   });
-  const childRiderB = await db.collection('children').add({
+  const playerRiderB = await db.collection('players').add({
     familyId: familyRiderB.id, name: '田中次郎', schoolEntryYear: 2019, isActive: true, createdAt: now, updatedAt: now,
   });
 
@@ -39,15 +39,15 @@ test('人カードの移動により未配車→定員超過へ警告内容が�
 
   await eventRef.collection('responses').doc(familyDriver.id).set({
     driverOutward: true, driverReturn: true, capacityToday: null, coachParticipating: null, remarks: '',
-    children: [],
+    players: [],
   });
   await eventRef.collection('responses').doc(familyRiderA.id).set({
     driverOutward: false, driverReturn: false, capacityToday: null, coachParticipating: null, remarks: '',
-    children: [{ childId: childRiderA.id, isParticipating: true, noOutwardRide: false, noReturnRide: false }],
+    players: [{ playerId: playerRiderA.id, isParticipating: true, noOutwardRide: false, noReturnRide: false }],
   });
   await eventRef.collection('responses').doc(familyRiderB.id).set({
     driverOutward: false, driverReturn: false, capacityToday: null, coachParticipating: null, remarks: '',
-    children: [{ childId: childRiderB.id, isParticipating: true, noOutwardRide: false, noReturnRide: false }],
+    players: [{ playerId: playerRiderB.id, isParticipating: true, noOutwardRide: false, noReturnRide: false }],
   });
 
   // 定員1（運転者本人を含む総定員）の車に山田太郎のみ乗車済み（定員内）、田中次郎は未配車の状態を直接作成する
@@ -55,7 +55,7 @@ test('人カードの移動により未配車→定員超過へ警告内容が�
     direction: 'OUTWARD',
     driverFamilyId: familyDriver.id,
     capacity: 1,
-    members: [{ type: 'child', childId: childRiderA.id }],
+    members: [{ type: 'player', playerId: playerRiderA.id }],
   });
 
   await page.goto(`/events/${eventRef.id}/carpool`);
@@ -65,9 +65,9 @@ test('人カードの移動により未配車→定員超過へ警告内容が�
   await page.reload();
   await expect(page.getByText('読み込み中...')).toHaveCount(0);
 
-  // 初期状態：田中次郎が未配車のため「未配車の子供がいます」が表示される
+  // 初期状態：田中次郎が未配車のため「未配車の選手がいます」が表示される
   await expect(page.getByText('未配車　1名')).toBeVisible();
-  await expect(page.getByRole('alert')).toHaveText('未配車の子供がいます');
+  await expect(page.getByRole('alert')).toHaveText('未配車の選手がいます');
 
   // 田中次郎を鈴木号（定員1・既に山田太郎が乗車済み）へドラッグ＆ドロップする
   const personCard = page.getByText('田中次郎').locator('..');
@@ -105,12 +105,12 @@ test('参加コーチが自分の家庭の車にいない場合「運転者不�
   const locA = await db.collection('pickupLocations').add({ name: '西公園', latitude: 35.0, longitude: 139.0 });
   const destinationRef = await db.collection('destinations').add({ name: '目的地A', latitude: 35.1, longitude: 139.1 });
 
-  // コーチが紐づき運転する家庭。定員2（コーチ+子供でぴったり）
+  // コーチが紐づき運転する家庭。定員2（コーチ+選手でぴったり）
   const familyCoach = await db.collection('families').add({
     familyName: '佐藤家', coachName: '佐藤父', vehicleCapacity: 2, pickupLocationId: locA.id,
     isActive: true, createdAt: now, updatedAt: now,
   });
-  const childCoachFamily = await db.collection('children').add({
+  const playerCoachFamily = await db.collection('players').add({
     familyId: familyCoach.id, name: '佐藤太郎', schoolEntryYear: 2019, isActive: true, createdAt: now, updatedAt: now,
   });
 
@@ -119,7 +119,7 @@ test('参加コーチが自分の家庭の車にいない場合「運転者不�
     familyName: '高橋家', coachName: null, vehicleCapacity: 0, pickupLocationId: locA.id,
     isActive: true, createdAt: now, updatedAt: now,
   });
-  const childUnassigned = await db.collection('children').add({
+  const playerUnassigned = await db.collection('players').add({
     familyId: familyUnassigned.id, name: '高橋花子', schoolEntryYear: 2019, isActive: true, createdAt: now, updatedAt: now,
   });
 
@@ -129,11 +129,11 @@ test('参加コーチが自分の家庭の車にいない場合「運転者不�
 
   await eventRef.collection('responses').doc(familyCoach.id).set({
     driverOutward: true, driverReturn: true, capacityToday: null, coachParticipating: true, remarks: '',
-    children: [{ childId: childCoachFamily.id, isParticipating: true, noOutwardRide: false, noReturnRide: false }],
+    players: [{ playerId: playerCoachFamily.id, isParticipating: true, noOutwardRide: false, noReturnRide: false }],
   });
   await eventRef.collection('responses').doc(familyUnassigned.id).set({
     driverOutward: false, driverReturn: false, capacityToday: null, coachParticipating: null, remarks: '',
-    children: [{ childId: childUnassigned.id, isParticipating: true, noOutwardRide: false, noReturnRide: false }],
+    players: [{ playerId: playerUnassigned.id, isParticipating: true, noOutwardRide: false, noReturnRide: false }],
   });
 
   // 佐藤父（コーチ）を含めずに佐藤号を直接作成する（＝ドラッグで運転者不在になった状態を再現）
@@ -141,7 +141,7 @@ test('参加コーチが自分の家庭の車にいない場合「運転者不�
     direction: 'OUTWARD',
     driverFamilyId: familyCoach.id,
     capacity: 2,
-    members: [{ type: 'child', childId: childCoachFamily.id }],
+    members: [{ type: 'player', playerId: playerCoachFamily.id }],
   });
 
   await page.goto(`/events/${eventRef.id}/carpool`);
@@ -152,7 +152,7 @@ test('参加コーチが自分の家庭の車にいない場合「運転者不�
   await expect(page.getByText('読み込み中...')).toHaveCount(0);
 
   // 佐藤父（コーチ）が車にいないため「運転者不在」、高橋花子が未配車のため両方の警告が出る
-  await expect(page.getByRole('alert')).toHaveText('運転者不在の車と未配車の子供があります');
+  await expect(page.getByRole('alert')).toHaveText('運転者不在の車と未配車の選手があります');
 
   // 佐藤父を佐藤号へドラッグ＆ドロップする
   const coachCard = page.getByText('佐藤父').locator('..');
@@ -177,5 +177,5 @@ test('参加コーチが自分の家庭の車にいない場合「運転者不�
   await page.mouse.up();
 
   // 佐藤父が車に戻ったため「運転者不在」は解消され、高橋花子の未配車のみ警告に残る
-  await expect(page.getByRole('alert')).toHaveText('未配車の子供がいます');
+  await expect(page.getByRole('alert')).toHaveText('未配車の選手がいます');
 });

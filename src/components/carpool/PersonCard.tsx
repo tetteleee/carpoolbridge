@@ -7,9 +7,9 @@ import type { CarpoolMember } from '../../types/event';
  * 未配車エリア・車カードのいずれの文脈でも同じ形で表示する。
  */
 export interface PersonCardData {
-  /** 人カードの一意なキー（子供IDまたは家庭ID） */
+  /** 人カードの一意なキー（選手IDまたは家庭ID） */
   id: string;
-  /** 表示名（子供名、または「〇〇父」などのコーチ表記） */
+  /** 表示名（選手名、または「〇〇父」などのコーチ表記） */
   name: string;
   /** 学年表記（例：「小4」）。学年を持たない人物（コーチなど）はnull */
   grade: string | null;
@@ -36,7 +36,7 @@ interface PersonCardProps {
 /**
  * 配車画面（メイン）の人カード。
  * 未配車エリア・車カードのどちらの中でも同じ見た目・情報構成で表示する。
- * 乗車メンバー種別（member.type）で子供・コーチを判定し、色分けで区別する。
+ * 乗車メンバー種別（member.type）で選手・コーチを判定し、色分けで区別する。
  *
  * ドラッグ起点はデバイスにより異なる（ref: docs/04_画面設計.md#ドラッグ＆ドロップ）。
  * マウスはカード全体、タッチ／ペンはドラッグハンドル（≡）部分のみとする。
@@ -46,7 +46,7 @@ interface PersonCardProps {
  * ハンドルからは確実に長押しドラッグを開始できるようにしている。
  */
 export function PersonCard({ person, onPointerDown, isDragging = false, draggable = true }: PersonCardProps) {
-  // 学年（person.grade）は対象学年外の子供もnullになりうるため、コーチ判定には使わない（04_画面設計.md#色分けルール）
+  // 学年（person.grade）は対象学年外の選手もnullになりうるため、コーチ判定には使わない（04_画面設計.md#色分けルール）
   const isCoach = person.member.type === 'coach';
 
   const handleCardPointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
@@ -73,9 +73,9 @@ export function PersonCard({ person, onPointerDown, isDragging = false, draggabl
         padding: '10px 12px',
         fontSize: '14px',
         color: 'var(--text)',
-        background: isCoach ? 'var(--coach-bg)' : 'var(--child-bg)',
-        border: isCoach ? '1px solid var(--coach-border)' : '1px solid var(--child-border)',
-        borderLeft: isCoach ? '5px solid var(--coach-accent)' : '5px solid var(--child-accent)',
+        background: isCoach ? 'var(--coach-bg)' : 'var(--player-bg)',
+        border: isCoach ? '1px solid var(--coach-border)' : '1px solid var(--player-border)',
+        borderLeft: isCoach ? '5px solid var(--coach-accent)' : '5px solid var(--player-accent)',
         opacity: isDragging ? 'var(--drag-ghost-opacity)' : 1,
         userSelect: onPointerDown ? 'none' : undefined,
         WebkitUserSelect: onPointerDown ? 'none' : undefined,

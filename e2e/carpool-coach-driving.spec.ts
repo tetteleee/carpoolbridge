@@ -19,12 +19,12 @@ test('コーチが運転する家庭は、コーチ自身も通常の乗車メ�
     name: '目的地A', latitude: 35.1, longitude: 139.1,
   });
 
-  // コーチ+子供1人でちょうど定員2。旧仕様（運転者分を無条件で-1）ではHard Failしていたケース
+  // コーチ+選手1人でちょうど定員2。旧仕様（運転者分を無条件で-1）ではHard Failしていたケース
   const familyRef = await db.collection('families').add({
     familyName: '佐藤家', coachName: '佐藤父', vehicleCapacity: 2, pickupLocationId: pickupLocationRef.id,
     isActive: true, createdAt: now, updatedAt: now,
   });
-  const childRef = await db.collection('children').add({
+  const playerRef = await db.collection('players').add({
     familyId: familyRef.id, name: '佐藤太郎', schoolEntryYear: 2020, isActive: true, createdAt: now, updatedAt: now,
   });
   const eventRef = await db.collection('events').add({
@@ -32,7 +32,7 @@ test('コーチが運転する家庭は、コーチ自身も通常の乗車メ�
   });
   await eventRef.collection('responses').doc(familyRef.id).set({
     driverOutward: true, driverReturn: true, capacityToday: null, coachParticipating: true, remarks: '',
-    children: [{ childId: childRef.id, isParticipating: true, noOutwardRide: false, noReturnRide: false }],
+    players: [{ playerId: playerRef.id, isParticipating: true, noOutwardRide: false, noReturnRide: false }],
   });
 
   await page.goto(`/events/${eventRef.id}/edit`);
@@ -57,7 +57,7 @@ test('コーチが運転する家庭は、コーチ自身も通常の乗車メ�
   expect(outwardSnapshot.docs).toHaveLength(1);
   const outwardData = outwardSnapshot.docs[0].data();
   expect(outwardData.members).toContainEqual({ type: 'coach', familyId: familyRef.id });
-  expect(outwardData.members).toContainEqual({ type: 'child', childId: childRef.id });
+  expect(outwardData.members).toContainEqual({ type: 'player', playerId: playerRef.id });
   expect(outwardData).not.toHaveProperty('driverIsCoach');
 
   // 画面上でも佐藤父が通常の人カードとして佐藤号の中に表示され、乗車率が2/2（3/2にならない）
@@ -66,7 +66,7 @@ test('コーチが運転する家庭は、コーチ自身も通常の乗車メ�
   await expect(carCard.getByText('2/2')).toBeVisible();
 });
 
-test('コーチのみで満席の場合、子供が乗れずHard Failし、エラー文言に「-1名」を含まない', async ({ page }) => {
+test('コーチのみで満席の場合、選手が乗れずHard Failし、エラー文言に「-1名」を含まない', async ({ page }) => {
   const db = getEmulatorFirestore();
   const now = Timestamp.now();
 
@@ -77,12 +77,12 @@ test('コーチのみで満席の場合、子供が乗れずHard Failし、エ�
     name: '目的地A', latitude: 35.1, longitude: 139.1,
   });
 
-  // 定員1（コーチのみでぴったり）なのに子供が1人いるため、優先割り当てグループが定員超過する
+  // 定員1（コーチのみでぴったり）なのに選手が1人いるため、優先割り当てグループが定員超過する
   const familyRef = await db.collection('families').add({
     familyName: '佐藤家', coachName: '佐藤父', vehicleCapacity: 1, pickupLocationId: pickupLocationRef.id,
     isActive: true, createdAt: now, updatedAt: now,
   });
-  const childRef = await db.collection('children').add({
+  const playerRef = await db.collection('players').add({
     familyId: familyRef.id, name: '佐藤太郎', schoolEntryYear: 2020, isActive: true, createdAt: now, updatedAt: now,
   });
   const eventRef = await db.collection('events').add({
@@ -90,7 +90,7 @@ test('コーチのみで満席の場合、子供が乗れずHard Failし、エ�
   });
   await eventRef.collection('responses').doc(familyRef.id).set({
     driverOutward: true, driverReturn: true, capacityToday: null, coachParticipating: true, remarks: '',
-    children: [{ childId: childRef.id, isParticipating: true, noOutwardRide: false, noReturnRide: false }],
+    players: [{ playerId: playerRef.id, isParticipating: true, noOutwardRide: false, noReturnRide: false }],
   });
 
   await page.goto(`/events/${eventRef.id}/edit`);

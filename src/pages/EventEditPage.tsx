@@ -10,14 +10,14 @@ import { CarIcon, LoadingIndicator } from '../components/icons';
 import { getEvent } from '../services/event/eventService';
 import { getDestination } from '../services/master/destinationService';
 import { getFamilies } from '../services/master/familyService';
-import { getChildrenByFamilyId } from '../services/master/childService';
+import { getPlayersByFamilyId } from '../services/master/playerService';
 import { getResponses } from '../services/event/responseService';
 import { getCarpools, deleteAllCarpools } from '../services/event/carpoolService';
 import { runCarpoolAssignment } from '../services/carpool/runCarpoolAssignment';
 import { formatDateWithWeekday } from '../utils/date';
 import { getFamilyHighestGrade } from '../utils/schoolGrade';
 import type { Event, Response } from '../types/event';
-import type { Child, Family } from '../types/master';
+import type { Player, Family } from '../types/master';
 
 /**
  * 対象イベントの行き・帰り両方向の配車を作成する。
@@ -48,8 +48,8 @@ export function EventEditPage() {
   const [event, setEvent] = useState<Event | null>(null);
   const [destinationName, setDestinationName] = useState('');
   const [families, setFamilies] = useState<Family[]>([]);
-  const [childrenByFamilyId, setChildrenByFamilyId] = useState<
-    Record<string, Child[]>
+  const [playersByFamilyId, setPlayersByFamilyId] = useState<
+    Record<string, Player[]>
   >({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -75,21 +75,21 @@ export function EventEditPage() {
 
         const activeFamilies = familiesData.filter((family) => family.isActive);
 
-        const childrenByFamily = await Promise.all(
-          activeFamilies.map((family) => getChildrenByFamilyId(family.id))
+        const playersByFamily = await Promise.all(
+          activeFamilies.map((family) => getPlayersByFamilyId(family.id))
         );
-        const childrenMap: Record<string, Child[]> = {};
+        const playersMap: Record<string, Player[]> = {};
         activeFamilies.forEach((family, index) => {
-          childrenMap[family.id] = childrenByFamily[index].filter(
-            (child) => child.isActive
+          playersMap[family.id] = playersByFamily[index].filter(
+            (player) => player.isActive
           );
         });
-        setChildrenByFamilyId(childrenMap);
+        setPlayersByFamilyId(playersMap);
 
-        // 家庭カードの並び順：家庭内の子供の最高学年で降順、同学年は家庭名順（04_画面設計.md#7）
+        // 家庭カードの並び順：家庭内の選手の最高学年で降順、同学年は家庭名順（04_画面設計.md#7）
         const sortedFamilies = [...activeFamilies].sort((a, b) => {
-          const gradeA = getFamilyHighestGrade(childrenMap[a.id] ?? []);
-          const gradeB = getFamilyHighestGrade(childrenMap[b.id] ?? []);
+          const gradeA = getFamilyHighestGrade(playersMap[a.id] ?? []);
+          const gradeB = getFamilyHighestGrade(playersMap[b.id] ?? []);
           if (gradeA !== gradeB) {
             if (gradeA === null) return 1;
             if (gradeB === null) return -1;
@@ -292,7 +292,7 @@ export function EventEditPage() {
               key={`${family.id}-${responseVersion}`}
               eventId={eventId}
               family={family}
-              childList={childrenByFamilyId[family.id] ?? []}
+              playerList={playersByFamilyId[family.id] ?? []}
               response={responsesByFamilyId[family.id]}
             />
           ))

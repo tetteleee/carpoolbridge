@@ -1,7 +1,7 @@
 /**
  * 開発用Seedスクリプト（`npm run seed`）。
  *
- * 既存の集合場所・目的地・家庭・子供・イベント（配下のresponses・carpoolsを含む）を
+ * 既存の集合場所・目的地・家庭・選手・イベント（配下のresponses・carpoolsを含む）を
  * 全削除したうえで、docs/05_データ設計.md のコレクション構成に合わせたテストデータを
  * Firestoreへ投入する。staffUsersは削除対象外。
  *
@@ -24,13 +24,13 @@ import { initializeApp } from 'firebase-admin/app';
 import { getFirestore, Timestamp, type Firestore } from 'firebase-admin/firestore';
 import { firestorePaths } from '../../src/constants';
 import {
-  CHILDREN,
+  PLAYERS,
   DESTINATIONS,
   EVENTS,
   FAMILIES,
   PICKUP_LOCATIONS,
   schoolEntryYearOf,
-  type SeedChild,
+  type SeedPlayer,
   type SeedDestination,
   type SeedEvent,
   type SeedFamily,
@@ -47,7 +47,7 @@ interface SeedSourceData {
   pickupLocations: SeedPickupLocation[];
   destinations: SeedDestination[];
   families: SeedFamily[];
-  children: SeedChild[];
+  players: SeedPlayer[];
   events: SeedEvent[];
 }
 
@@ -65,7 +65,7 @@ function loadSeedSourceData(): SeedSourceData {
       pickupLocations: PICKUP_LOCATIONS,
       destinations: DESTINATIONS,
       families: FAMILIES,
-      children: CHILDREN,
+      players: PLAYERS,
       events: EVENTS,
     };
   }
@@ -132,13 +132,13 @@ async function seedCollection<T extends { id: string }>(
 
 async function main(): Promise<void> {
   const projectId = readProjectId();
-  const { pickupLocations, destinations, families, children, events } = loadSeedSourceData();
+  const { pickupLocations, destinations, families, players, events } = loadSeedSourceData();
   console.log(`[seed] 投入先: 実Firebaseプロジェクト / project=${projectId}`);
 
   const app = initializeApp({ projectId });
   const db = getFirestore(app);
 
-  await deleteCollectionRecursively(db, firestorePaths.childrenCollection());
+  await deleteCollectionRecursively(db, firestorePaths.playersCollection());
   await deleteCollectionRecursively(db, firestorePaths.familiesCollection());
   await deleteCollectionRecursively(db, firestorePaths.pickupLocationsCollection());
   await deleteCollectionRecursively(db, firestorePaths.destinationsCollection());
@@ -154,8 +154,8 @@ async function main(): Promise<void> {
 
   await seedCollection(
     db,
-    firestorePaths.childrenCollection(),
-    children.map(({ grade, ...rest }) => ({
+    firestorePaths.playersCollection(),
+    players.map(({ grade, ...rest }) => ({
       ...rest,
       schoolEntryYear: schoolEntryYearOf(grade),
     })),

@@ -5,13 +5,13 @@ import {
   updateFamily,
 } from '../../services/master/familyService';
 import {
-  createChild,
-  getChildrenByFamilyId,
-  updateChild,
-} from '../../services/master/childService';
+  createPlayer,
+  getPlayersByFamilyId,
+  updatePlayer,
+} from '../../services/master/playerService';
 import { getPickupLocations } from '../../services/master/pickupLocationService';
-import type { Child, Family, PickupLocation } from '../../types/master';
-import { ChildSection } from './ChildSection';
+import type { Player, Family, PickupLocation } from '../../types/master';
+import { PlayerSection } from './PlayerSection';
 import { Button } from '../common/Button';
 import { Card } from '../common/Card';
 import { getSchoolEntryYearOptions } from '../../utils/schoolGrade';
@@ -26,14 +26,14 @@ type FamilyUpdatableFields = Partial<
   >
 >;
 
-type ChildUpdatableFields = Partial<
-  Pick<Child, 'name' | 'schoolEntryYear' | 'isActive'>
+type PlayerUpdatableFields = Partial<
+  Pick<Player, 'name' | 'schoolEntryYear' | 'isActive'>
 >;
 
 export interface FamilySectionHandle {
   /** 下書き内容をまとめてFirestoreへ反映する */
   save: () => Promise<void>;
-  /** 保存済み内容と比べて未保存の編集・追加があるか（家庭・子供いずれか） */
+  /** 保存済み内容と比べて未保存の編集・追加があるか（家庭・選手いずれか） */
   hasChanges: () => boolean;
 }
 
@@ -44,17 +44,17 @@ interface FamilySectionProps {
 /**
  * マスタ管理画面「家庭」セクション。
  * 登録済み家庭の一覧表示・下書き編集・新規追加・在籍中トグルを行う。
- * 家庭カード内には子供セクション（ChildSection）を組み込み、
- * 子供の一覧表示・下書き編集・新規追加・在籍中トグルも行う。
+ * 家庭カード内には選手セクション（PlayerSection）を組み込み、
+ * 選手の一覧表示・下書き編集・新規追加・在籍中トグルも行う。
  * Firestoreへの反映は画面共通の保存ボタン押下時にまとめて行う。
  */
 export function FamilySection({ ref }: FamilySectionProps) {
   const [families, setFamilies] = useState<Family[]>([]);
   const [savedFamilies, setSavedFamilies] = useState<Family[]>([]);
   const [newIds, setNewIds] = useState<Set<string>>(new Set());
-  const [children, setChildren] = useState<Child[]>([]);
-  const [savedChildren, setSavedChildren] = useState<Child[]>([]);
-  const [newChildIds, setNewChildIds] = useState<Set<string>>(new Set());
+  const [players, setPlayers] = useState<Player[]>([]);
+  const [savedPlayers, setSavedPlayers] = useState<Player[]>([]);
+  const [newPlayerIds, setNewPlayerIds] = useState<Set<string>>(new Set());
   const [pickupLocations, setPickupLocations] = useState<PickupLocation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -66,12 +66,12 @@ export function FamilySection({ ref }: FamilySectionProps) {
         setSavedFamilies(familiesData);
         setPickupLocations(pickupLocationsData);
 
-        const childrenByFamily = await Promise.all(
-          familiesData.map((family) => getChildrenByFamilyId(family.id))
+        const playersByFamily = await Promise.all(
+          familiesData.map((family) => getPlayersByFamilyId(family.id))
         );
-        const childrenData = childrenByFamily.flat();
-        setChildren(childrenData);
-        setSavedChildren(childrenData);
+        const playersData = playersByFamily.flat();
+        setPlayers(playersData);
+        setSavedPlayers(playersData);
       })
       .catch(() => setError('家庭の取得に失敗しました'))
       .finally(() => setLoading(false));
@@ -127,35 +127,35 @@ export function FamilySection({ ref }: FamilySectionProps) {
     ]);
   };
 
-  const handleChildNameChange = (childId: string, name: string) => {
-    setChildren((prev) =>
-      prev.map((child) => (child.id === childId ? { ...child, name } : child))
+  const handlePlayerNameChange = (playerId: string, name: string) => {
+    setPlayers((prev) =>
+      prev.map((player) => (player.id === playerId ? { ...player, name } : player))
     );
   };
 
-  const handleChildSchoolEntryYearChange = (
-    childId: string,
+  const handlePlayerSchoolEntryYearChange = (
+    playerId: string,
     schoolEntryYear: number
   ) => {
-    setChildren((prev) =>
-      prev.map((child) =>
-        child.id === childId ? { ...child, schoolEntryYear } : child
+    setPlayers((prev) =>
+      prev.map((player) =>
+        player.id === playerId ? { ...player, schoolEntryYear } : player
       )
     );
   };
 
-  const handleChildActiveToggle = (childId: string) => {
-    setChildren((prev) =>
-      prev.map((child) =>
-        child.id === childId ? { ...child, isActive: !child.isActive } : child
+  const handlePlayerActiveToggle = (playerId: string) => {
+    setPlayers((prev) =>
+      prev.map((player) =>
+        player.id === playerId ? { ...player, isActive: !player.isActive } : player
       )
     );
   };
 
-  const handleChildAdd = (familyId: string) => {
+  const handlePlayerAdd = (familyId: string) => {
     const id = crypto.randomUUID();
-    setNewChildIds((prev) => new Set(prev).add(id));
-    setChildren((prev) => [
+    setNewPlayerIds((prev) => new Set(prev).add(id));
+    setPlayers((prev) => [
       ...prev,
       {
         id,
@@ -163,14 +163,14 @@ export function FamilySection({ ref }: FamilySectionProps) {
         name: '',
         schoolEntryYear: getSchoolEntryYearOptions()[0],
         isActive: true,
-      } as Child,
+      } as Player,
     ]);
   };
 
   useImperativeHandle(ref, () => ({
     hasChanges: () =>
       newIds.size > 0 ||
-      newChildIds.size > 0 ||
+      newPlayerIds.size > 0 ||
       families.some((family) => {
         const original = savedFamilies.find((f) => f.id === family.id);
         return (
@@ -182,13 +182,13 @@ export function FamilySection({ ref }: FamilySectionProps) {
             original.isActive !== family.isActive)
         );
       }) ||
-      children.some((child) => {
-        const original = savedChildren.find((c) => c.id === child.id);
+      players.some((player) => {
+        const original = savedPlayers.find((c) => c.id === player.id);
         return (
           original &&
-          (original.name !== child.name ||
-            original.schoolEntryYear !== child.schoolEntryYear ||
-            original.isActive !== child.isActive)
+          (original.name !== player.name ||
+            original.schoolEntryYear !== player.schoolEntryYear ||
+            original.isActive !== player.isActive)
         );
       }),
     save: async () => {
@@ -233,36 +233,36 @@ export function FamilySection({ ref }: FamilySectionProps) {
             }
           }
 
-          const familyChildren = children.filter(
-            (child) => child.familyId === family.id
+          const familyPlayers = players.filter(
+            (player) => player.familyId === family.id
           );
 
-          for (const child of familyChildren) {
-            if (newChildIds.has(child.id)) {
-              await createChild({
+          for (const player of familyPlayers) {
+            if (newPlayerIds.has(player.id)) {
+              await createPlayer({
                 familyId,
-                name: child.name,
-                schoolEntryYear: child.schoolEntryYear,
+                name: player.name,
+                schoolEntryYear: player.schoolEntryYear,
               });
               continue;
             }
 
-            const originalChild = savedChildren.find((c) => c.id === child.id);
-            if (!originalChild) continue;
+            const originalPlayer = savedPlayers.find((c) => c.id === player.id);
+            if (!originalPlayer) continue;
 
-            const childChanges: ChildUpdatableFields = {};
-            if (originalChild.name !== child.name) {
-              childChanges.name = child.name;
+            const playerChanges: PlayerUpdatableFields = {};
+            if (originalPlayer.name !== player.name) {
+              playerChanges.name = player.name;
             }
-            if (originalChild.schoolEntryYear !== child.schoolEntryYear) {
-              childChanges.schoolEntryYear = child.schoolEntryYear;
+            if (originalPlayer.schoolEntryYear !== player.schoolEntryYear) {
+              playerChanges.schoolEntryYear = player.schoolEntryYear;
             }
-            if (originalChild.isActive !== child.isActive) {
-              childChanges.isActive = child.isActive;
+            if (originalPlayer.isActive !== player.isActive) {
+              playerChanges.isActive = player.isActive;
             }
 
-            if (Object.keys(childChanges).length > 0) {
-              await updateChild(child.id, childChanges);
+            if (Object.keys(playerChanges).length > 0) {
+              await updatePlayer(player.id, playerChanges);
             }
           }
         }
@@ -272,17 +272,17 @@ export function FamilySection({ ref }: FamilySectionProps) {
         setSavedFamilies(refreshedFamilies);
         setNewIds(new Set());
 
-        const refreshedChildrenByFamily = await Promise.all(
-          refreshedFamilies.map((family) => getChildrenByFamilyId(family.id))
+        const refreshedPlayersByFamily = await Promise.all(
+          refreshedFamilies.map((family) => getPlayersByFamilyId(family.id))
         );
-        const refreshedChildren = refreshedChildrenByFamily.flat();
-        setChildren(refreshedChildren);
-        setSavedChildren(refreshedChildren);
-        setNewChildIds(new Set());
+        const refreshedPlayers = refreshedPlayersByFamily.flat();
+        setPlayers(refreshedPlayers);
+        setSavedPlayers(refreshedPlayers);
+        setNewPlayerIds(new Set());
 
         setError(null);
       } catch {
-        setError('家庭・子供の保存に失敗しました');
+        setError('家庭・選手の保存に失敗しました');
         throw new Error('family save failed');
       }
     },
@@ -490,14 +490,14 @@ export function FamilySection({ ref }: FamilySectionProps) {
                 </button>
               </div>
 
-              <ChildSection
-                childList={children.filter(
-                  (child) => child.familyId === family.id
+              <PlayerSection
+                playerList={players.filter(
+                  (player) => player.familyId === family.id
                 )}
-                onNameChange={handleChildNameChange}
-                onSchoolEntryYearChange={handleChildSchoolEntryYearChange}
-                onActiveToggle={handleChildActiveToggle}
-                onAdd={() => handleChildAdd(family.id)}
+                onNameChange={handlePlayerNameChange}
+                onSchoolEntryYearChange={handlePlayerSchoolEntryYearChange}
+                onActiveToggle={handlePlayerActiveToggle}
+                onAdd={() => handlePlayerAdd(family.id)}
               />
             </Card>
           ))}

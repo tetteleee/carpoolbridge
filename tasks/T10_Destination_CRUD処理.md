@@ -41,7 +41,7 @@ ref:
 - UI実装（一覧表示・入力フォーム等。T14で実施）
 - Firestore Security Rules変更
 - サンプルデータ投入機能（T17）
-- Family・Child・Event等、他データとの関連処理
+- Family・Player・Event等、他データとの関連処理
 
 ---
 

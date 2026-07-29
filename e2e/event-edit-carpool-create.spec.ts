@@ -28,7 +28,7 @@ test('配車作成ボタンと配車再作成確認ダイアログ', async ({ pa
     createdAt: now,
     updatedAt: now,
   });
-  const childRef = await db.collection('children').add({
+  const playerRef = await db.collection('players').add({
     familyId: familyRef.id,
     name: '太郎',
     schoolEntryYear: 2020,
@@ -49,8 +49,8 @@ test('配車作成ボタンと配車再作成確認ダイアログ', async ({ pa
     capacityToday: null,
     coachParticipating: null,
     remarks: '',
-    children: [
-      { childId: childRef.id, isParticipating: true, noOutwardRide: false, noReturnRide: false },
+    players: [
+      { playerId: playerRef.id, isParticipating: true, noOutwardRide: false, noReturnRide: false },
     ],
   });
 

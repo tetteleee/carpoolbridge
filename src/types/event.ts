@@ -24,11 +24,11 @@ export interface Event {
 }
 
 /**
- * イベント回答における子供個別の情報を表す型
+ * イベント回答における選手個別の情報を表す型
  */
-export interface ResponseChild {
-  /** 子供ID */
-  childId: string;
+export interface ResponsePlayer {
+  /** 選手ID */
+  playerId: string;
   /** イベントに参加するかどうか。未選択=null、参加=true、欠席=false */
   isParticipating: boolean | null;
   /** 行きの配車が不要かどうか（現地集合、午後から参加など） */
@@ -49,18 +49,18 @@ export interface Response {
   capacityToday: number | null;
   /** コーチが参加するかどうか。コーチが紐づかない家庭ではnull */
   coachParticipating: boolean | null;
-  /** 特記事項（子供個別の特殊ケースもここに集約する） */
+  /** 特記事項（選手個別の特殊ケースもここに集約する） */
   remarks: string;
-  /** 子供情報の配列 */
-  children: ResponseChild[];
+  /** 選手情報の配列 */
+  players: ResponsePlayer[];
 }
 
 /**
- * 乗車メンバー（子ども）
+ * 乗車メンバー（選手）
  */
-export interface CarpoolMemberChild {
-  type: 'child';
-  childId: string;
+export interface CarpoolMemberPlayer {
+  type: 'player';
+  playerId: string;
 }
 
 /**
@@ -74,7 +74,7 @@ export interface CarpoolMemberCoach {
 /**
  * 乗車メンバーを表すUnion型
  */
-export type CarpoolMember = CarpoolMemberChild | CarpoolMemberCoach;
+export type CarpoolMember = CarpoolMemberPlayer | CarpoolMemberCoach;
 
 /**
  * 配車結果を表す型

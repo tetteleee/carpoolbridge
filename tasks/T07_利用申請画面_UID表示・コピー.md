@@ -95,7 +95,7 @@ bL3f2QmP4x......
 - コピー押下でUIDがクリップボードへコピーされる
 - 説明文は表示しない
 - Firestoreへのアクセスを行わない
-- families、children、events等の通常データを取得しない
+- families、players、events等の通常データを取得しない
 
 ---
 

@@ -37,7 +37,7 @@ const textareaStyle: CSSProperties = {
 
 /**
  * イベント編集（回答入力）画面・家庭カード内の
- * 備考（remarks）の自由記述入力欄。家庭単位で1つのみ配置し、子供個別の入力欄は設けない。
+ * 備考（remarks）の自由記述入力欄。家庭単位で1つのみ配置し、選手個別の入力欄は設けない。
  * 値は呼び出し側（FamilyResponseCard）が保持し、変更の都度Firestoreへ自動保存される（T29）。
  */
 export function RemarksSection({

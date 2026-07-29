@@ -10,7 +10,7 @@ import {
 import { db } from '../../firebase';
 import { firestorePaths } from '../../constants';
 import type { Family } from '../../types/master';
-import { deactivateChildrenByFamilyId } from './childService';
+import { deactivatePlayersByFamilyId } from './playerService';
 
 /**
  * 家庭を新規登録します。
@@ -63,7 +63,7 @@ export async function getFamily(familyId: string): Promise<Family | null> {
  * isActive を false にすることで論理削除（卒団・非表示扱い）、true に戻すことで在籍復帰を表します。
  * 更新時に updatedAt をサーバー時刻で更新します。
  *
- * isActive を false に更新した場合、この家庭に属する子供も連動して自動で論理削除されます。
+ * isActive を false に更新した場合、この家庭に属する選手も連動して自動で論理削除されます。
  *
  * @param familyId 更新対象のドキュメントID
  * @param data 更新するフィールド（部分更新可）
@@ -84,6 +84,6 @@ export async function updateFamily(
   });
 
   if (data.isActive === false) {
-    await deactivateChildrenByFamilyId(familyId);
+    await deactivatePlayersByFamilyId(familyId);
   }
 }

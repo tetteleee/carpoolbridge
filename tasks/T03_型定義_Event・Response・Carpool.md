@@ -55,11 +55,11 @@ Event・Response・Carpoolのデータ構造をTypeScriptの型として定義�
 
 ---
 
-### ResponseChild型を定義する
+### ResponsePlayer型を定義する
 
-children配列の要素型として定義する。
+players配列の要素型として定義する。
 
-- childId
+- playerId
 - isParticipating
 - noOutwardRide
 - noReturnRide
@@ -93,10 +93,10 @@ children配列の要素型として定義する。
 
 以下のUnion型を定義する。
 
-#### Child
+#### Player
 
 - type
-- childId
+- playerId
 
 #### Coach
 
@@ -125,7 +125,7 @@ children配列の要素型として定義する。
 
 - Event型が定義されている
 - Response型が定義されている
-- ResponseChild型が定義されている
+- ResponsePlayer型が定義されている
 - Carpool型が定義されている
 - Direction型が定義されている
 - CarpoolMember型がUnion型で定義されている

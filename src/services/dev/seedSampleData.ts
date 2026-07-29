@@ -1,7 +1,7 @@
 import { collection, doc, getDocs, serverTimestamp, writeBatch } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { firestorePaths } from '../../constants';
-import { CHILDREN, DESTINATIONS, EVENTS, FAMILIES, PICKUP_LOCATIONS, schoolEntryYearOf } from './seedData';
+import { PLAYERS, DESTINATIONS, EVENTS, FAMILIES, PICKUP_LOCATIONS, schoolEntryYearOf } from './seedData';
 
 const DELETE_BATCH_SIZE = 400;
 
@@ -39,7 +39,7 @@ async function deleteAllEventsWithSubcollections(): Promise<void> {
 /**
  * 開発環境限定の「サンプルデータ投入」機能。
  *
- * 既存の集合場所・目的地・家庭・子供・イベント（配下のresponses・carpoolsを含む）を
+ * 既存の集合場所・目的地・家庭・選手・イベント（配下のresponses・carpoolsを含む）を
  * 全削除したうえで、評価・動作確認用のテストデータ
  * （src/services/dev/seedData.ts。`npm run seed` と共通）を投入する。
  * ドキュメントIDは固定値のため、`npm run seed` で投入した場合と同一のドキュメントになる。
@@ -49,7 +49,7 @@ async function deleteAllEventsWithSubcollections(): Promise<void> {
  * 「11. 削除方針」の例外を参照）であり、本機能以外からは呼び出さないこと。
  */
 export async function seedSampleData(): Promise<void> {
-  await deleteAllDocsInCollection(firestorePaths.childrenCollection());
+  await deleteAllDocsInCollection(firestorePaths.playersCollection());
   await deleteAllDocsInCollection(firestorePaths.familiesCollection());
   await deleteAllDocsInCollection(firestorePaths.pickupLocationsCollection());
   await deleteAllDocsInCollection(firestorePaths.destinationsCollection());
@@ -73,8 +73,8 @@ export async function seedSampleData(): Promise<void> {
     });
   });
 
-  CHILDREN.forEach(({ id, grade, ...rest }) => {
-    batch.set(doc(db, firestorePaths.childDocument(id)), {
+  PLAYERS.forEach(({ id, grade, ...rest }) => {
+    batch.set(doc(db, firestorePaths.playerDocument(id)), {
       ...rest,
       schoolEntryYear: schoolEntryYearOf(grade),
       createdAt: serverTimestamp(),

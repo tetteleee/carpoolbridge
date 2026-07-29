@@ -15,8 +15,8 @@ service cloud.firestore {
       allow read, write: if isStaff();
     }
 
-    // 子供
-    match /children/{document=**} {
+    // 選手
+    match /players/{document=**} {
       allow read, write: if isStaff();
     }
 

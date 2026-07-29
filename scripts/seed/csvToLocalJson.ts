@@ -1,7 +1,7 @@
 /**
  * CSVから、ローカル専用Seedデータ（src/services/dev/seedData.local.json）を生成するスクリプト。
  *
- * seedData.local.jsonはIDによる相互参照（family.pickupLocationId、child.familyId等）を
+ * seedData.local.jsonはIDによる相互参照（family.pickupLocationId、player.familyId等）を
  * 手作業で書く必要があり手間が大きいため、名前ベースで書けるCSVを用意し、
  * このスクリプトでID採番・紐づけを自動化する。
  *
@@ -49,7 +49,7 @@ interface OutputFamily {
   isActive: boolean;
 }
 
-interface OutputChild {
+interface OutputPlayer {
   id: string;
   familyId: string;
   name: string;
@@ -261,22 +261,22 @@ function buildFamilies(pickupLocationIdByName: Map<string, string>): {
   return { families, idByName };
 }
 
-function buildChildren(familyIdByName: Map<string, string>): OutputChild[] {
-  const records = readCsvFile('children.csv');
+function buildPlayers(familyIdByName: Map<string, string>): OutputPlayer[] {
+  const records = readCsvFile('players.csv');
   return records.map((record, index) => {
-    const context = `children.csv ${index + 2}行目`;
+    const context = `players.csv ${index + 2}行目`;
     const familyName = requireField(record, 'familyName', context);
     const familyId = familyIdByName.get(familyName);
     if (!familyId) {
       throw new Error(`${context}: 家庭名「${familyName}」がfamilies.csvに見つかりません`);
     }
-    const name = requireField(record, 'childName', context);
+    const name = requireField(record, 'playerName', context);
     const grade = parseRequiredInt(requireField(record, 'grade', context), 'grade', context);
     if (grade < 1 || grade > 6) {
       throw new Error(`${context}: 「grade」は1〜6で入力してください（値: "${grade}"）`);
     }
     return {
-      id: `child-${index + 1}`,
+      id: `player-${index + 1}`,
       familyId,
       name,
       grade,
@@ -311,17 +311,17 @@ function main(): void {
   const { locations: pickupLocations, idByName: pickupLocationIdByName } = buildPickupLocations();
   const { destinations, idByName: destinationIdByName } = buildDestinations();
   const { families, idByName: familyIdByName } = buildFamilies(pickupLocationIdByName);
-  const children = buildChildren(familyIdByName);
+  const players = buildPlayers(familyIdByName);
   const events = buildEvents(destinationIdByName);
 
-  const output = { pickupLocations, destinations, families, children, events };
+  const output = { pickupLocations, destinations, families, players, events };
   writeFileSync(OUTPUT_PATH, `${JSON.stringify(output, null, 2)}\n`, 'utf-8');
 
   console.log(`[seed:from-csv] ${OUTPUT_PATH} を生成しました`);
   console.log(`[seed:from-csv]   集合場所: ${pickupLocations.length}件`);
   console.log(`[seed:from-csv]   目的地: ${destinations.length}件`);
   console.log(`[seed:from-csv]   家庭: ${families.length}件`);
-  console.log(`[seed:from-csv]   子供: ${children.length}件`);
+  console.log(`[seed:from-csv]   選手: ${players.length}件`);
   console.log(`[seed:from-csv]   イベント: ${events.length}件`);
 }
 

@@ -67,7 +67,7 @@ export function HomeIcon({ size = 18 }: IconProps) {
   );
 }
 
-/** 子供（人物）アイコン */
+/** 選手（人物）アイコン */
 export function UserIcon({ size = 18 }: IconProps) {
   return (
     <svg {...baseProps(size)}>

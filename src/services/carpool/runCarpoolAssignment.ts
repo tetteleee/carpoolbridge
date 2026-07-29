@@ -10,7 +10,7 @@
 import type { Carpool, Direction, Response } from '../../types/event';
 import type { PickupLocation } from '../../types/master';
 import { getFamilies } from '../master/familyService';
-import { getChildrenByFamilyId } from '../master/childService';
+import { getPlayersByFamilyId } from '../master/playerService';
 import { getPickupLocations } from '../master/pickupLocationService';
 import { getResponses } from '../event/responseService';
 import { createCarpool } from '../event/carpoolService';
@@ -29,7 +29,7 @@ import {
   DriverGroupCapacityExceededError,
   buildAssignmentWarnings,
 } from './assignmentErrors';
-import { isDriverForDirection, isChildRidingForDirection } from './eligibility';
+import { isDriverForDirection, isPlayerRidingForDirection } from './eligibility';
 
 /**
  * runCarpoolAssignmentの戻り値。
@@ -71,14 +71,14 @@ export async function runCarpoolAssignment(
   );
   const unansweredCount = activeFamilies.length - answeredFamilies.length;
 
-  const childrenLists = await Promise.all(
-    answeredFamilies.map((family) => getChildrenByFamilyId(family.id))
+  const playersLists = await Promise.all(
+    answeredFamilies.map((family) => getPlayersByFamilyId(family.id))
   );
-  const activeChildIdsByFamilyId = new Map<string, Set<string>>();
+  const activePlayerIdsByFamilyId = new Map<string, Set<string>>();
   answeredFamilies.forEach((family, index) => {
-    activeChildIdsByFamilyId.set(
+    activePlayerIdsByFamilyId.set(
       family.id,
-      new Set(childrenLists[index].filter((child) => child.isActive).map((child) => child.id))
+      new Set(playersLists[index].filter((player) => player.isActive).map((player) => player.id))
     );
   });
 
@@ -90,15 +90,15 @@ export async function runCarpoolAssignment(
   const usedPickupLocations: PickupLocation[] = [];
   for (const family of answeredFamilies) {
     const response = responseByFamilyId.get(family.id) as Response;
-    const activeChildIds = activeChildIdsByFamilyId.get(family.id) as Set<string>;
+    const activePlayerIds = activePlayerIdsByFamilyId.get(family.id) as Set<string>;
     const driving = isDriverForDirection(response, direction);
-    const hasRidingChild = response.children.some(
-      (child) => activeChildIds.has(child.childId) && isChildRidingForDirection(child, direction)
+    const hasRidingPlayer = response.players.some(
+      (player) => activePlayerIds.has(player.playerId) && isPlayerRidingForDirection(player, direction)
     );
     const hasRidingCoach = family.coachName !== null && response.coachParticipating === true;
 
     if (
-      (driving || hasRidingChild || hasRidingCoach) &&
+      (driving || hasRidingPlayer || hasRidingCoach) &&
       !usedLocationIds.has(family.pickupLocationId)
     ) {
       usedLocationIds.add(family.pickupLocationId);
@@ -132,7 +132,7 @@ export async function runCarpoolAssignment(
 
   for (const family of answeredFamilies) {
     const response = responseByFamilyId.get(family.id) as Response;
-    const activeChildIds = activeChildIdsByFamilyId.get(family.id) as Set<string>;
+    const activePlayerIds = activePlayerIdsByFamilyId.get(family.id) as Set<string>;
     const hasParticipatingCoach = family.coachName !== null && response.coachParticipating === true;
     const vehicleCapacity = response.capacityToday ?? family.vehicleCapacity;
 
@@ -148,13 +148,13 @@ export async function runCarpoolAssignment(
       driverReturn: response.driverReturn,
     });
 
-    for (const child of response.children) {
-      if (activeChildIds.has(child.childId) && isChildRidingForDirection(child, direction)) {
+    for (const player of response.players) {
+      if (activePlayerIds.has(player.playerId) && isPlayerRidingForDirection(player, direction)) {
         passengers.push({
           familyId: family.id,
           pickupLocationId: family.pickupLocationId,
           pickupLocation: toLocation(family.pickupLocationId),
-          member: { type: 'child', childId: child.childId },
+          member: { type: 'player', playerId: player.playerId },
         });
       }
     }

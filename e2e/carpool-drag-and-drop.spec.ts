@@ -23,7 +23,7 @@ test('未配車エリアの人カードを長押しドラッグして車カー�
     familyName: '山田家', coachName: null, vehicleCapacity: 0, pickupLocationId: locA.id,
     isActive: true, createdAt: now, updatedAt: now,
   });
-  const childRider = await db.collection('children').add({
+  const playerRider = await db.collection('players').add({
     familyId: familyRider.id, name: '山田太郎', schoolEntryYear: 2019, isActive: true, createdAt: now, updatedAt: now,
   });
 
@@ -33,11 +33,11 @@ test('未配車エリアの人カードを長押しドラッグして車カー�
 
   await eventRef.collection('responses').doc(familyDriver.id).set({
     driverOutward: true, driverReturn: true, capacityToday: null, coachParticipating: null, remarks: '',
-    children: [],
+    players: [],
   });
   await eventRef.collection('responses').doc(familyRider.id).set({
     driverOutward: false, driverReturn: false, capacityToday: null, coachParticipating: null, remarks: '',
-    children: [{ childId: childRider.id, isParticipating: true, noOutwardRide: false, noReturnRide: false }],
+    players: [{ playerId: playerRider.id, isParticipating: true, noOutwardRide: false, noReturnRide: false }],
   });
 
   await page.goto(`/events/${eventRef.id}/edit`);
@@ -78,7 +78,7 @@ test('未配車エリアの人カードを長押しドラッグして車カー�
 
   const carpoolsSnapshot = await eventRef.collection('carpools').where('direction', '==', 'OUTWARD').get();
   const carpool = carpoolsSnapshot.docs[0].data();
-  expect(carpool.members).toEqual([{ type: 'child', childId: childRider.id }]);
+  expect(carpool.members).toEqual([{ type: 'player', playerId: playerRider.id }]);
 });
 
 test('人カードの短いタップはドラッグとして扱われない', async ({ page }) => {
@@ -92,7 +92,7 @@ test('人カードの短いタップはドラッグとして扱われない', as
     familyName: '山田家', coachName: null, vehicleCapacity: 0, pickupLocationId: locA.id,
     isActive: true, createdAt: now, updatedAt: now,
   });
-  const childRider = await db.collection('children').add({
+  const playerRider = await db.collection('players').add({
     familyId: familyRider.id, name: '山田太郎', schoolEntryYear: 2019, isActive: true, createdAt: now, updatedAt: now,
   });
 
@@ -101,7 +101,7 @@ test('人カードの短いタップはドラッグとして扱われない', as
   });
   await eventRef.collection('responses').doc(familyRider.id).set({
     driverOutward: false, driverReturn: false, capacityToday: null, coachParticipating: null, remarks: '',
-    children: [{ childId: childRider.id, isParticipating: true, noOutwardRide: false, noReturnRide: false }],
+    players: [{ playerId: playerRider.id, isParticipating: true, noOutwardRide: false, noReturnRide: false }],
   });
 
   await page.goto(`/events/${eventRef.id}/edit`);
@@ -149,7 +149,7 @@ test('人カードを別の集合場所の車へ移動すると、経由地一�
     familyName: '山田家', coachName: null, vehicleCapacity: 0, pickupLocationId: locB.id,
     isActive: true, createdAt: now, updatedAt: now,
   });
-  const childRider = await db.collection('children').add({
+  const playerRider = await db.collection('players').add({
     familyId: familyRider.id, name: '山田太郎', schoolEntryYear: 2019, isActive: true, createdAt: now, updatedAt: now,
   });
 
@@ -159,11 +159,11 @@ test('人カードを別の集合場所の車へ移動すると、経由地一�
 
   await eventRef.collection('responses').doc(familyDriver.id).set({
     driverOutward: true, driverReturn: true, capacityToday: null, coachParticipating: null, remarks: '',
-    children: [],
+    players: [],
   });
   await eventRef.collection('responses').doc(familyRider.id).set({
     driverOutward: false, driverReturn: false, capacityToday: null, coachParticipating: null, remarks: '',
-    children: [{ childId: childRider.id, isParticipating: true, noOutwardRide: false, noReturnRide: false }],
+    players: [{ playerId: playerRider.id, isParticipating: true, noOutwardRide: false, noReturnRide: false }],
   });
 
   // 鈴木号（西公園始発・定員2）に誰も乗っていない状態を直接作成する。山田太郎（中央公園）は未配車のまま
@@ -236,7 +236,7 @@ test('画面外（下方）の車カードへは、画面端までドラッグ�
     familyName: '山田家', coachName: null, vehicleCapacity: 0, pickupLocationId: locA.id,
     isActive: true, createdAt: now, updatedAt: now,
   });
-  const childRider = await db.collection('children').add({
+  const playerRider = await db.collection('players').add({
     familyId: familyRider.id, name: '山田太郎', schoolEntryYear: 2019, isActive: true, createdAt: now, updatedAt: now,
   });
 
@@ -247,12 +247,12 @@ test('画面外（下方）の車カードへは、画面端までドラッグ�
   for (const familyRef of driverFamilies) {
     await eventRef.collection('responses').doc(familyRef.id).set({
       driverOutward: true, driverReturn: true, capacityToday: null, coachParticipating: null, remarks: '',
-      children: [],
+      players: [],
     });
   }
   await eventRef.collection('responses').doc(familyRider.id).set({
     driverOutward: false, driverReturn: false, capacityToday: null, coachParticipating: null, remarks: '',
-    children: [{ childId: childRider.id, isParticipating: true, noOutwardRide: false, noReturnRide: false }],
+    players: [{ playerId: playerRider.id, isParticipating: true, noOutwardRide: false, noReturnRide: false }],
   });
 
   await page.goto(`/events/${eventRef.id}/edit`);
@@ -308,7 +308,7 @@ test('画面外（下方）の車カードへは、画面端までドラッグ�
   await expect(page.getByText('未配車')).toHaveCount(0);
 
   const targetCarpool = await eventRef.collection('carpools').doc(lastCarpoolId).get();
-  expect(targetCarpool.data()?.members).toEqual([{ type: 'child', childId: childRider.id }]);
+  expect(targetCarpool.data()?.members).toEqual([{ type: 'player', playerId: playerRider.id }]);
 });
 
 test('同じ車の中で人カードをドラッグすると、ドロップした位置に並び替えられる', async ({ page }) => {
@@ -325,19 +325,19 @@ test('同じ車の中で人カードをドラッグすると、ドロップし�
 
   const riderNames = ['山田太郎', '佐藤花子', '田中一郎'];
   const riderFamilyIds: string[] = [];
-  const riderChildIds: string[] = [];
+  const riderPlayerIds: string[] = [];
   for (const name of riderNames) {
     const familyRef = await db.collection('families').add({
       familyName: `${name}家`, coachName: null, vehicleCapacity: 0, pickupLocationId: locA.id,
       isActive: true, createdAt: now, updatedAt: now,
     });
-    const childRef = await db.collection('children').add({
+    const playerRef = await db.collection('players').add({
       familyId: familyRef.id, name, schoolEntryYear: 2019, isActive: true, createdAt: now, updatedAt: now,
     });
     riderFamilyIds.push(familyRef.id);
-    riderChildIds.push(childRef.id);
+    riderPlayerIds.push(playerRef.id);
   }
-  const [yamadaId, satoId, tanakaId] = riderChildIds;
+  const [yamadaId, satoId, tanakaId] = riderPlayerIds;
 
   const eventRef = await db.collection('events').add({
     name: '練習試合', date: '2026-08-01', destinationId: destinationRef.id, createdAt: now, updatedAt: now,
@@ -345,12 +345,12 @@ test('同じ車の中で人カードをドラッグすると、ドロップし�
 
   await eventRef.collection('responses').doc(familyDriver.id).set({
     driverOutward: true, driverReturn: true, capacityToday: null, coachParticipating: null, remarks: '',
-    children: [],
+    players: [],
   });
-  for (let i = 0; i < riderChildIds.length; i += 1) {
+  for (let i = 0; i < riderPlayerIds.length; i += 1) {
     await eventRef.collection('responses').doc(riderFamilyIds[i]).set({
       driverOutward: false, driverReturn: false, capacityToday: null, coachParticipating: null, remarks: '',
-      children: [{ childId: riderChildIds[i], isParticipating: true, noOutwardRide: false, noReturnRide: false }],
+      players: [{ playerId: riderPlayerIds[i], isParticipating: true, noOutwardRide: false, noReturnRide: false }],
     });
   }
 
@@ -360,9 +360,9 @@ test('同じ車の中で人カードをドラッグすると、ドロップし�
     driverFamilyId: familyDriver.id,
     capacity: 4,
     members: [
-      { type: 'child', childId: yamadaId },
-      { type: 'child', childId: satoId },
-      { type: 'child', childId: tanakaId },
+      { type: 'player', playerId: yamadaId },
+      { type: 'player', playerId: satoId },
+      { type: 'player', playerId: tanakaId },
     ],
   });
 
@@ -397,9 +397,9 @@ test('同じ車の中で人カードをドラッグすると、ドロップし�
   await expect(async () => {
     const carpoolSnapshot = await carpoolRef.get();
     expect(carpoolSnapshot.data()?.members).toEqual([
-      { type: 'child', childId: satoId },
-      { type: 'child', childId: yamadaId },
-      { type: 'child', childId: tanakaId },
+      { type: 'player', playerId: satoId },
+      { type: 'player', playerId: yamadaId },
+      { type: 'player', playerId: tanakaId },
     ]);
   }).toPass();
 });
@@ -420,7 +420,7 @@ test('未配車から車カードへ、既存メンバーの位置を指定し�
     familyName: '佐藤家', coachName: null, vehicleCapacity: 0, pickupLocationId: locA.id,
     isActive: true, createdAt: now, updatedAt: now,
   });
-  const childSato = await db.collection('children').add({
+  const playerSato = await db.collection('players').add({
     familyId: familySato.id, name: '佐藤花子', schoolEntryYear: 2019, isActive: true, createdAt: now, updatedAt: now,
   });
 
@@ -428,7 +428,7 @@ test('未配車から車カードへ、既存メンバーの位置を指定し�
     familyName: '田中家', coachName: null, vehicleCapacity: 0, pickupLocationId: locA.id,
     isActive: true, createdAt: now, updatedAt: now,
   });
-  const childTanaka = await db.collection('children').add({
+  const playerTanaka = await db.collection('players').add({
     familyId: familyTanaka.id, name: '田中一郎', schoolEntryYear: 2019, isActive: true, createdAt: now, updatedAt: now,
   });
 
@@ -436,7 +436,7 @@ test('未配車から車カードへ、既存メンバーの位置を指定し�
     familyName: '山田家', coachName: null, vehicleCapacity: 0, pickupLocationId: locA.id,
     isActive: true, createdAt: now, updatedAt: now,
   });
-  const childYamada = await db.collection('children').add({
+  const playerYamada = await db.collection('players').add({
     familyId: familyYamada.id, name: '山田太郎', schoolEntryYear: 2019, isActive: true, createdAt: now, updatedAt: now,
   });
 
@@ -446,19 +446,19 @@ test('未配車から車カードへ、既存メンバーの位置を指定し�
 
   await eventRef.collection('responses').doc(familyDriver.id).set({
     driverOutward: true, driverReturn: true, capacityToday: null, coachParticipating: null, remarks: '',
-    children: [],
+    players: [],
   });
   await eventRef.collection('responses').doc(familySato.id).set({
     driverOutward: false, driverReturn: false, capacityToday: null, coachParticipating: null, remarks: '',
-    children: [{ childId: childSato.id, isParticipating: true, noOutwardRide: false, noReturnRide: false }],
+    players: [{ playerId: playerSato.id, isParticipating: true, noOutwardRide: false, noReturnRide: false }],
   });
   await eventRef.collection('responses').doc(familyTanaka.id).set({
     driverOutward: false, driverReturn: false, capacityToday: null, coachParticipating: null, remarks: '',
-    children: [{ childId: childTanaka.id, isParticipating: true, noOutwardRide: false, noReturnRide: false }],
+    players: [{ playerId: playerTanaka.id, isParticipating: true, noOutwardRide: false, noReturnRide: false }],
   });
   await eventRef.collection('responses').doc(familyYamada.id).set({
     driverOutward: false, driverReturn: false, capacityToday: null, coachParticipating: null, remarks: '',
-    children: [{ childId: childYamada.id, isParticipating: true, noOutwardRide: false, noReturnRide: false }],
+    players: [{ playerId: playerYamada.id, isParticipating: true, noOutwardRide: false, noReturnRide: false }],
   });
 
   // 鈴木号に佐藤花子・田中一郎の順で乗車済み。山田太郎は未配車のまま
@@ -467,8 +467,8 @@ test('未配車から車カードへ、既存メンバーの位置を指定し�
     driverFamilyId: familyDriver.id,
     capacity: 4,
     members: [
-      { type: 'child', childId: childSato.id },
-      { type: 'child', childId: childTanaka.id },
+      { type: 'player', playerId: playerSato.id },
+      { type: 'player', playerId: playerTanaka.id },
     ],
   });
 
@@ -503,9 +503,9 @@ test('未配車から車カードへ、既存メンバーの位置を指定し�
   await expect(async () => {
     const carpoolSnapshot = await carpoolRef.get();
     expect(carpoolSnapshot.data()?.members).toEqual([
-      { type: 'child', childId: childSato.id },
-      { type: 'child', childId: childYamada.id },
-      { type: 'child', childId: childTanaka.id },
+      { type: 'player', playerId: playerSato.id },
+      { type: 'player', playerId: playerYamada.id },
+      { type: 'player', playerId: playerTanaka.id },
     ]);
   }).toPass();
 });

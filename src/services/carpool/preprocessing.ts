@@ -28,7 +28,7 @@ export interface Vehicle {
   remainingCapacity: number;
   /** 経由予定の集合場所IDセット（O(1)検索用） */
   pickupLocationIds: Set<string>;
-  /** 乗車メンバー（子供・コーチ） */
+  /** 乗車メンバー（選手・コーチ） */
   members: CarpoolMember[];
 }
 
@@ -64,7 +64,7 @@ export interface Passenger {
   pickupLocationId: string;
   /** 所属家庭の集合場所（アルゴリズム用座標オブジェクト） */
   pickupLocation: Location;
-  /** 乗車メンバー情報（子供またはコーチ） */
+  /** 乗車メンバー情報（選手またはコーチ） */
   member: CarpoolMember;
 }
 
@@ -136,7 +136,7 @@ export function initializeVehicles(
 
 /**
  * 乗客を家庭（familyId）単位で1つのグループに統合します。
- * 「兄弟は同じ車」「乗客コーチは所属家庭の子供と同じ集合場所から乗車」という
+ * 「兄弟は同じ車」「乗客コーチは所属家庭の選手と同じ集合場所から乗車」という
  * 絶対制約をコードの構造で解決するため、以降の割り当て処理は家庭単位のグループを対象に行う。
  * ref: docs/07_配車アルゴリズム.md#2.2 家族グループ（Family Group）の形成
  *

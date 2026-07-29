@@ -22,7 +22,7 @@ export interface CarCardData {
   routeLocationNames: string[];
   /** 車を出す家庭自身の参加コーチの人カードID（family.id）。該当コーチがいない場合はnull */
   expectedCoachPersonId: string | null;
-  /** 乗車メンバー（子供・コーチ） */
+  /** 乗車メンバー（選手・コーチ） */
   members: PersonCardData[];
 }
 

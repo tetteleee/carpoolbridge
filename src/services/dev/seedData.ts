@@ -42,7 +42,7 @@ export interface SeedFamily {
   isActive: boolean;
 }
 
-export interface SeedChild {
+export interface SeedPlayer {
   id: string;
   familyId: string;
   name: string;
@@ -155,125 +155,125 @@ export const FAMILIES: SeedFamily[] = [
   },
 ];
 
-export const CHILDREN: SeedChild[] = [
+export const PLAYERS: SeedPlayer[] = [
   {
-    id: 'child-sato-ichiro',
+    id: 'player-sato-ichiro',
     familyId: 'family-sato',
     name: '佐藤一郎',
     grade: 6,
     isActive: true,
   },
   {
-    id: 'child-sato-hanako',
+    id: 'player-sato-hanako',
     familyId: 'family-sato',
     name: '佐藤花子',
     grade: 3,
     isActive: true,
   },
   {
-    id: 'child-suzuki-kenta',
+    id: 'player-suzuki-kenta',
     familyId: 'family-suzuki',
     name: '鈴木健太',
     grade: 5,
     isActive: true,
   },
   {
-    id: 'child-suzuki-yuki',
+    id: 'player-suzuki-yuki',
     familyId: 'family-suzuki',
     name: '鈴木優希',
     grade: 2,
     isActive: true,
   },
   {
-    id: 'child-tanaka-misaki',
+    id: 'player-tanaka-misaki',
     familyId: 'family-tanaka',
     name: '田中美咲',
     grade: 2,
     isActive: true,
   },
   {
-    id: 'child-tanaka-daisuke',
+    id: 'player-tanaka-daisuke',
     familyId: 'family-tanaka',
     name: '田中大輔',
     grade: 4,
     isActive: true,
   },
   {
-    id: 'child-takahashi-sakura',
+    id: 'player-takahashi-sakura',
     familyId: 'family-takahashi',
     name: '高橋さくら',
     grade: 1,
     isActive: true,
   },
   {
-    id: 'child-takahashi-ryo',
+    id: 'player-takahashi-ryo',
     familyId: 'family-takahashi',
     name: '高橋涼',
     grade: 4,
     isActive: true,
   },
   {
-    id: 'child-takahashi-mio',
+    id: 'player-takahashi-mio',
     familyId: 'family-takahashi',
     name: '高橋美緒',
     grade: 6,
     isActive: true,
   },
   {
-    id: 'child-ito-shota',
+    id: 'player-ito-shota',
     familyId: 'family-ito',
     name: '伊藤翔太',
     grade: 6,
     isActive: true,
   },
   {
-    id: 'child-ito-hina',
+    id: 'player-ito-hina',
     familyId: 'family-ito',
     name: '伊藤陽菜',
     grade: 3,
     isActive: true,
   },
   {
-    id: 'child-watanabe-ren',
+    id: 'player-watanabe-ren',
     familyId: 'family-watanabe',
     name: '渡辺蓮',
     grade: 1,
     isActive: true,
   },
   {
-    id: 'child-watanabe-aoi',
+    id: 'player-watanabe-aoi',
     familyId: 'family-watanabe',
     name: '渡辺葵',
     grade: 3,
     isActive: true,
   },
   {
-    id: 'child-watanabe-yuma',
+    id: 'player-watanabe-yuma',
     familyId: 'family-watanabe',
     name: '渡辺悠真',
     grade: 5,
     isActive: true,
   },
   {
-    id: 'child-yamamoto-kaito',
+    id: 'player-yamamoto-kaito',
     familyId: 'family-yamamoto',
     name: '山本海斗',
     grade: 2,
     isActive: true,
   },
   {
-    id: 'child-yamamoto-riko',
+    id: 'player-yamamoto-riko',
     familyId: 'family-yamamoto',
     name: '山本莉子',
     grade: 4,
     isActive: true,
   },
   {
-    id: 'child-nakamura-taiga',
+    id: 'player-nakamura-taiga',
     familyId: 'family-nakamura',
     name: '中村大雅',
     grade: 6,
-    // 家庭の卒団に連動して子供も論理削除される想定のサンプル
+    // 家庭の卒団に連動して選手も論理削除される想定のサンプル
     isActive: false,
   },
 ];

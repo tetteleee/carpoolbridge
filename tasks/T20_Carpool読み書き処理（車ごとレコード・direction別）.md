@@ -27,7 +27,7 @@ ref:
 
 - `events/{eventId}/carpools/{carpoolId}` への新規登録処理
   - direction（"OUTWARD"｜"RETURN"）・driverFamilyId・driverIsCoach・capacity・routeOrder[]・members[]
-  - members[]は`{ type: "child", childId }`または`{ type: "coach", familyId }`の2種のみとする
+  - members[]は`{ type: "player", playerId }`または`{ type: "coach", familyId }`の2種のみとする
 - 指定eventId配下のCarpool一覧取得処理（directionを指定した絞り込み取得を含む）
 - 指定eventId・carpoolIdの単一Carpool取得処理
 - 既存Carpoolドキュメントに対する更新処理（driverFamilyId・driverIsCoach・capacity・routeOrder・membersを更新可能とする）

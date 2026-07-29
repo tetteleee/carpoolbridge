@@ -5,7 +5,7 @@
 // ルートコレクション名
 export const FIRESTORE_COLLECTIONS = {
   FAMILIES: 'families',
-  CHILDREN: 'children',
+  PLAYERS: 'players',
   PICKUP_LOCATIONS: 'pickupLocations',
   DESTINATIONS: 'destinations',
   EVENTS: 'events',
@@ -30,14 +30,14 @@ export const firestorePaths = {
   familyDocument: (familyId: string) => `${FIRESTORE_COLLECTIONS.FAMILIES}/${familyId}`,
 
   /**
-   * children コレクションパス
+   * players コレクションパス
    */
-  childrenCollection: () => FIRESTORE_COLLECTIONS.CHILDREN,
+  playersCollection: () => FIRESTORE_COLLECTIONS.PLAYERS,
 
   /**
-   * child ドキュメントパス
+   * player ドキュメントパス
    */
-  childDocument: (childId: string) => `${FIRESTORE_COLLECTIONS.CHILDREN}/${childId}`,
+  playerDocument: (playerId: string) => `${FIRESTORE_COLLECTIONS.PLAYERS}/${playerId}`,
 
   /**
    * pickupLocations コレクションパス

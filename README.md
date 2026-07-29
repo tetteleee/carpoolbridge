@@ -34,13 +34,13 @@ npx playwright install chromium
 ## Seed（テストデータ投入）
 
 開発中のFirestoreデータを、アプリの主要機能を一通り確認できる程度のテストデータ
-（家族・子ども・集合場所・目的地・イベント）で初期化するための開発用スクリプトです。
+（家族・選手・集合場所・目的地・イベント）で初期化するための開発用スクリプトです。
 
 ```bash
 npm run seed
 ```
 
-- **実行すると、`staffUsers`を除く既存データ（家族・子ども・集合場所・目的地・イベント。
+- **実行すると、`staffUsers`を除く既存データ（家族・選手・集合場所・目的地・イベント。
   イベント配下の`responses`・`carpools`を含む）をすべて物理削除したうえで、
   固定IDのテストデータを投入し直します。** 画面操作で追加したデータも含めて消えます。
   何度実行しても同じ内容になります（冪等）。
@@ -73,7 +73,7 @@ SEED_SOURCE=local npm run seed
 
 - 投入元は`src/services/dev/seedData.local.json`です。`.gitignore`済みのため
   コミットされません。中身は`seedData.ts`と同じ形（`pickupLocations` /
-  `destinations` / `families` / `children` / `events`）で自分で作成・編集してください。
+  `destinations` / `families` / `players` / `events`）で自分で作成・編集してください。
 - 実際の使用感を手元で確認したいときなど、個人情報に近いデータを使いたい場合に利用します。
   内容は各自の環境でのみ保持し、他人と共有しないでください。
 - `SEED_SOURCE`を指定しない場合（`npm run seed`のみ）は、従来どおりコミット済みの
@@ -93,7 +93,7 @@ npm run seed:from-csv
 - 使い方
   1. `scripts/seed/csv/*.sample.csv`をコピーして、`.sample`を外したファイルを作る
      （例: `families.sample.csv` → `families.csv`）
-  2. Excel・Googleスプレッドシート等でCSVとして中身を編集する。家庭・子ども・イベントの
+  2. Excel・Googleスプレッドシート等でCSVとして中身を編集する。家庭・選手・イベントの
      紐づけはIDではなく「名前」（`pickupLocationName`・`familyName`・`destinationName`）で
      入力する
   3. `npm run seed:from-csv`を実行する → `src/services/dev/seedData.local.json`を生成・上書きする
@@ -107,7 +107,7 @@ npm run seed:from-csv
 
 **注意：開発段階限定の機能です。現時点ではDev/Prod用のFirebaseプロジェクトが分離されて
 いないため、実行すると実際のFirebaseプロジェクトに対して全削除・再投入が行われます。
-運用開始後にこのスクリプトをそのまま使うと、実際に入力された家族・子ども・イベント等の
+運用開始後にこのスクリプトをそのまま使うと、実際に入力された家族・選手・イベント等の
 データが消えてしまいます。運用開始後は別の手段（Dev/Prodプロジェクトの分離、削除範囲の限定等）
 を検討し、このスクリプトを本番運用中のプロジェクトに対して実行しないでください。**
 

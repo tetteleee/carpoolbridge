@@ -29,7 +29,7 @@ Firestore Security Rulesを実装する。
   - `request.auth != null` かつ `staffUsers/{request.auth.uid}` ドキュメントが存在する場合に `true` を返す
 - 以下のコレクションは `isStaff()` が `true` の場合のみ `read, write` を許可する
   - `families`
-  - `children`
+  - `players`
   - `coaches`
   - `pickupLocations`
   - `destinations`
@@ -55,7 +55,7 @@ Firestore Security Rulesを実装する。
 ## 6. 受け入れ条件
 
 - `firestore.rules` の内容が06_認証・権限管理設計.md 6章の記載と一致している
-- `families` / `children` / `coaches` / `pickupLocations` / `destinations` / `events` の各コレクションについて、
+- `families` / `players` / `coaches` / `pickupLocations` / `destinations` / `events` の各コレクションについて、
   - `staffUsers` 未登録UIDでは読み書きできない
   - `staffUsers` 登録済みUIDでは読み書きできる
   ことをFirestore Emulator等で確認できる

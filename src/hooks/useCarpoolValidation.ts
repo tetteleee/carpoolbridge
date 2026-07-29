@@ -11,7 +11,7 @@ interface UseCarpoolValidationResult {
   hasOverCapacityCar: boolean;
   /** 運転者不在（参加コーチが自分の家庭の車に乗っていない）の車が存在するかどうか */
   hasMissingDriverCoach: boolean;
-  /** 未配車の子供・コーチが存在するかどうか */
+  /** 未配車の選手・コーチが存在するかどうか */
   hasUnassignedPerson: boolean;
   /** いずれかの問題が存在するかどうか */
   hasWarning: boolean;
@@ -48,7 +48,7 @@ export function useCarpoolValidation(
       phrases.push('運転者不在の車');
     }
     if (hasUnassignedPerson) {
-      phrases.push('未配車の子供');
+      phrases.push('未配車の選手');
     }
 
     let message: string | null = null;

@@ -1,4 +1,4 @@
-import type { Child } from '../../types/master';
+import type { Player } from '../../types/master';
 import {
   formatSchoolEntryYearLabel,
   getSchoolEntryYearOptions,
@@ -7,11 +7,11 @@ import { Button } from '../common/Button';
 import { Card } from '../common/Card';
 import { UserIcon } from '../icons';
 
-interface ChildSectionProps {
-  childList: Child[];
-  onNameChange: (childId: string, name: string) => void;
-  onSchoolEntryYearChange: (childId: string, schoolEntryYear: number) => void;
-  onActiveToggle: (childId: string) => void;
+interface PlayerSectionProps {
+  playerList: Player[];
+  onNameChange: (playerId: string, name: string) => void;
+  onSchoolEntryYearChange: (playerId: string, schoolEntryYear: number) => void;
+  onActiveToggle: (playerId: string) => void;
   onAdd: () => void;
 }
 
@@ -35,22 +35,22 @@ const inputStyle = {
 } as const;
 
 /**
- * マスタ管理画面「子供」セクション（家庭カード内に埋め込む）。
- * 対象家庭に紐づく子供の下書き編集・新規追加を行う。
+ * マスタ管理画面「選手」セクション（家庭カード内に埋め込む）。
+ * 対象家庭に紐づく選手の下書き編集・新規追加を行う。
  * Firestoreへの反映は家庭セクションの保存処理にまとめて委譲する。
  */
-export function ChildSection({
-  childList,
+export function PlayerSection({
+  playerList,
   onNameChange,
   onSchoolEntryYearChange,
   onActiveToggle,
   onAdd,
-}: ChildSectionProps) {
+}: PlayerSectionProps) {
   const schoolEntryYearOptions = getSchoolEntryYearOptions();
 
   return (
     <div
-      id="child-section"
+      id="player-section"
       style={{
         display: 'flex',
         flexDirection: 'column',
@@ -70,16 +70,16 @@ export function ChildSection({
         }}
       >
         <UserIcon size={15} />
-        子供
+        選手
       </h3>
 
       <div
-        id="child-list"
+        id="player-list"
         style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}
       >
-        {childList.map((child) => (
+        {playerList.map((player) => (
           <Card
-            key={child.id}
+            key={player.id}
             style={{
               display: 'flex',
               flexDirection: 'column',
@@ -91,8 +91,8 @@ export function ChildSection({
               名前
               <input
                 type="text"
-                value={child.name}
-                onChange={(e) => onNameChange(child.id, e.target.value)}
+                value={player.name}
+                onChange={(e) => onNameChange(player.id, e.target.value)}
                 style={inputStyle}
               />
             </label>
@@ -100,15 +100,15 @@ export function ChildSection({
             <label style={fieldLabelStyle}>
               入学年度
               <select
-                value={child.schoolEntryYear}
+                value={player.schoolEntryYear}
                 onChange={(e) =>
-                  onSchoolEntryYearChange(child.id, Number(e.target.value))
+                  onSchoolEntryYearChange(player.id, Number(e.target.value))
                 }
                 style={inputStyle}
               >
-                {!schoolEntryYearOptions.includes(child.schoolEntryYear) && (
-                  <option value={child.schoolEntryYear}>
-                    {formatSchoolEntryYearLabel(child.schoolEntryYear)}
+                {!schoolEntryYearOptions.includes(player.schoolEntryYear) && (
+                  <option value={player.schoolEntryYear}>
+                    {formatSchoolEntryYearLabel(player.schoolEntryYear)}
                   </option>
                 )}
                 {schoolEntryYearOptions.map((year) => (
@@ -133,24 +133,24 @@ export function ChildSection({
               <button
                 type="button"
                 role="switch"
-                aria-checked={child.isActive}
-                onClick={() => onActiveToggle(child.id)}
+                aria-checked={player.isActive}
+                onClick={() => onActiveToggle(player.id)}
                 style={{
                   padding: '6px 16px',
                   borderRadius: '999px',
-                  border: child.isActive
+                  border: player.isActive
                     ? '1px solid var(--accent-border)'
                     : '1px solid var(--border)',
-                  background: child.isActive
+                  background: player.isActive
                     ? 'var(--accent-bg)'
                     : 'transparent',
-                  color: child.isActive ? 'var(--accent)' : 'var(--text)',
+                  color: player.isActive ? 'var(--accent)' : 'var(--text)',
                   fontSize: '13px',
                   fontFamily: 'var(--sans)',
                   cursor: 'pointer',
                 }}
               >
-                {child.isActive ? 'ON' : 'OFF'}
+                {player.isActive ? 'ON' : 'OFF'}
               </button>
             </div>
           </Card>
@@ -163,7 +163,7 @@ export function ChildSection({
         onClick={onAdd}
         style={{ alignSelf: 'flex-end' }}
       >
-        + 子供を追加
+        + 選手を追加
       </Button>
     </div>
   );

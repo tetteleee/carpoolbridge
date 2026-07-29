@@ -6,10 +6,10 @@
   --code-bg: #f4f3ec;
   --panel-bg: #f9f8f4;
 
-  /* 役割カラー（子供・コーチ・保護者）。背景＋枠線＋左帯の3点セットで使う */
-  --child-bg: #f5ead8;
-  --child-border: #e6ddc8;
-  --child-accent: #b8823c;
+  /* 役割カラー（選手・コーチ・保護者）。背景＋枠線＋左帯の3点セットで使う */
+  --player-bg: #f5ead8;
+  --player-border: #e6ddc8;
+  --player-accent: #b8823c;
   --coach-bg: #e6ecf5;
   --coach-border: #d7dce3;
   --coach-accent: #5b7290;

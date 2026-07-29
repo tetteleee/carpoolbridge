@@ -28,7 +28,7 @@ test('サンプル回答生成ボタンと確認ダイアログ', async ({ page 
     createdAt: now,
     updatedAt: now,
   });
-  const childRef = await db.collection('children').add({
+  const playerRef = await db.collection('players').add({
     familyId: familyRef.id,
     name: '太郎',
     schoolEntryYear: 2020,
@@ -52,8 +52,8 @@ test('サンプル回答生成ボタンと確認ダイアログ', async ({ page 
     capacityToday: null,
     coachParticipating: null,
     remarks: existingRemarksMarker,
-    children: [
-      { childId: childRef.id, isParticipating: false, noOutwardRide: false, noReturnRide: false },
+    players: [
+      { playerId: playerRef.id, isParticipating: false, noOutwardRide: false, noReturnRide: false },
     ],
   });
 
@@ -90,7 +90,7 @@ test('サンプル回答生成ボタンと確認ダイアログ', async ({ page 
   const generated = generatedSnapshot.data();
   // サンプル文言候補に既存マーカーは含まれないため、置き換えられていれば必ず一致しない
   expect(generated?.remarks).not.toBe(existingRemarksMarker);
-  expect(generated?.children).toEqual([
-    expect.objectContaining({ childId: childRef.id }),
+  expect(generated?.players).toEqual([
+    expect.objectContaining({ playerId: playerRef.id }),
   ]);
 });

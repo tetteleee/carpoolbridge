@@ -34,7 +34,7 @@ Firestoreで利用する全コレクションパスを定数として定義し�
 対象コレクション
 
 - `families`
-- `children`
+- `players`
 - `pickupLocations`
 - `destinations`
 - `events`
@@ -89,7 +89,7 @@ Firestoreで利用する全コレクションパスを定数として定義し�
 
 ## 7. 依存タスク
 
-- T02 型定義 Family・Child・PickupLocation・Destination
+- T02 型定義 Family・Player・PickupLocation・Destination
 - T03 型定義 Event・Response・Carpool
 
 ---

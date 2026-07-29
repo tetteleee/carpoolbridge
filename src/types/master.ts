@@ -13,7 +13,7 @@ export interface Family {
   coachName: string | null;
   /** 車の総定員（運転者本人を含む。車を持たない場合は0） */
   vehicleCapacity: number;
-  /** 家庭の集合場所（家庭に属する子供・コーチは全員この集合場所から乗車する） */
+  /** 家庭の集合場所（家庭に属する選手・コーチは全員この集合場所から乗車する） */
   pickupLocationId: string;
   /** 在籍中（falseで卒団・非表示扱い） */
   isActive: boolean;
@@ -22,9 +22,9 @@ export interface Family {
 }
 
 /**
- * 子供（Child）を表す型
+ * 選手（Player）を表す型
  */
-export interface Child {
+export interface Player {
   id: string;
   familyId: string;
   name: string;

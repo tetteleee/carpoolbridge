@@ -30,11 +30,11 @@ ref:
 
 - 指定`eventId`・`direction`（`OUTWARD`｜`RETURN`）に対応するデータの取得
   - T19のResponse読み書き処理を用いて、対象イベント配下のResponse一覧を取得する
-  - 取得したResponseおよびFamily・Child等のマスタ情報をもとに、前処理フェーズ（T33・T34）が要求する入力形式（車両配列・グループ配列）へ変換する
+  - 取得したResponseおよびFamily・Player等のマスタ情報をもとに、前処理フェーズ（T33・T34）が要求する入力形式（車両配列・グループ配列）へ変換する
 - 前処理（T33・T34）→割当（T35）→例外系ハンドリング（T36）の一連の呼び出し
 - 割当結果（`assignedVehicles`）を、05_データ設計.md#9のCarpoolドキュメント形式へ変換する処理
   - `direction`・`driverFamilyId`・`driverIsCoach`・`capacity`・`routeOrder[]`・`members[]`を生成する
-  - `members[]`は`{ type: "child", childId }`または`{ type: "coach", familyId }`の2種のみとし、05_データ設計.md#9の判定基準（child: 対象方向の`noOutwardRide`/`noReturnRide`が`false`かつ`isParticipating`が`true`の子供、coach: `coachParticipating`が`true`かつ対象方向の車出しが不可の場合のみ）に従って生成する
+  - `members[]`は`{ type: "player", playerId }`または`{ type: "coach", familyId }`の2種のみとし、05_データ設計.md#9の判定基準（player: 対象方向の`noOutwardRide`/`noReturnRide`が`false`かつ`isParticipating`が`true`の選手、coach: `coachParticipating`が`true`かつ対象方向の車出しが不可の場合のみ）に従って生成する
   - `carName`・`driverName`はドキュメントに含めない
 - T20のCarpool読み書き処理を用いて、変換したCarpoolドキュメントをFirestoreへ保存する処理
 - T36で検出されたHard Failエラーが存在する場合は、Firestoreへの保存を行わずにエラー結果を呼び出し元へ返す処理
@@ -58,7 +58,7 @@ ref:
 
 - 指定`eventId`・`direction`を指定して統合関数を呼び出すと、対象方向のResponseから未配車グループ・車両情報が構築され、前処理→割当→例外系ハンドリングの一連の処理が実行される
 - 割当結果が05_データ設計.md#9のCarpoolドキュメント形式（`direction`・`driverFamilyId`・`driverIsCoach`・`capacity`・`routeOrder[]`・`members[]`）に変換される
-- `members[]`が`{ type: "child", childId }`または`{ type: "coach", familyId }`のみで構成され、`carName`・`driverName`を含まない
+- `members[]`が`{ type: "player", playerId }`または`{ type: "coach", familyId }`のみで構成され、`carName`・`driverName`を含まない
 - 変換されたCarpoolドキュメントが、T20の書き込み処理を通じてFirestoreへ保存される
 - 緯度経度未登録・優先割当定員超過などのHard Failエラーが検出された場合、Firestoreへの保存が行われず、エラー内容を含む結果が返る
 - `unassignedList`が発生する（配車枠が不足する）場合でも、割当済みの結果についてはFirestoreへの保存が行われ、警告情報とあわせて結果が返る

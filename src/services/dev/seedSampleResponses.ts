@@ -2,9 +2,9 @@ import { doc, writeBatch } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { firestorePaths } from '../../constants';
 import { getFamilies } from '../master/familyService';
-import { getChildrenByFamilyId } from '../master/childService';
+import { getPlayersByFamilyId } from '../master/playerService';
 import { deleteAllResponses } from '../event/responseService';
-import type { Response, ResponseChild } from '../../types/event';
+import type { Response, ResponsePlayer } from '../../types/event';
 
 /** 備考のサンプル文言（一定確率で空文字も選ばれるようにし、未入力のケースも再現する） */
 const SAMPLE_REMARKS = ['', '', '', '本日は妹も同乗します', '集合場所を変更希望', '早退の可能性あり'];
@@ -58,14 +58,14 @@ function randomDriverOffer(effectiveCapacity: number): { driverOutward: boolean 
 /** 送迎不要（例外）が発生する確率。現地集合・保護者お迎え等は稀なケースのため低めに設定する */
 const NO_RIDE_PROBABILITY = 0.15;
 
-function randomResponseChild(childId: string): ResponseChild {
+function randomResponsePlayer(playerId: string): ResponsePlayer {
   const isParticipating = randomTriState();
   // 送迎要否スイッチは「参加」が○の場合のみ意味を持つため、それ以外は既定値（送迎あり＝false）のままにする
   if (isParticipating !== true) {
-    return { childId, isParticipating, noOutwardRide: false, noReturnRide: false };
+    return { playerId, isParticipating, noOutwardRide: false, noReturnRide: false };
   }
   return {
-    childId,
+    playerId,
     isParticipating,
     noOutwardRide: Math.random() < NO_RIDE_PROBABILITY,
     noReturnRide: Math.random() < NO_RIDE_PROBABILITY,
@@ -73,16 +73,16 @@ function randomResponseChild(childId: string): ResponseChild {
 }
 
 /**
- * 家庭・子供のマスタデータを基に、1家庭分のランダムな回答を生成する。
+ * 家庭・選手のマスタデータを基に、1家庭分のランダムな回答を生成する。
  *
  * @param vehicleCapacity 対象家庭の通常定員（Family.vehicleCapacity）
  * @param hasCoach 対象家庭にコーチが紐づくか（coachNameが設定されているか）
- * @param childIds 対象家庭に属する有効な子供IDの一覧
+ * @param playerIds 対象家庭に属する有効な選手IDの一覧
  */
 function buildRandomResponse(
   vehicleCapacity: number,
   hasCoach: boolean,
-  childIds: string[]
+  playerIds: string[]
 ): Response {
   const capacityToday = randomCapacityToday(vehicleCapacity);
   const effectiveCapacity = capacityToday ?? vehicleCapacity;
@@ -94,7 +94,7 @@ function buildRandomResponse(
     capacityToday,
     coachParticipating: hasCoach ? randomTriState() : null,
     remarks: randomRemarks(),
-    children: childIds.map((childId) => randomResponseChild(childId)),
+    players: playerIds.map((playerId) => randomResponsePlayer(playerId)),
   };
 }
 
@@ -102,7 +102,7 @@ function buildRandomResponse(
  * 開発環境限定の「サンプル回答生成」機能（04_画面設計.md#7 開発用機能）。
  *
  * 対象イベントの既存回答（Response）をすべて削除したうえで、登録済みの
- * 家庭・子供等のマスタデータ（在籍中のもののみ）を基に、ランダムな回答を
+ * 家庭・選手等のマスタデータ（在籍中のもののみ）を基に、ランダムな回答を
  * 生成・登録する。実行のたびにランダム性により結果が変わり得る。
  *
  * 回答の物理削除は、通常の運用では行わない例外的な操作（05_データ設計.md
@@ -114,8 +114,8 @@ export async function generateSampleResponses(eventId: string): Promise<void> {
   const families = await getFamilies();
   const activeFamilies = families.filter((family) => family.isActive);
 
-  const childrenByFamily = await Promise.all(
-    activeFamilies.map((family) => getChildrenByFamilyId(family.id))
+  const playersByFamily = await Promise.all(
+    activeFamilies.map((family) => getPlayersByFamilyId(family.id))
   );
 
   await deleteAllResponses(eventId);
@@ -123,14 +123,14 @@ export async function generateSampleResponses(eventId: string): Promise<void> {
   const batch = writeBatch(db);
 
   activeFamilies.forEach((family, index) => {
-    const activeChildIds = childrenByFamily[index]
-      .filter((child) => child.isActive)
-      .map((child) => child.id);
+    const activePlayerIds = playersByFamily[index]
+      .filter((player) => player.isActive)
+      .map((player) => player.id);
 
     const response = buildRandomResponse(
       family.vehicleCapacity,
       family.coachName !== null,
-      activeChildIds
+      activePlayerIds
     );
 
     batch.set(doc(db, firestorePaths.responseDocument(eventId, family.id)), response);

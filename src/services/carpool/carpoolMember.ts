@@ -9,9 +9,9 @@ import { updateCarpool } from '../event/carpoolService';
 /** 未配車エリアを表すドロップゾーンID（車カードはCarpool.idをそのままドロップゾーンIDとして使う） */
 export const UNASSIGNED_ZONE_ID = 'unassigned';
 
-/** 乗車メンバー（child/coach）を一意に識別するキーを生成する */
+/** 乗車メンバー（player/coach）を一意に識別するキーを生成する */
 export function memberKey(member: CarpoolMember): string {
-  return member.type === 'child' ? `child:${member.childId}` : `coach:${member.familyId}`;
+  return member.type === 'player' ? `player:${member.playerId}` : `coach:${member.familyId}`;
 }
 
 /** 2つの乗車メンバー配列が、並び順を含めて完全に一致するかどうかを判定する */

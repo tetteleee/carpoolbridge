@@ -12,7 +12,7 @@ interface DevSampleDataButtonProps {
  * マスタ管理画面 開発用機能「サンプルデータ投入」ボタン。
  * 開発環境（`import.meta.env.DEV`）でのみ表示する。
  * 押下時に確認ダイアログを表示し、実行が選択された場合のみ
- * 既存の集合場所・目的地・家庭・子供を全削除しサンプルデータを登録する。
+ * 既存の集合場所・目的地・家庭・選手を全削除しサンプルデータを登録する。
  */
 export function DevSampleDataButton({ onSeeded }: DevSampleDataButtonProps) {
   const [dialogOpen, setDialogOpen] = useState(false);

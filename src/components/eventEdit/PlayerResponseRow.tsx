@@ -1,9 +1,9 @@
 import type { CSSProperties } from 'react';
 import { CheckIcon, CloseIcon } from '../icons';
 
-interface ChildResponseRowProps {
-  /** 対象子供ID（DOM要素のid付与に使用） */
-  childId: string;
+interface PlayerResponseRowProps {
+  /** 対象選手ID（DOM要素のid付与に使用） */
+  playerId: string;
   /** イベントに参加するかどうか。未選択=null */
   isParticipating: boolean | null;
   /** 行きの配車が不要かどうか */
@@ -161,32 +161,32 @@ function RideSwitch({ id, label, ariaLabel, noRide, disabled, onChange }: RideSw
 
 /**
  * イベント編集（回答入力）画面・家庭カード内の
- * 子供ごとの参加（3状態）・行き／帰りの送迎要否（ミニスイッチ）。
+ * 選手ごとの参加（3状態）・行き／帰りの送迎要否（ミニスイッチ）。
  * 値は呼び出し側（FamilyResponseCard）が保持し、変更の都度Firestoreへ自動保存される（T29）。
  */
-export function ChildResponseRow({
-  childId,
+export function PlayerResponseRow({
+  playerId,
   isParticipating,
   noOutwardRide,
   noReturnRide,
   onChangeIsParticipating,
   onChangeNoOutwardRide,
   onChangeNoReturnRide,
-}: ChildResponseRowProps) {
+}: PlayerResponseRowProps) {
   // 送迎要否スイッチは「参加」が○（true）の場合のみ意味を持つため、
   // ○以外（✕・未回答）では操作不可にする。値自体は保持し、○に戻せば復元される。
   const rideSwitchDisabled = isParticipating !== true;
 
   return (
     <div
-      id={`child-response-frame-${childId}`}
+      id={`player-response-frame-${playerId}`}
       style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}
     >
       <div style={rowStyle}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <div style={segmentTrackStyle}>
             <button
-              id={`child-participating-yes-${childId}`}
+              id={`player-participating-yes-${playerId}`}
               type="button"
               aria-pressed={isParticipating === true}
               onClick={() => onChangeIsParticipating(true)}
@@ -201,7 +201,7 @@ export function ChildResponseRow({
               参加
             </button>
             <button
-              id={`child-participating-no-${childId}`}
+              id={`player-participating-no-${playerId}`}
               type="button"
               aria-pressed={isParticipating === false}
               onClick={() => onChangeIsParticipating(false)}
@@ -219,7 +219,7 @@ export function ChildResponseRow({
 
           <div style={{ display: 'flex', gap: '6px' }}>
             <RideSwitch
-              id={`no-outward-ride-${childId}`}
+              id={`no-outward-ride-${playerId}`}
               label="行"
               ariaLabel="行きの送迎"
               noRide={noOutwardRide}
@@ -227,7 +227,7 @@ export function ChildResponseRow({
               onChange={onChangeNoOutwardRide}
             />
             <RideSwitch
-              id={`no-return-ride-${childId}`}
+              id={`no-return-ride-${playerId}`}
               label="帰"
               ariaLabel="帰りの送迎"
               noRide={noReturnRide}
