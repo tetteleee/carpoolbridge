@@ -56,7 +56,7 @@ export function UnsavedChangesDialog({
       >
         <h3
           id="unsaved-changes-dialog-title"
-          style={{ margin: 0, fontSize: '16px', color: 'var(--text-h)' }}
+          style={{ margin: 0, fontSize: '16px', color: 'var(--text-h)', textAlign: 'center' }}
         >
           保存されていません
         </h3>
@@ -66,6 +66,7 @@ export function UnsavedChangesDialog({
             fontSize: '14px',
             color: 'var(--text)',
             lineHeight: 1.6,
+            textAlign: 'center',
           }}
         >
           編集内容は保存されていません。

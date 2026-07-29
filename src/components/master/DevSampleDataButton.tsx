@@ -126,7 +126,7 @@ export function DevSampleDataButton({ onSeeded }: DevSampleDataButtonProps) {
           >
             <h3
               id="dev-sample-data-dialog-title"
-              style={{ margin: 0, fontSize: '16px', color: 'var(--text-h)' }}
+              style={{ margin: 0, fontSize: '16px', color: 'var(--text-h)', textAlign: 'center' }}
             >
               サンプルデータを投入
             </h3>
@@ -136,6 +136,7 @@ export function DevSampleDataButton({ onSeeded }: DevSampleDataButtonProps) {
                 fontSize: '14px',
                 color: 'var(--text)',
                 lineHeight: 1.6,
+                textAlign: 'center',
               }}
             >
               既存のデータはすべて削除されます。

@@ -131,7 +131,7 @@ export function DevSampleResponseButton({
           >
             <h3
               id="dev-sample-response-dialog-title"
-              style={{ margin: 0, fontSize: '16px', color: 'var(--text-h)' }}
+              style={{ margin: 0, fontSize: '16px', color: 'var(--text-h)', textAlign: 'center' }}
             >
               サンプル回答を生成
             </h3>
@@ -141,6 +141,7 @@ export function DevSampleResponseButton({
                 fontSize: '14px',
                 color: 'var(--text)',
                 lineHeight: 1.6,
+                textAlign: 'center',
               }}
             >
               対象イベントの既存回答は削除されます。
