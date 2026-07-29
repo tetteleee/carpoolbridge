@@ -59,7 +59,7 @@ export function CarpoolRecreateDialog({
       >
         <h3
           id="carpool-recreate-dialog-title"
-          style={{ margin: 0, fontSize: '16px', color: 'var(--text-h)' }}
+          style={{ margin: 0, fontSize: '16px', color: 'var(--text-h)', textAlign: 'center' }}
         >
           配車を再作成
         </h3>
@@ -69,6 +69,7 @@ export function CarpoolRecreateDialog({
             fontSize: '14px',
             color: 'var(--text)',
             lineHeight: 1.6,
+            textAlign: 'center',
           }}
         >
           現在の配車結果は削除されます。
