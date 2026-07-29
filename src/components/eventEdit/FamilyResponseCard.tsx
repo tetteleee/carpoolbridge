@@ -40,8 +40,8 @@ const memberNameStyle: CSSProperties = {
 const memberBoxBaseStyle: CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
-  gap: '6px',
-  padding: '16px',
+  gap: '4px',
+  padding: '10px 16px',
 };
 
 /** 子供カードの内側ボックス（役割色：背景＋枠線＋左帯） */
@@ -158,8 +158,8 @@ export function FamilyResponseCard({
       style={{
         display: 'flex',
         flexDirection: 'column',
-        gap: '12px',
-        padding: '16px',
+        gap: '10px',
+        padding: '12px 16px',
       }}
     >
       <h2
@@ -193,7 +193,7 @@ export function FamilyResponseCard({
 
       <div
         id={`family-response-card-members-${family.id}`}
-        style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}
+        style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}
       >
         {childList.map((child) => {
           const responseChild =
