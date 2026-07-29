@@ -237,7 +237,7 @@ export function EventEditPage() {
         style={{
           display: 'flex',
           flexDirection: 'column',
-          gap: '16px',
+          gap: '12px',
           padding: '16px',
           boxSizing: 'border-box',
         }}
