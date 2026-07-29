@@ -15,6 +15,7 @@ import { getResponses } from '../services/event/responseService';
 import { getCarpools, deleteAllCarpools } from '../services/event/carpoolService';
 import { runCarpoolAssignment } from '../services/carpool/runCarpoolAssignment';
 import { formatDateWithWeekday } from '../utils/date';
+import { getFamilyHighestGrade } from '../utils/schoolGrade';
 import type { Event, Response } from '../types/event';
 import type { Child, Family } from '../types/master';
 
@@ -73,7 +74,6 @@ export function EventEditPage() {
         setEvent(eventData);
 
         const activeFamilies = familiesData.filter((family) => family.isActive);
-        setFamilies(activeFamilies);
 
         const childrenByFamily = await Promise.all(
           activeFamilies.map((family) => getChildrenByFamilyId(family.id))
@@ -85,6 +85,19 @@ export function EventEditPage() {
           );
         });
         setChildrenByFamilyId(childrenMap);
+
+        // 家庭カードの並び順：家庭内の子供の最高学年で降順、同学年は家庭名順（04_画面設計.md#7）
+        const sortedFamilies = [...activeFamilies].sort((a, b) => {
+          const gradeA = getFamilyHighestGrade(childrenMap[a.id] ?? []);
+          const gradeB = getFamilyHighestGrade(childrenMap[b.id] ?? []);
+          if (gradeA !== gradeB) {
+            if (gradeA === null) return 1;
+            if (gradeB === null) return -1;
+            return gradeB - gradeA;
+          }
+          return a.familyName.localeCompare(b.familyName, 'ja');
+        });
+        setFamilies(sortedFamilies);
 
         setResponsesByFamilyId(
           Object.fromEntries(
