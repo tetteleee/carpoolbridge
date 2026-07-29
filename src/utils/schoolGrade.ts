@@ -1,3 +1,5 @@
+import type { Child } from '../types/master';
+
 const ELEMENTARY_GRADE_COUNT = 6;
 
 /**
@@ -47,4 +49,19 @@ export function getSchoolEntryYearOptions(
     { length: ELEMENTARY_GRADE_COUNT },
     (_, i) => schoolYear - i
   );
+}
+
+/**
+ * 家庭内の子供のうち最高学年（最も学年の高い子）を返す。
+ * 対象学年（小1〜6）の子が1人もいない場合は null を返す。
+ * 04_画面設計.md#7（回答編集画面の家庭カード並び順）で使用する。
+ */
+export function getFamilyHighestGrade(
+  childList: Child[],
+  referenceDate: Date = new Date()
+): number | null {
+  const grades = childList
+    .map((child) => getSchoolGrade(child.schoolEntryYear, referenceDate))
+    .filter((grade): grade is number => grade !== null);
+  return grades.length > 0 ? Math.max(...grades) : null;
 }
