@@ -24,13 +24,13 @@ const variantStyle: Record<ButtonVariant, CSSProperties> = {
     background: 'var(--bg)',
     color: 'var(--text-h)',
     border: '1px solid var(--border)',
-    borderRadius: '8px',
+    borderRadius: '999px',
   },
   danger: {
     background: 'var(--negative)',
     color: '#fff',
     border: 'none',
-    borderRadius: '8px',
+    borderRadius: '999px',
   },
 };
 
