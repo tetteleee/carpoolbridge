@@ -1,7 +1,9 @@
 import { useEffect, useImperativeHandle, useState } from 'react';
-import { Button } from '../common/Button';
-import { Card } from '../common/Card';
-import { LoadingIndicator } from '../icons';
+import type { CSSProperties } from 'react';
+import { AddRow } from '../common/AddRow';
+import { CollapsibleListRow } from '../common/CollapsibleListRow';
+import { FieldRow } from '../common/FieldRow';
+import { LoadingIndicator, MapPinIcon } from '../icons';
 import {
   createPickupLocation,
   getPickupLocations,
@@ -22,15 +24,30 @@ interface PickupLocationSectionProps {
   ref?: React.Ref<PickupLocationSectionHandle>;
 }
 
+const fieldInputStyle: CSSProperties = {
+  width: '100%',
+  padding: '7px 9px',
+  borderRadius: '7px',
+  border: '1px solid var(--border)',
+  // iOSはinput/selectのfont-sizeが16px未満だとフォーカス時に自動でズームしてしまうため16px以上にする
+  fontSize: '16px',
+  fontFamily: 'var(--sans)',
+  color: 'var(--text-h)',
+  background: 'var(--panel-bg)',
+  boxSizing: 'border-box',
+};
+
 /**
  * マスタ管理画面「集合場所」セクション。
  * 登録済み集合場所の一覧表示・下書き編集・新規追加を行う。
+ * 各行は折りたたみ表示とし、タップした行だけ編集欄を展開する（04_画面設計.md#10.2）。
  * Firestoreへの反映は画面共通の保存ボタン押下時にまとめて行う。
  */
 export function PickupLocationSection({ ref }: PickupLocationSectionProps) {
   const [locations, setLocations] = useState<PickupLocation[]>([]);
   const [savedLocations, setSavedLocations] = useState<PickupLocation[]>([]);
   const [newIds, setNewIds] = useState<Set<string>>(new Set());
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -61,9 +78,22 @@ export function PickupLocationSection({ ref }: PickupLocationSectionProps) {
     );
   };
 
+  const toggleExpanded = (id: string) => {
+    setExpandedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
   const handleAdd = () => {
     const id = crypto.randomUUID();
     setNewIds((prev) => new Set(prev).add(id));
+    setExpandedIds((prev) => new Set(prev).add(id));
     setLocations((prev) => [
       ...prev,
       { id, name: '', latitude: null, longitude: null },
@@ -125,8 +155,8 @@ export function PickupLocationSection({ ref }: PickupLocationSectionProps) {
       style={{
         display: 'flex',
         flexDirection: 'column',
-        gap: '16px',
-        padding: '16px',
+        gap: '12px',
+        padding: '12px',
         boxSizing: 'border-box',
       }}
     >
@@ -143,133 +173,65 @@ export function PickupLocationSection({ ref }: PickupLocationSectionProps) {
       ) : (
         <div
           id="pickup-location-list"
-          style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}
+          style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}
         >
           {locations.map((location) => (
-            <Card
+            <CollapsibleListRow
               key={location.id}
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '8px',
-                padding: '12px',
-              }}
+              icon={<MapPinIcon size={15} />}
+              iconBg="var(--accent-bg)"
+              iconColor="var(--accent)"
+              title={location.name || '（名称未設定）'}
+              meta={`緯度 ${location.latitude ?? '未設定'}・経度 ${location.longitude ?? '未設定'}`}
+              expanded={expandedIds.has(location.id)}
+              onToggle={() => toggleExpanded(location.id)}
             >
-              <label
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '4px',
-                  fontSize: '12px',
-                  color: 'var(--text)',
-                }}
-              >
-                名称
+              <FieldRow label="名称">
                 <input
                   type="text"
                   value={location.name}
                   onChange={(e) =>
                     handleFieldChange(location.id, 'name', e.target.value)
                   }
-                  style={{
-                    padding: '8px 10px',
-                    borderRadius: '6px',
-                    border: '1px solid var(--border)',
-                    fontSize: '16px',
-                    fontFamily: 'var(--sans)',
-                    color: 'var(--text-h)',
-                    background: 'transparent',
-                    boxSizing: 'border-box',
-                  }}
+                  style={fieldInputStyle}
                 />
-              </label>
+              </FieldRow>
 
               <div style={{ display: 'flex', gap: '8px' }}>
-                <label
-                  style={{
-                    flex: 1,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '4px',
-                    fontSize: '12px',
-                    color: 'var(--text)',
-                  }}
-                >
-                  緯度
-                  <input
-                    type="number"
-                    step="any"
-                    value={location.latitude ?? ''}
-                    onChange={(e) =>
-                      handleFieldChange(
-                        location.id,
-                        'latitude',
-                        e.target.value
-                      )
-                    }
-                    style={{
-                      padding: '8px 10px',
-                      borderRadius: '6px',
-                      border: '1px solid var(--border)',
-                      fontSize: '16px',
-                      fontFamily: 'var(--sans)',
-                      color: 'var(--text-h)',
-                      background: 'transparent',
-                      boxSizing: 'border-box',
-                      width: '100%',
-                    }}
-                  />
-                </label>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <FieldRow label="緯度" labelWidth={40}>
+                    <input
+                      type="number"
+                      step="any"
+                      value={location.latitude ?? ''}
+                      onChange={(e) =>
+                        handleFieldChange(location.id, 'latitude', e.target.value)
+                      }
+                      style={fieldInputStyle}
+                    />
+                  </FieldRow>
+                </div>
 
-                <label
-                  style={{
-                    flex: 1,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '4px',
-                    fontSize: '12px',
-                    color: 'var(--text)',
-                  }}
-                >
-                  経度
-                  <input
-                    type="number"
-                    step="any"
-                    value={location.longitude ?? ''}
-                    onChange={(e) =>
-                      handleFieldChange(
-                        location.id,
-                        'longitude',
-                        e.target.value
-                      )
-                    }
-                    style={{
-                      padding: '8px 10px',
-                      borderRadius: '6px',
-                      border: '1px solid var(--border)',
-                      fontSize: '16px',
-                      fontFamily: 'var(--sans)',
-                      color: 'var(--text-h)',
-                      background: 'transparent',
-                      boxSizing: 'border-box',
-                      width: '100%',
-                    }}
-                  />
-                </label>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <FieldRow label="経度" labelWidth={40}>
+                    <input
+                      type="number"
+                      step="any"
+                      value={location.longitude ?? ''}
+                      onChange={(e) =>
+                        handleFieldChange(location.id, 'longitude', e.target.value)
+                      }
+                      style={fieldInputStyle}
+                    />
+                  </FieldRow>
+                </div>
               </div>
-            </Card>
+            </CollapsibleListRow>
           ))}
         </div>
       )}
 
-      <Button
-        variant="secondary"
-        size="sm"
-        onClick={handleAdd}
-        style={{ alignSelf: 'flex-end' }}
-      >
-        + 集合場所を追加
-      </Button>
+      <AddRow onClick={handleAdd}>+ 集合場所を追加</AddRow>
     </section>
   );
 }

@@ -12,6 +12,9 @@ interface MenuItem {
   path: string;
   label: string;
   icon: React.ReactNode;
+  /** アイコン背景色。白一色になりがちな画面に区別点を作るための配色で、8章「色分けルール」の役割色とは別の意味づけ */
+  iconBg: string;
+  iconColor: string;
   count: number | null;
 }
 
@@ -49,18 +52,24 @@ export function MasterPage() {
       path: '/master/pickup-locations',
       label: '集合場所',
       icon: <MapPinIcon size={18} />,
+      iconBg: 'var(--accent-bg)',
+      iconColor: 'var(--accent)',
       count: counts?.pickupLocations ?? null,
     },
     {
       path: '/master/destinations',
       label: '目的地',
       icon: <FlagIcon size={18} />,
+      iconBg: 'var(--positive-bg)',
+      iconColor: 'var(--positive)',
       count: counts?.destinations ?? null,
     },
     {
       path: '/master/families',
       label: '家庭',
       icon: <HomeIcon size={18} />,
+      iconBg: 'var(--border)',
+      iconColor: 'var(--text-h)',
       count: counts?.families ?? null,
     },
   ];
@@ -137,8 +146,8 @@ export function MasterPage() {
                   width: '34px',
                   height: '34px',
                   borderRadius: '10px',
-                  background: 'var(--accent-bg)',
-                  color: 'var(--accent)',
+                  background: item.iconBg,
+                  color: item.iconColor,
                 }}
               >
                 {item.icon}

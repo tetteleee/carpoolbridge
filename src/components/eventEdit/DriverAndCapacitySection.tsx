@@ -1,5 +1,6 @@
 import type { ComponentType, CSSProperties } from 'react';
 import { CarIcon, CheckIcon, CloseIcon, ChevronLeftIcon, ChevronRightIcon } from '../icons';
+import { Stepper } from '../common/Stepper';
 
 interface DriverAndCapacitySectionProps {
   /** 対象家庭ID（DOM要素のid付与に使用） */
@@ -75,21 +76,6 @@ const segmentSelectedStyle: CSSProperties = {
   background: 'var(--bg)',
   boxShadow: '0 1px 2px rgba(0, 0, 0, 0.15)',
   fontWeight: 700,
-};
-
-const stepperButtonStyle: CSSProperties = {
-  minWidth: '44px',
-  minHeight: '44px',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  borderRadius: '6px',
-  border: '1px solid var(--border)',
-  background: 'transparent',
-  color: 'var(--text)',
-  fontSize: '16px',
-  fontFamily: 'var(--sans)',
-  cursor: 'pointer',
 };
 
 type DriverOfferKey = 'both' | 'none' | 'outwardOnly' | 'returnOnly';
@@ -239,14 +225,6 @@ export function DriverAndCapacitySection({
   const displayCapacity = capacityToday ?? vehicleCapacity;
   const capacityIsZero = displayCapacity <= 0;
 
-  const handleDecrement = () => {
-    onChangeCapacityToday(Math.max(0, displayCapacity - 1));
-  };
-
-  const handleIncrement = () => {
-    onChangeCapacityToday(displayCapacity + 1);
-  };
-
   return (
     <div
       id={`drive-offer-frame-${familyId}`}
@@ -271,7 +249,7 @@ export function DriverAndCapacitySection({
 
       <div style={rowStyle}>
         <span style={rowLabelStyle}>乗車可能人数</span>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
           {isCapacityChanged && (
             <span
               id={`capacity-changed-label-${familyId}`}
@@ -280,43 +258,21 @@ export function DriverAndCapacitySection({
               変更済み
             </span>
           )}
-          <button
-            id={`capacity-today-decrement-${familyId}`}
-            type="button"
-            aria-label="乗車可能人数を減らす"
-            disabled={displayCapacity <= 0}
-            onClick={handleDecrement}
-            style={{
-              ...stepperButtonStyle,
-              opacity: displayCapacity <= 0 ? 0.4 : 1,
-              cursor: displayCapacity <= 0 ? 'default' : 'pointer',
-            }}
-          >
-            －
-          </button>
-          <span
-            id={`capacity-today-value-${familyId}`}
-            style={{
-              minWidth: '24px',
-              textAlign: 'center',
-              fontSize: '14px',
-              fontFamily: 'var(--sans)',
-              color: isCapacityChanged ? 'var(--text-h)' : 'var(--text)',
-              fontWeight: isCapacityChanged ? 700 : 400,
-            }}
-          >
-            {displayCapacity}
-          </span>
-          <button
-            id={`capacity-today-increment-${familyId}`}
-            type="button"
-            aria-label="乗車可能人数を増やす"
-            onClick={handleIncrement}
-            style={stepperButtonStyle}
-          >
-            ＋
-          </button>
-          <span style={rowLabelStyle}>人</span>
+          <Stepper
+            value={displayCapacity}
+            onChange={onChangeCapacityToday}
+            decrementLabel="乗車可能人数を減らす"
+            incrementLabel="乗車可能人数を増やす"
+            decrementId={`capacity-today-decrement-${familyId}`}
+            incrementId={`capacity-today-increment-${familyId}`}
+            valueId={`capacity-today-value-${familyId}`}
+            unit="人"
+            valueStyle={
+              isCapacityChanged
+                ? { color: 'var(--text-h)', fontWeight: 800 }
+                : { color: 'var(--text)', fontWeight: 400 }
+            }
+          />
         </div>
       </div>
     </div>

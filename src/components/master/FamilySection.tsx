@@ -1,4 +1,5 @@
 import { useEffect, useImperativeHandle, useState } from 'react';
+import type { CSSProperties } from 'react';
 import {
   createFamily,
   getFamilies,
@@ -12,10 +13,14 @@ import {
 import { getPickupLocations } from '../../services/master/pickupLocationService';
 import type { Player, Family, PickupLocation } from '../../types/master';
 import { PlayerSection } from './PlayerSection';
-import { Button } from '../common/Button';
-import { Card } from '../common/Card';
-import { getSchoolEntryYearOptions } from '../../utils/schoolGrade';
-import { LoadingIndicator } from '../icons';
+import { AddRow } from '../common/AddRow';
+import { CollapsibleListRow } from '../common/CollapsibleListRow';
+import { FieldRow } from '../common/FieldRow';
+import { RoleBox } from '../common/RoleBox';
+import { Stepper } from '../common/Stepper';
+import { Switch } from '../common/Switch';
+import { getFamilyHighestGrade, getSchoolEntryYearOptions } from '../../utils/schoolGrade';
+import { HomeIcon, LoadingIndicator, UserIcon } from '../icons';
 
 type EditableField = 'familyName' | 'coachName' | 'vehicleCapacity';
 
@@ -41,9 +46,79 @@ interface FamilySectionProps {
   ref?: React.Ref<FamilySectionHandle>;
 }
 
+const fieldInputStyle: CSSProperties = {
+  width: '100%',
+  padding: '7px 9px',
+  borderRadius: '7px',
+  border: '1px solid var(--border)',
+  // iOSはinput/selectのfont-sizeが16px未満だとフォーカス時に自動でズームしてしまうため16px以上にする
+  fontSize: '16px',
+  fontFamily: 'var(--sans)',
+  color: 'var(--text-h)',
+  background: 'var(--panel-bg)',
+  boxSizing: 'border-box',
+};
+
+const statusLabelStyle: CSSProperties = {
+  fontSize: '12px',
+  color: 'var(--text)',
+  fontWeight: 600,
+};
+
+const coachTagStyle: CSSProperties = {
+  flexShrink: 0,
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: '3px',
+  fontSize: '10px',
+  fontWeight: 800,
+  color: '#fff',
+  background: 'var(--coach-accent)',
+  padding: '2px 6px',
+  borderRadius: '5px',
+};
+
+const sectionLabelStyle: CSSProperties = {
+  fontSize: '11px',
+  fontWeight: 800,
+  color: 'var(--text)',
+  textTransform: 'uppercase',
+  letterSpacing: '0.5px',
+};
+
+/**
+ * 家庭カードの並び順（04_画面設計.md#10.4）：
+ * 1. 在籍中の家庭を先、休会中の家庭を後にする
+ * 2. 家庭内の選手の最高学年を基準に降順（対象学年の選手がいない家庭は末尾）
+ * 3. 上記が同じ場合は家庭名順（文字列比較）
+ * 画面表示・保存後の再表示のタイミングでのみ並べ替える（編集中は並べ替えない）。
+ */
+function sortFamilies(familyList: Family[], playerList: Player[]): Family[] {
+  return [...familyList].sort((a, b) => {
+    if (a.isActive !== b.isActive) {
+      return a.isActive ? -1 : 1;
+    }
+
+    const gradeA = getFamilyHighestGrade(
+      playerList.filter((player) => player.familyId === a.id)
+    );
+    const gradeB = getFamilyHighestGrade(
+      playerList.filter((player) => player.familyId === b.id)
+    );
+    if (gradeA !== gradeB) {
+      if (gradeA === null) return 1;
+      if (gradeB === null) return -1;
+      return gradeB - gradeA;
+    }
+
+    return a.familyName.localeCompare(b.familyName, 'ja');
+  });
+}
+
 /**
  * マスタ管理画面「家庭」セクション。
  * 登録済み家庭の一覧表示・下書き編集・新規追加・在籍中トグルを行う。
+ * 各家庭は折りたたみ表示とし、タップした家庭だけ詳細編集欄を展開する（04_画面設計.md#10.4）。
  * 家庭カード内には選手セクション（PlayerSection）を組み込み、
  * 選手の一覧表示・下書き編集・新規追加・在籍中トグルも行う。
  * Firestoreへの反映は画面共通の保存ボタン押下時にまとめて行う。
@@ -56,14 +131,13 @@ export function FamilySection({ ref }: FamilySectionProps) {
   const [savedPlayers, setSavedPlayers] = useState<Player[]>([]);
   const [newPlayerIds, setNewPlayerIds] = useState<Set<string>>(new Set());
   const [pickupLocations, setPickupLocations] = useState<PickupLocation[]>([]);
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     Promise.all([getFamilies(), getPickupLocations()])
       .then(async ([familiesData, pickupLocationsData]) => {
-        setFamilies(familiesData);
-        setSavedFamilies(familiesData);
         setPickupLocations(pickupLocationsData);
 
         const playersByFamily = await Promise.all(
@@ -72,6 +146,10 @@ export function FamilySection({ ref }: FamilySectionProps) {
         const playersData = playersByFamily.flat();
         setPlayers(playersData);
         setSavedPlayers(playersData);
+
+        const sortedFamilies = sortFamilies(familiesData, playersData);
+        setFamilies(sortedFamilies);
+        setSavedFamilies(sortedFamilies);
       })
       .catch(() => setError('家庭の取得に失敗しました'))
       .finally(() => setLoading(false));
@@ -111,9 +189,22 @@ export function FamilySection({ ref }: FamilySectionProps) {
     );
   };
 
+  const toggleExpanded = (id: string) => {
+    setExpandedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
   const handleAdd = () => {
     const id = crypto.randomUUID();
     setNewIds((prev) => new Set(prev).add(id));
+    setExpandedIds((prev) => new Set(prev).add(id));
     setFamilies((prev) => [
       ...prev,
       {
@@ -268,8 +359,6 @@ export function FamilySection({ ref }: FamilySectionProps) {
         }
 
         const refreshedFamilies = await getFamilies();
-        setFamilies(refreshedFamilies);
-        setSavedFamilies(refreshedFamilies);
         setNewIds(new Set());
 
         const refreshedPlayersByFamily = await Promise.all(
@@ -279,6 +368,10 @@ export function FamilySection({ ref }: FamilySectionProps) {
         setPlayers(refreshedPlayers);
         setSavedPlayers(refreshedPlayers);
         setNewPlayerIds(new Set());
+
+        const sortedFamilies = sortFamilies(refreshedFamilies, refreshedPlayers);
+        setFamilies(sortedFamilies);
+        setSavedFamilies(sortedFamilies);
 
         setError(null);
       } catch {
@@ -294,8 +387,8 @@ export function FamilySection({ ref }: FamilySectionProps) {
       style={{
         display: 'flex',
         flexDirection: 'column',
-        gap: '16px',
-        padding: '16px',
+        gap: '8px',
+        padding: '12px',
         boxSizing: 'border-box',
       }}
     >
@@ -312,206 +405,137 @@ export function FamilySection({ ref }: FamilySectionProps) {
       ) : (
         <div
           id="family-list"
-          style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}
+          style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}
         >
-          {families.map((family) => (
-            <Card
-              key={family.id}
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '8px',
-                padding: '12px',
-              }}
-            >
-              <label
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '4px',
-                  fontSize: '12px',
-                  color: 'var(--text)',
-                }}
-              >
-                家庭名
-                <input
-                  type="text"
-                  value={family.familyName}
-                  onChange={(e) =>
-                    handleFieldChange(family.id, 'familyName', e.target.value)
-                  }
-                  style={{
-                    padding: '8px 10px',
-                    borderRadius: '6px',
-                    border: '1px solid var(--border)',
-                    fontSize: '16px',
-                    fontFamily: 'var(--sans)',
-                    color: 'var(--text-h)',
-                    background: 'transparent',
-                    boxSizing: 'border-box',
-                  }}
-                />
-              </label>
+          {families.map((family) => {
+            const familyPlayers = players.filter(
+              (player) => player.familyId === family.id
+            );
+            const pickupName =
+              pickupLocations.find((location) => location.id === family.pickupLocationId)
+                ?.name ?? '未設定';
+            const dimStyle: CSSProperties = {
+              opacity: family.isActive ? 1 : 'var(--disabled-opacity)',
+            };
 
-              <label
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '4px',
-                  fontSize: '12px',
-                  color: 'var(--text)',
-                }}
+            return (
+              <CollapsibleListRow
+                key={family.id}
+                icon={<HomeIcon size={15} />}
+                iconBg="var(--border)"
+                iconColor="var(--text-h)"
+                title={<span style={dimStyle}>{family.familyName || '（家庭名未設定）'}</span>}
+                meta={
+                  <span style={dimStyle}>
+                    選手{familyPlayers.length}名
+                    {family.coachName ? '・コーチあり' : ''}・{pickupName}
+                  </span>
+                }
+                expanded={expandedIds.has(family.id)}
+                onToggle={() => toggleExpanded(family.id)}
+                trailing={
+                  <span
+                    style={{
+                      flexShrink: 0,
+                      fontSize: '10.5px',
+                      fontWeight: 800,
+                      padding: '3px 9px',
+                      borderRadius: '999px',
+                      whiteSpace: 'nowrap',
+                      background: family.isActive ? 'var(--positive-bg)' : 'var(--border)',
+                      color: family.isActive ? 'var(--positive)' : 'var(--text)',
+                    }}
+                  >
+                    在籍中
+                  </span>
+                }
               >
-                コーチ名
-                <input
-                  type="text"
-                  value={family.coachName ?? ''}
-                  onChange={(e) =>
-                    handleFieldChange(family.id, 'coachName', e.target.value)
-                  }
-                  placeholder="コーチなしの場合は空欄"
-                  style={{
-                    padding: '8px 10px',
-                    borderRadius: '6px',
-                    border: '1px solid var(--border)',
-                    fontSize: '16px',
-                    fontFamily: 'var(--sans)',
-                    color: 'var(--text-h)',
-                    background: 'transparent',
-                    boxSizing: 'border-box',
-                  }}
-                />
-              </label>
+                <FieldRow label="家庭名">
+                  <input
+                    type="text"
+                    value={family.familyName}
+                    onChange={(e) =>
+                      handleFieldChange(family.id, 'familyName', e.target.value)
+                    }
+                    style={fieldInputStyle}
+                  />
+                </FieldRow>
 
-              <label
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '4px',
-                  fontSize: '12px',
-                  color: 'var(--text)',
-                }}
-              >
-                通常定員
-                <input
-                  type="number"
-                  min={0}
-                  value={family.vehicleCapacity}
-                  onChange={(e) =>
-                    handleFieldChange(
-                      family.id,
-                      'vehicleCapacity',
-                      e.target.value
-                    )
-                  }
-                  style={{
-                    padding: '8px 10px',
-                    borderRadius: '6px',
-                    border: '1px solid var(--border)',
-                    fontSize: '16px',
-                    fontFamily: 'var(--sans)',
-                    color: 'var(--text-h)',
-                    background: 'transparent',
-                    boxSizing: 'border-box',
-                    width: '100%',
-                  }}
-                />
-              </label>
-
-              <label
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '4px',
-                  fontSize: '12px',
-                  color: 'var(--text)',
-                }}
-              >
-                集合場所
-                <select
-                  value={family.pickupLocationId}
-                  onChange={(e) =>
-                    handlePickupLocationChange(family.id, e.target.value)
-                  }
-                  style={{
-                    padding: '8px 10px',
-                    borderRadius: '6px',
-                    border: '1px solid var(--border)',
-                    fontSize: '16px',
-                    fontFamily: 'var(--sans)',
-                    color: 'var(--text-h)',
-                    background: 'transparent',
-                    boxSizing: 'border-box',
-                  }}
-                >
-                  <option value="" disabled>
-                    選択してください
-                  </option>
-                  {pickupLocations.map((location) => (
-                    <option key={location.id} value={location.id}>
-                      {location.name}
+                <FieldRow label="集合場所" labelWidth={68}>
+                  <select
+                    value={family.pickupLocationId}
+                    onChange={(e) =>
+                      handlePickupLocationChange(family.id, e.target.value)
+                    }
+                    style={fieldInputStyle}
+                  >
+                    <option value="" disabled>
+                      選択してください
                     </option>
-                  ))}
-                </select>
-              </label>
+                    {pickupLocations.map((location) => (
+                      <option key={location.id} value={location.id}>
+                        {location.name}
+                      </option>
+                    ))}
+                  </select>
+                </FieldRow>
 
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  paddingTop: '4px',
-                }}
-              >
-                <span style={{ fontSize: '12px', color: 'var(--text)' }}>
-                  在籍中
-                </span>
-                <button
-                  type="button"
-                  role="switch"
-                  aria-checked={family.isActive}
-                  onClick={() => handleActiveToggle(family.id)}
-                  style={{
-                    padding: '6px 16px',
-                    borderRadius: '999px',
-                    border: family.isActive
-                      ? '1px solid var(--accent-border)'
-                      : '1px solid var(--border)',
-                    background: family.isActive
-                      ? 'var(--accent-bg)'
-                      : 'transparent',
-                    color: family.isActive ? 'var(--accent)' : 'var(--text)',
-                    fontSize: '13px',
-                    fontFamily: 'var(--sans)',
-                    cursor: 'pointer',
-                  }}
-                >
-                  {family.isActive ? 'ON' : 'OFF'}
-                </button>
-              </div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span style={statusLabelStyle}>通常定員</span>
+                  <Stepper
+                    value={family.vehicleCapacity}
+                    onChange={(next) =>
+                      handleFieldChange(family.id, 'vehicleCapacity', String(next))
+                    }
+                    decrementLabel="通常定員を減らす"
+                    incrementLabel="通常定員を増やす"
+                    unit="人"
+                  />
+                </div>
 
-              <PlayerSection
-                playerList={players.filter(
-                  (player) => player.familyId === family.id
-                )}
-                onNameChange={handlePlayerNameChange}
-                onSchoolEntryYearChange={handlePlayerSchoolEntryYearChange}
-                onActiveToggle={handlePlayerActiveToggle}
-                onAdd={() => handlePlayerAdd(family.id)}
-              />
-            </Card>
-          ))}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span style={statusLabelStyle}>在籍中（家庭）</span>
+                  <Switch
+                    checked={family.isActive}
+                    onChange={() => handleActiveToggle(family.id)}
+                    ariaLabel={`${family.familyName || '家庭'}の在籍状態`}
+                  />
+                </div>
+
+                <RoleBox role="coach">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={coachTagStyle}>
+                      <UserIcon size={11} />
+                      コーチ
+                    </span>
+                    <input
+                      type="text"
+                      value={family.coachName ?? ''}
+                      onChange={(e) =>
+                        handleFieldChange(family.id, 'coachName', e.target.value)
+                      }
+                      placeholder="コーチなしの場合は空欄"
+                      style={{ ...fieldInputStyle, background: 'var(--bg)', fontWeight: 700 }}
+                    />
+                  </div>
+                </RoleBox>
+
+                <div style={sectionLabelStyle}>選手 {familyPlayers.length}名</div>
+
+                <PlayerSection
+                  playerList={familyPlayers}
+                  onNameChange={handlePlayerNameChange}
+                  onSchoolEntryYearChange={handlePlayerSchoolEntryYearChange}
+                  onActiveToggle={handlePlayerActiveToggle}
+                  onAdd={() => handlePlayerAdd(family.id)}
+                />
+              </CollapsibleListRow>
+            );
+          })}
         </div>
       )}
 
-      <Button
-        variant="secondary"
-        size="sm"
-        onClick={handleAdd}
-        style={{ alignSelf: 'flex-end' }}
-      >
-        + 家庭を追加
-      </Button>
+      <AddRow onClick={handleAdd}>+ 家庭を追加</AddRow>
     </section>
   );
 }
