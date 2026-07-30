@@ -1,11 +1,14 @@
 import { useEffect, useImperativeHandle, useState } from 'react';
 import type { CSSProperties } from 'react';
 import { AddRow } from '../common/AddRow';
+import { Button } from '../common/Button';
 import { CollapsibleListRow } from '../common/CollapsibleListRow';
 import { FieldRow } from '../common/FieldRow';
 import { FlagIcon, LoadingIndicator } from '../icons';
+import { LocationDeleteDialog } from './LocationDeleteDialog';
 import {
   createDestination,
+  deleteDestination,
   getDestinations,
   updateDestination,
 } from '../../services/master/destinationService';
@@ -50,6 +53,8 @@ export function DestinationSection({ ref }: DestinationSectionProps) {
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     getDestinations()
@@ -98,6 +103,36 @@ export function DestinationSection({ ref }: DestinationSectionProps) {
       ...prev,
       { id, name: '', latitude: null, longitude: null },
     ]);
+  };
+
+  const handleDeleteConfirm = async () => {
+    const id = deleteTargetId;
+    if (!id) {
+      return;
+    }
+    if (newIds.has(id)) {
+      // 未保存の新規追加行はFirestoreに存在しないため、下書きから取り除くのみ
+      setDestinations((prev) => prev.filter((destination) => destination.id !== id));
+      setNewIds((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
+      setDeleteTargetId(null);
+      return;
+    }
+    setDeleting(true);
+    try {
+      await deleteDestination(id);
+      setDestinations((prev) => prev.filter((destination) => destination.id !== id));
+      setSavedDestinations((prev) => prev.filter((destination) => destination.id !== id));
+      setError(null);
+      setDeleteTargetId(null);
+    } catch {
+      setError('目的地の削除に失敗しました');
+    } finally {
+      setDeleting(false);
+    }
   };
 
   useImperativeHandle(ref, () => ({
@@ -229,12 +264,30 @@ export function DestinationSection({ ref }: DestinationSectionProps) {
                   </FieldRow>
                 </div>
               </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                <Button
+                  variant="danger"
+                  size="sm"
+                  onClick={() => setDeleteTargetId(destination.id)}
+                >
+                  削除
+                </Button>
+              </div>
             </CollapsibleListRow>
           ))}
         </div>
         <AddRow onClick={handleAdd}>+ 目的地を追加</AddRow>
         </>
       )}
+
+      <LocationDeleteDialog
+        open={deleteTargetId !== null}
+        label="目的地"
+        processing={deleting}
+        onCancel={() => setDeleteTargetId(null)}
+        onConfirm={handleDeleteConfirm}
+      />
     </section>
   );
 }

@@ -2,14 +2,31 @@ import {
   collection,
   doc,
   addDoc,
+  deleteDoc,
   getDoc,
   getDocs,
   serverTimestamp,
   updateDoc,
+  writeBatch,
 } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { firestorePaths } from '../../constants';
 import type { Event } from '../../types/event';
+
+const DELETE_BATCH_SIZE = 400;
+
+/** 指定コレクション配下の全ドキュメントを物理削除する */
+async function deleteAllDocsInCollection(collectionPath: string): Promise<void> {
+  const colRef = collection(db, collectionPath);
+  const snapshot = await getDocs(colRef);
+  const docs = snapshot.docs;
+
+  for (let i = 0; i < docs.length; i += DELETE_BATCH_SIZE) {
+    const batch = writeBatch(db);
+    docs.slice(i, i + DELETE_BATCH_SIZE).forEach((d) => batch.delete(d.ref));
+    await batch.commit();
+  }
+}
 
 /**
  * イベントを新規登録します。
@@ -72,4 +89,17 @@ export async function updateEvent(
     ...data,
     updatedAt: serverTimestamp(),
   });
+}
+
+/**
+ * イベントを、配下の回答（Response）・配車結果（Carpool、行き・帰り両方向）ごと物理削除します。
+ * クライアントSDKには再帰削除がないため、サブコレクションを先に削除してからイベント本体を削除する。
+ * 復元手段は用意しない（05_データ設計.md#11 削除方針）。
+ *
+ * @param eventId 削除対象のドキュメントID
+ */
+export async function deleteEvent(eventId: string): Promise<void> {
+  await deleteAllDocsInCollection(firestorePaths.responsesCollection(eventId));
+  await deleteAllDocsInCollection(firestorePaths.carpoolsCollection(eventId));
+  await deleteDoc(doc(db, firestorePaths.eventDocument(eventId)));
 }

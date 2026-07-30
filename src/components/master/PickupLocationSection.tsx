@@ -1,11 +1,14 @@
 import { useEffect, useImperativeHandle, useState } from 'react';
 import type { CSSProperties } from 'react';
 import { AddRow } from '../common/AddRow';
+import { Button } from '../common/Button';
 import { CollapsibleListRow } from '../common/CollapsibleListRow';
 import { FieldRow } from '../common/FieldRow';
 import { LoadingIndicator, MapPinIcon } from '../icons';
+import { LocationDeleteDialog } from './LocationDeleteDialog';
 import {
   createPickupLocation,
+  deletePickupLocation,
   getPickupLocations,
   updatePickupLocation,
 } from '../../services/master/pickupLocationService';
@@ -50,6 +53,8 @@ export function PickupLocationSection({ ref }: PickupLocationSectionProps) {
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     getPickupLocations()
@@ -98,6 +103,36 @@ export function PickupLocationSection({ ref }: PickupLocationSectionProps) {
       ...prev,
       { id, name: '', latitude: null, longitude: null },
     ]);
+  };
+
+  const handleDeleteConfirm = async () => {
+    const id = deleteTargetId;
+    if (!id) {
+      return;
+    }
+    if (newIds.has(id)) {
+      // 未保存の新規追加行はFirestoreに存在しないため、下書きから取り除くのみ
+      setLocations((prev) => prev.filter((location) => location.id !== id));
+      setNewIds((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
+      setDeleteTargetId(null);
+      return;
+    }
+    setDeleting(true);
+    try {
+      await deletePickupLocation(id);
+      setLocations((prev) => prev.filter((location) => location.id !== id));
+      setSavedLocations((prev) => prev.filter((location) => location.id !== id));
+      setError(null);
+      setDeleteTargetId(null);
+    } catch {
+      setError('集合場所の削除に失敗しました');
+    } finally {
+      setDeleting(false);
+    }
   };
 
   useImperativeHandle(ref, () => ({
@@ -227,12 +262,30 @@ export function PickupLocationSection({ ref }: PickupLocationSectionProps) {
                   </FieldRow>
                 </div>
               </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                <Button
+                  variant="danger"
+                  size="sm"
+                  onClick={() => setDeleteTargetId(location.id)}
+                >
+                  削除
+                </Button>
+              </div>
             </CollapsibleListRow>
           ))}
         </div>
         <AddRow onClick={handleAdd}>+ 集合場所を追加</AddRow>
         </>
       )}
+
+      <LocationDeleteDialog
+        open={deleteTargetId !== null}
+        label="集合場所"
+        processing={deleting}
+        onCancel={() => setDeleteTargetId(null)}
+        onConfirm={handleDeleteConfirm}
+      />
     </section>
   );
 }

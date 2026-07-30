@@ -65,7 +65,7 @@ function toPersonCardData(
 ): PersonCardData | null {
   const pickupLocationId = getMemberPickupLocationId(member, masterData);
   const pickupLocationName = pickupLocationId
-    ? (masterData.pickupLocationById.get(pickupLocationId)?.name ?? '')
+    ? (masterData.pickupLocationById.get(pickupLocationId)?.name ?? '（削除済み）')
     : '';
 
   if (member.type === 'player') {
@@ -118,7 +118,9 @@ function buildRouteLocationNames(carpool: Carpool, masterData: BoardMasterData):
     }
   }
 
-  return locationIds.map((locationId) => masterData.pickupLocationById.get(locationId)?.name ?? '');
+  return locationIds.map(
+    (locationId) => masterData.pickupLocationById.get(locationId)?.name ?? '（削除済み）'
+  );
 }
 
 /**

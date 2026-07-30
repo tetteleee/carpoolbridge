@@ -2,8 +2,9 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Header } from '../components/Header';
 import { Button } from '../components/common/Button';
+import { EventDeleteDialog } from '../components/EventDeleteDialog';
 import { FlagIcon, LoadingIndicator } from '../components/icons';
-import { getEvent, updateEvent } from '../services/event/eventService';
+import { deleteEvent, getEvent, updateEvent } from '../services/event/eventService';
 import { getDestinations } from '../services/master/destinationService';
 import type { Destination } from '../types/master';
 
@@ -22,6 +23,8 @@ export function EventInfoEditPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     if (!eventId) {
@@ -59,6 +62,21 @@ export function EventInfoEditPage() {
     } catch {
       setError('イベント情報の保存に失敗しました');
       setSaving(false);
+    }
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!eventId) {
+      return;
+    }
+    setDeleting(true);
+    try {
+      await deleteEvent(eventId);
+      navigate('/');
+    } catch {
+      setError('イベントの削除に失敗しました');
+      setDeleting(false);
+      setDeleteDialogOpen(false);
     }
   };
 
@@ -212,29 +230,47 @@ export function EventInfoEditPage() {
         <div
           style={{
             display: 'flex',
-            gap: '12px',
+            flexDirection: 'column',
+            gap: '16px',
             padding: '16px',
             boxSizing: 'border-box',
           }}
         >
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <Button
+              variant="secondary"
+              onClick={handleCancel}
+              disabled={saving}
+              style={{ flex: 1 }}
+            >
+              キャンセル
+            </Button>
+            <Button
+              variant="primary"
+              onClick={handleSave}
+              disabled={!canSave || saving}
+              style={{ flex: 1 }}
+            >
+              {saving ? '保存中...' : '保存'}
+            </Button>
+          </div>
+
           <Button
-            variant="secondary"
-            onClick={handleCancel}
+            variant="danger"
+            onClick={() => setDeleteDialogOpen(true)}
             disabled={saving}
-            style={{ flex: 1 }}
           >
-            キャンセル
-          </Button>
-          <Button
-            variant="primary"
-            onClick={handleSave}
-            disabled={!canSave || saving}
-            style={{ flex: 1 }}
-          >
-            {saving ? '保存中...' : '保存'}
+            イベントを削除
           </Button>
         </div>
       )}
+
+      <EventDeleteDialog
+        open={deleteDialogOpen}
+        processing={deleting}
+        onCancel={() => setDeleteDialogOpen(false)}
+        onConfirm={handleDeleteConfirm}
+      />
     </div>
   );
 }

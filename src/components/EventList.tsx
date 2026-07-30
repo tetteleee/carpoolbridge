@@ -55,7 +55,7 @@ export function EventList({
 
   const renderEventCard = (event: Event, isPast: boolean) => {
     const isToday = event.date === today;
-    const destinationName = destinationNameById[event.destinationId] ?? '';
+    const destinationName = destinationNameById[event.destinationId] ?? '（削除済み）';
 
     return (
       <Card
