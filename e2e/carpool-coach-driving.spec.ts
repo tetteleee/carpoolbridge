@@ -42,7 +42,7 @@ test('コーチが運転する家庭は、コーチ自身も通常の乗車メ�
   await page.reload();
   await expect(page.locator(`#family-response-card-${familyRef.id}`)).toBeVisible();
 
-  await page.getByRole('button', { name: '配車', exact: true }).click();
+  await page.getByRole('button', { name: '自動配車', exact: true }).click();
   await page.waitForURL(`**/events/${eventRef.id}/carpool`);
   await expect(page.getByText('読み込み中...')).toHaveCount(0);
 
@@ -100,7 +100,7 @@ test('コーチのみで満席の場合、選手が乗れずHard Failし、エ�
   await page.reload();
   await expect(page.locator(`#family-response-card-${familyRef.id}`)).toBeVisible();
 
-  await page.getByRole('button', { name: '配車', exact: true }).click();
+  await page.getByRole('button', { name: '自動配車', exact: true }).click();
 
   const errorMessage = page.getByText('様の優先割り当て人数（同乗必須メンバー数）が、車両の有効定員を超過しています');
   await expect(errorMessage).toBeVisible();

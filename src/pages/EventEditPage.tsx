@@ -23,7 +23,7 @@ import type { Player, Family } from '../types/master';
  * 対象イベントの行き・帰り両方向の配車を作成する。
  * 一方でもHard Failエラーが発生した場合は、その時点でエラーを返す
  * （04_画面設計.md#7には方向別の分岐は定義されておらず、
- * 「配車作成」ボタンは1つのため、両方向をまとめて作成する）。
+ * 「自動配車」ボタンは1つのため、両方向をまとめて作成する）。
  */
 async function createCarpoolsForBothDirections(
   eventId: string
@@ -239,7 +239,7 @@ export function EventEditPage() {
                 onClick={handleCreateCarpoolClick}
                 disabled={creatingCarpools}
               >
-                {creatingCarpools ? '作成中' : '配車'}
+                {creatingCarpools ? '作成中' : '自動配車'}
               </Button>
             )
           }

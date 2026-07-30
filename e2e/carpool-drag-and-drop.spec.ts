@@ -46,7 +46,7 @@ test('未配車エリアの人カードを長押しドラッグして車カー�
   await db.collection('staffUsers').doc(uid as string).set({});
   await page.reload();
   await expect(page.locator(`#family-response-card-${familyDriver.id}`)).toBeVisible();
-  await page.getByRole('button', { name: '配車', exact: true }).click();
+  await page.getByRole('button', { name: '自動配車', exact: true }).click();
   await page.waitForURL(`**/events/${eventRef.id}/carpool`);
   await expect(page.getByText('読み込み中...')).toHaveCount(0);
   await expect(page.getByRole('heading', { name: '未配車　1名' })).toBeVisible();
@@ -110,7 +110,7 @@ test('人カードの短いタップはドラッグとして扱われない', as
   await db.collection('staffUsers').doc(uid as string).set({});
   await page.reload();
   await expect(page.locator(`#family-response-card-${familyRider.id}`)).toBeVisible();
-  await page.getByRole('button', { name: '配車', exact: true }).click();
+  await page.getByRole('button', { name: '自動配車', exact: true }).click();
   await page.waitForURL(`**/events/${eventRef.id}/carpool`);
   await expect(page.getByText('読み込み中...')).toHaveCount(0);
   await expect(page.getByText('未配車　1名')).toBeVisible();
@@ -261,7 +261,7 @@ test('画面外（下方）の車カードへは、画面端までドラッグ�
   await db.collection('staffUsers').doc(uid as string).set({});
   await page.reload();
   await expect(page.locator(`#family-response-card-${firstDriverFamily.id}`)).toBeVisible();
-  await page.getByRole('button', { name: '配車', exact: true }).click();
+  await page.getByRole('button', { name: '自動配車', exact: true }).click();
   await page.waitForURL(`**/events/${eventRef.id}/carpool`);
   await expect(page.getByText('読み込み中...')).toHaveCount(0);
   // 各車は定員0のため、山田太郎は自動配車されず未配車のまま残る

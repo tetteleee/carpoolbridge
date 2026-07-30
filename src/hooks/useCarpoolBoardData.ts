@@ -12,7 +12,7 @@ import {
   isCoachParticipating,
   type EligibilityMasterData,
 } from '../services/carpool/eligibility';
-import { reconcileIneligibleMembers } from '../services/carpool/reconcileCarpoolMembers';
+import { reconcileCarpools } from '../services/carpool/reconcileCarpools';
 import { memberKey } from '../services/carpool/carpoolMember';
 import { getSchoolGrade } from '../utils/schoolGrade';
 import type { Carpool, CarpoolMember, Direction } from '../types/event';
@@ -257,9 +257,9 @@ export function useCarpoolBoardData(
   }, [eventId]);
 
   /**
-   * 回答変更後の配車結果自動整合（回答編集画面で不参加等に変更された人を、
-   * 配車画面を開いたタイミングでCarpoolから自動的に取り除く）。
-   * ref: 04_画面設計.md#8 配車画面（メイン）
+   * 回答変更後の配車結果自動整合（回答編集画面での変更を、配車画面を開いたタイミングで反映する）。
+   * 対象方向にCarpoolが1件も存在しない（自動配車が未実行の）場合は何もしない。
+   * ref: 04_画面設計.md#8 画面を開いた際の自動整合
    */
   useEffect(() => {
     if (!eventId || !masterData || carpools.length === 0) {
@@ -268,7 +268,7 @@ export function useCarpoolBoardData(
 
     let ignore = false;
 
-    reconcileIneligibleMembers(eventId, direction, carpools, masterData).then((changed) => {
+    reconcileCarpools(eventId, direction, carpools, masterData).then((changed) => {
       if (!ignore && changed) {
         onCarpoolsReconciled();
       }

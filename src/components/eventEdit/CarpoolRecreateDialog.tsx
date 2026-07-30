@@ -13,7 +13,7 @@ interface CarpoolRecreateDialogProps {
 
 /**
  * 配車再作成の確認ダイアログ。
- * 既存の配車結果が存在する状態で「配車作成」が押された場合にのみ表示する。
+ * 既存の配車結果が存在する状態で「自動配車」が押された場合にのみ表示する。
  * ref: docs/04_画面設計.md#7 配車再作成
  */
 export function CarpoolRecreateDialog({

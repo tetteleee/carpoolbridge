@@ -95,3 +95,16 @@ export async function deleteAllCarpools(eventId: string): Promise<void> {
   const snapshot = await getDocs(colRef);
   await Promise.all(snapshot.docs.map((d) => deleteDoc(d.ref)));
 }
+
+/**
+ * 配車結果を1件物理削除します。
+ * 05_データ設計.md#11の例外（車出し可否変更に伴う自動整合）としてのみ利用する処理であり、
+ * 車出し可否が可→不可に変わった家庭のCarpoolを削除する場合にのみ呼び出す。
+ *
+ * @param eventId 対象のイベントID
+ * @param carpoolId 削除対象の配車結果ID
+ */
+export async function deleteCarpool(eventId: string, carpoolId: string): Promise<void> {
+  const docRef = doc(db, firestorePaths.carpoolDocument(eventId, carpoolId));
+  await deleteDoc(docRef);
+}
