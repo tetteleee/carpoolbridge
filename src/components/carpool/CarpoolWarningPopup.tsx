@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { CloseIcon, WarningIcon } from '../icons';
 
 interface CarpoolWarningPopupProps {
@@ -10,13 +10,10 @@ interface CarpoolWarningPopupProps {
  * 配車画面（メイン）の定員超過・未配車の警告表示。
  * ヘッダーには置かず、画面最下部に固定表示する（スクロール位置に関わらず追従しない）。
  * 閉じるボタンで一時的に非表示にできるが、メッセージが変わると再度表示される。
+ * メッセージ変化時の再表示は、呼び出し元がmessageをkeyに渡して再マウントさせることで実現する。
  */
 export function CarpoolWarningPopup({ message }: CarpoolWarningPopupProps) {
   const [dismissed, setDismissed] = useState(false);
-
-  useEffect(() => {
-    setDismissed(false);
-  }, [message]);
 
   if (!message || dismissed) {
     return null;

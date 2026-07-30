@@ -1,5 +1,5 @@
 import { CarIcon, FlagIcon, MapPinIcon, UserIcon } from '../icons';
-import { computeOccupantCount, type CarCardData } from './CarCard';
+import { computeOccupantCount, type CarCardData } from '../../utils/carCard';
 import { toCarName } from '../../utils/carName';
 
 interface CarpoolSummaryBarProps {

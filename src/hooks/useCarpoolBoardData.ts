@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import type { CarCardData } from '../components/carpool/CarCard';
+import type { CarCardData } from '../utils/carCard';
 import type { UnassignedPerson } from '../components/carpool/UnassignedArea';
 import type { PersonCardData } from '../components/carpool/PersonCard';
 import { getFamilies } from '../services/master/familyService';

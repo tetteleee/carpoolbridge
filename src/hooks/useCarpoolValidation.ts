@@ -3,7 +3,7 @@ import {
   computeOccupantCount,
   isCoachSeatOccupied,
   type CarCardData,
-} from '../components/carpool/CarCard';
+} from '../utils/carCard';
 import type { UnassignedPerson } from '../components/carpool/UnassignedArea';
 
 interface UseCarpoolValidationResult {

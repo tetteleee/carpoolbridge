@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
 import type { CarpoolMember } from '../types/event';
 import type { PersonCardData } from '../components/carpool/PersonCard';
@@ -124,7 +124,9 @@ export function useDragAndDrop({ onDrop, topEdgePx }: UseDragAndDropOptions): Us
   // ドラッグ中のイベントハンドラーはwindowに一度だけ登録するクロージャーのため、
   // 再レンダリングごとに変わるtopEdgePxをrefに反映して参照する
   const topEdgePxRef = useRef(topEdgePx ?? DEFAULT_AUTO_SCROLL_EDGE_TOP_PX);
-  topEdgePxRef.current = topEdgePx ?? DEFAULT_AUTO_SCROLL_EDGE_TOP_PX;
+  useEffect(() => {
+    topEdgePxRef.current = topEdgePx ?? DEFAULT_AUTO_SCROLL_EDGE_TOP_PX;
+  }, [topEdgePx]);
 
   const clearLongPressTimer = () => {
     if (longPressTimerRef.current !== null) {

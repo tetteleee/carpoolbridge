@@ -35,7 +35,6 @@ export function MasterPage() {
   const [dataVersion, setDataVersion] = useState(0);
 
   useEffect(() => {
-    setCounts(null);
     Promise.all([getPickupLocations(), getDestinations(), getFamilies()])
       .then(([pickupLocations, destinations, families]) => {
         setCounts({
@@ -193,7 +192,12 @@ export function MasterPage() {
       <hr
         style={{ border: 'none', borderTop: '1px solid var(--border)', margin: 0 }}
       />
-      <DevSampleDataButton onSeeded={() => setDataVersion((v) => v + 1)} />
+      <DevSampleDataButton
+        onSeeded={() => {
+          setCounts(null);
+          setDataVersion((v) => v + 1);
+        }}
+      />
     </div>
   );
 }

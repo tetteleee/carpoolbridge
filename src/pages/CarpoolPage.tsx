@@ -20,7 +20,7 @@ import { getEvent } from '../services/event/eventService';
 import { getDestination } from '../services/master/destinationService';
 import { moveCarpoolMember, UNASSIGNED_ZONE_ID } from '../services/carpool/carpoolMember';
 import { formatDateWithWeekday } from '../utils/date';
-import type { Direction, Event } from '../types/event';
+import type { Event } from '../types/event';
 
 /**
  * オートスクロール開始位置（画面上端からの距離）を、sticky header（ヘッダー＋トグル＋サマリー）の
@@ -114,6 +114,9 @@ export function CarpoolPage() {
     topEdgePx: stickyHeaderHeight + AUTO_SCROLL_TOP_BUFFER_PX,
   });
 
+  const warningPopupMessage =
+    !loading && !error && hasWarning && !dragState ? validationMessage : null;
+
   const handleEditAnswersClick = () => {
     if (!eventId) {
       return;
@@ -122,7 +125,7 @@ export function CarpoolPage() {
   };
 
   // LINE共有画面への遷移先接続はT46aで行う
-  const handleShareClick = (_shareDirection: Direction) => {};
+  const handleShareClick = () => {};
 
   return (
     <div
@@ -267,9 +270,8 @@ export function CarpoolPage() {
       </div>
 
       <CarpoolWarningPopup
-        message={
-          !loading && !error && hasWarning && !dragState ? validationMessage : null
-        }
+        key={warningPopupMessage ?? 'none'}
+        message={warningPopupMessage}
       />
 
       {dragState && (
