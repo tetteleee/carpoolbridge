@@ -171,6 +171,7 @@ export function PickupLocationSection({ ref }: PickupLocationSectionProps) {
           <LoadingIndicator />
         </div>
       ) : (
+        <>
         <div
           id="pickup-location-list"
           style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}
@@ -229,9 +230,9 @@ export function PickupLocationSection({ ref }: PickupLocationSectionProps) {
             </CollapsibleListRow>
           ))}
         </div>
+        <AddRow onClick={handleAdd}>+ 集合場所を追加</AddRow>
+        </>
       )}
-
-      <AddRow onClick={handleAdd}>+ 集合場所を追加</AddRow>
     </section>
   );
 }

@@ -173,6 +173,7 @@ export function DestinationSection({ ref }: DestinationSectionProps) {
           <LoadingIndicator />
         </div>
       ) : (
+        <>
         <div
           id="destination-list"
           style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}
@@ -231,9 +232,9 @@ export function DestinationSection({ ref }: DestinationSectionProps) {
             </CollapsibleListRow>
           ))}
         </div>
+        <AddRow onClick={handleAdd}>+ 目的地を追加</AddRow>
+        </>
       )}
-
-      <AddRow onClick={handleAdd}>+ 目的地を追加</AddRow>
     </section>
   );
 }

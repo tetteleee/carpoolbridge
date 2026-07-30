@@ -403,6 +403,7 @@ export function FamilySection({ ref }: FamilySectionProps) {
           <LoadingIndicator />
         </div>
       ) : (
+        <>
         <div
           id="family-list"
           style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}
@@ -533,9 +534,9 @@ export function FamilySection({ ref }: FamilySectionProps) {
             );
           })}
         </div>
+        <AddRow onClick={handleAdd}>+ 家庭を追加</AddRow>
+        </>
       )}
-
-      <AddRow onClick={handleAdd}>+ 家庭を追加</AddRow>
     </section>
   );
 }
