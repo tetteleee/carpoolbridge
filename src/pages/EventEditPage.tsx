@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Header } from '../components/Header';
 import { EventHeaderTitle } from '../components/EventHeaderTitle';
@@ -6,7 +6,7 @@ import { Button } from '../components/common/Button';
 import { FamilyResponseCard } from '../components/eventEdit/FamilyResponseCard';
 import { CarpoolRecreateDialog } from '../components/eventEdit/CarpoolRecreateDialog';
 import { DevSampleResponseButton } from '../components/eventEdit/DevSampleResponseButton';
-import { CarIcon, LoadingIndicator } from '../components/icons';
+import { CarIcon, ChevronDownIcon, LoadingIndicator } from '../components/icons';
 import { getEvent } from '../services/event/eventService';
 import { getDestination } from '../services/master/destinationService';
 import { getFamilies } from '../services/master/familyService';
@@ -16,6 +16,7 @@ import { getCarpools, deleteAllCarpools } from '../services/event/carpoolService
 import { runCarpoolAssignment } from '../services/carpool/runCarpoolAssignment';
 import { formatDateWithWeekday } from '../utils/date';
 import { getFamilyHighestGrade } from '../utils/schoolGrade';
+import { computeResponseStatus, type ResponseStatus } from '../utils/responseStatus';
 import type { Event, Response } from '../types/event';
 import type { Player, Family } from '../types/master';
 
@@ -35,6 +36,35 @@ async function createCarpoolsForBothDirections(
     }
   }
   return { success: true };
+}
+
+interface StatusCountTierProps {
+  /** 状態を示すドットの色 */
+  dotColor: string;
+  /** ドットの不透明度（未指定時は1） */
+  dotOpacity?: number;
+  label: string;
+  count: number;
+}
+
+/** ヘッダー下の集計表示（色付きドット＋ラベル＋件数）の1項目分 */
+function StatusCountTier({ dotColor, dotOpacity = 1, label, count }: StatusCountTierProps) {
+  return (
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', whiteSpace: 'nowrap' }}>
+      <span
+        aria-hidden="true"
+        style={{
+          width: '7px',
+          height: '7px',
+          borderRadius: '50%',
+          background: dotColor,
+          opacity: dotOpacity,
+          flexShrink: 0,
+        }}
+      />
+      {label} <strong style={{ color: 'var(--text-h)' }}>{count}</strong>
+    </span>
+  );
 }
 
 /**
@@ -57,6 +87,11 @@ export function EventEditPage() {
     Record<string, Response>
   >({});
   const [responseVersion, setResponseVersion] = useState(0);
+  // 折りたたまれている家庭ID（家庭一覧の取得後に全家庭IDで初期化し、全折りたたみ状態から始める。
+  // 04_画面設計.md#7「家庭カードの折りたたみ」参照）
+  const [collapsedFamilyIds, setCollapsedFamilyIds] = useState<Set<string>>(new Set());
+  // 家庭ごとの回答状況（回答済み／一部回答／未回答）。ヘッダー下の集計表示に使用する
+  const [statusByFamilyId, setStatusByFamilyId] = useState<Record<string, ResponseStatus>>({});
   const [recreateDialogOpen, setRecreateDialogOpen] = useState(false);
   const [creatingCarpools, setCreatingCarpools] = useState(false);
   const [carpoolMessage, setCarpoolMessage] = useState<{
@@ -98,12 +133,32 @@ export function EventEditPage() {
           return a.familyName.localeCompare(b.familyName, 'ja');
         });
         setFamilies(sortedFamilies);
+        // 初期状態は全家庭カードを折りたたんだ状態で表示する（04_画面設計.md#7参照）
+        setCollapsedFamilyIds(new Set(sortedFamilies.map((family) => family.id)));
 
-        setResponsesByFamilyId(
-          Object.fromEntries(
-            responsesData.map(({ familyId, ...response }) => [familyId, response])
-          )
+        const responseMap = Object.fromEntries(
+          responsesData.map(({ familyId, ...response }) => [familyId, response])
         );
+        setResponsesByFamilyId(responseMap);
+
+        // 回答状況（回答済み／一部回答／未回答）の初期値。以降はFamilyResponseCard側からの通知で更新する
+        const initialStatusMap: Record<string, ResponseStatus> = {};
+        activeFamilies.forEach((family) => {
+          const familyResponse: Response = responseMap[family.id] ?? {
+            driverOutward: null,
+            driverReturn: null,
+            capacityToday: null,
+            coachParticipating: null,
+            remarks: '',
+            players: [],
+          };
+          initialStatusMap[family.id] = computeResponseStatus(
+            familyResponse,
+            playersMap[family.id] ?? [],
+            family.coachName !== null
+          );
+        });
+        setStatusByFamilyId(initialStatusMap);
       })
       .catch(() => setError('データの取得に失敗しました'))
       .finally(() => setLoading(false));
@@ -192,6 +247,36 @@ export function EventEditPage() {
     );
     setResponseVersion((v) => v + 1);
   };
+
+  /** 家庭カード1件のみ開閉する */
+  const handleToggleFamilyOpen = (familyId: string) => {
+    setCollapsedFamilyIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(familyId)) {
+        next.delete(familyId);
+      } else {
+        next.add(familyId);
+      }
+      return next;
+    });
+  };
+
+  // 1つでも折りたたまれていれば「全て展開」、全展開済みなら「全て折りたたむ」を表示する
+  const anyCollapsed = families.some((family) => collapsedFamilyIds.has(family.id));
+
+  /** ヘッダー下の「全て展開／全て折りたたむ」ボタン */
+  const handleToggleAllOpen = () => {
+    setCollapsedFamilyIds(anyCollapsed ? new Set() : new Set(families.map((family) => family.id)));
+  };
+
+  const statusCounts = useMemo(() => {
+    const counts: Record<ResponseStatus, number> = { answered: 0, partial: 0, unanswered: 0 };
+    families.forEach((family) => {
+      const status = statusByFamilyId[family.id] ?? 'unanswered';
+      counts[status] += 1;
+    });
+    return counts;
+  }, [families, statusByFamilyId]);
 
   return (
     <div
@@ -287,15 +372,68 @@ export function EventEditPage() {
             対象の家庭がありません
           </p>
         ) : (
-          families.map((family) => (
-            <FamilyResponseCard
-              key={`${family.id}-${responseVersion}`}
-              eventId={eventId}
-              family={family}
-              playerList={playersByFamilyId[family.id] ?? []}
-              response={responsesByFamilyId[family.id]}
-            />
-          ))
+          <>
+            <div
+              style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: '6px 8px',
+              }}
+            >
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 8px', fontSize: '12px', color: 'var(--text)' }}>
+                <StatusCountTier dotColor="var(--positive)" label="回答済み" count={statusCounts.answered} />
+                <StatusCountTier dotColor="var(--warning)" label="一部回答" count={statusCounts.partial} />
+                <StatusCountTier dotColor="var(--text)" dotOpacity={0.45} label="未回答" count={statusCounts.unanswered} />
+              </div>
+              <button
+                type="button"
+                onClick={handleToggleAllOpen}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  flexShrink: 0,
+                  background: 'transparent',
+                  border: '1px solid var(--border)',
+                  color: 'var(--accent)',
+                  borderRadius: '999px',
+                  padding: '5px 10px',
+                  fontSize: '12.5px',
+                  fontWeight: 700,
+                  fontFamily: 'var(--sans)',
+                  whiteSpace: 'nowrap',
+                  cursor: 'pointer',
+                }}
+              >
+                <span
+                  aria-hidden="true"
+                  style={{ display: 'flex', transform: anyCollapsed ? undefined : 'rotate(180deg)' }}
+                >
+                  <ChevronDownIcon size={13} />
+                </span>
+                {anyCollapsed ? '全て展開' : '全て折りたたむ'}
+              </button>
+            </div>
+
+            {families.map((family) => (
+              <FamilyResponseCard
+                key={`${family.id}-${responseVersion}`}
+                eventId={eventId}
+                family={family}
+                playerList={playersByFamilyId[family.id] ?? []}
+                response={responsesByFamilyId[family.id]}
+                isOpen={!collapsedFamilyIds.has(family.id)}
+                onToggleOpen={() => handleToggleFamilyOpen(family.id)}
+                onStatusChange={(status) =>
+                  setStatusByFamilyId((prev) =>
+                    prev[family.id] === status ? prev : { ...prev, [family.id]: status }
+                  )
+                }
+              />
+            ))}
+          </>
         )}
 
         {eventId && !loading && !error && (

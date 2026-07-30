@@ -60,6 +60,9 @@ test('回答入力画面の各項目を変更すると、都度Firestoreへ自�
   // 「保存」ボタンが存在しないことを確認する
   await expect(page.getByRole('button', { name: '保存' })).toHaveCount(0);
 
+  // 初期状態は折りたたまれているため、ヘッダーをタップして展開する（04_画面設計.md#7参照）
+  await page.click(`#family-response-card-header-${familyRef.id}`);
+
   // 1件目の変更（車出し・行きのみ）でResponseドキュメントが新規作成される
   await page.click(`#driver-offer-${familyRef.id}-outward-only`);
   await expect
@@ -113,6 +116,8 @@ test('回答入力画面の各項目を変更すると、都度Firestoreへ自�
 
   // リロード後も自動保存済みの内容が初期表示に反映される（「戻る」後の再訪と同等の確認）
   await page.reload();
+  // リロード直後は再び折りたたまれているため、ヘッダーをタップして展開する
+  await page.click(`#family-response-card-header-${familyRef.id}`);
   await expect(page.locator(`#driver-offer-${familyRef.id}-outward-only`)).toHaveAttribute(
     'aria-pressed',
     'true'
