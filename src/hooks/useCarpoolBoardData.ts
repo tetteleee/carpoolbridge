@@ -77,6 +77,7 @@ function toPersonCardData(
       id: player.id,
       name: player.name,
       grade: toGradeLabel(player.schoolEntryYear),
+      pickupLocationId: pickupLocationId ?? '',
       pickupLocationName,
       member,
     };
@@ -90,6 +91,7 @@ function toPersonCardData(
     id: family.id,
     name: family.coachName,
     grade: null,
+    pickupLocationId: pickupLocationId ?? '',
     pickupLocationName,
     member,
   };

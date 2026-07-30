@@ -1,8 +1,8 @@
 import type { PointerEvent as ReactPointerEvent } from 'react';
 import { CarIcon } from '../icons';
-import { PersonCard, type PersonCardData } from './PersonCard';
+import type { PersonCardData } from './PersonCard';
+import { LocationGroupedList } from './LocationGroupedList';
 import { RouteLocationList } from './RouteLocationList';
-import { memberKey } from '../../services/carpool/carpoolMember';
 import { toCarName } from '../../utils/carName';
 import { Card } from '../common/Card';
 
@@ -45,8 +45,6 @@ interface CarCardProps {
   isDropTarget?: boolean;
   /** ドラッグ中の人カードのID（自身のカード内であれば薄く表示するために使用。T43） */
   draggingPersonId?: string | null;
-  /** ドラッグ中、この車カード内で挿入先となる直前の乗車メンバーのキー（memberKey形式）。末尾に挿入される場合はnull。isDropTargetがfalseの間は意味を持たない */
-  insertionAnchorKey?: string | null;
   /** 人カードのonPointerDownハンドラーを生成する（T43。長押しドラッグ開始の検知に使用） */
   onPersonPointerDown?: (
     person: PersonCardData
@@ -63,7 +61,6 @@ export function CarCard({
   car,
   isDropTarget = false,
   draggingPersonId = null,
-  insertionAnchorKey = null,
   onPersonPointerDown,
 }: CarCardProps) {
   const occupantCount = computeOccupantCount(car);
@@ -126,41 +123,14 @@ export function CarCard({
         </div>
       </div>
 
-      <ul
-        style={{
-          listStyle: 'none',
-          margin: 0,
-          padding: '8px 10px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '6px',
-        }}
-      >
-        {car.members.map((member, index) => {
-          const personKey = memberKey(member.member);
-          const isInsertionAnchor = isDropTarget && insertionAnchorKey === personKey;
-          const isAppendTarget =
-            isDropTarget && insertionAnchorKey === null && index === car.members.length - 1;
-          return (
-            <li
-              key={member.id}
-              data-person-key={personKey}
-              style={{
-                borderTop: isInsertionAnchor ? '3px solid var(--drop-target-border)' : undefined,
-                borderBottom: isAppendTarget ? '3px solid var(--drop-target-border)' : undefined,
-                borderRadius: '6px',
-                overflow: 'hidden',
-              }}
-            >
-              <PersonCard
-                person={member}
-                onPointerDown={onPersonPointerDown?.(member)}
-                isDragging={member.id === draggingPersonId}
-              />
-            </li>
-          );
-        })}
-      </ul>
+      <div style={{ padding: '8px 10px' }}>
+        <LocationGroupedList
+          members={car.members}
+          draggingPersonId={draggingPersonId}
+          onPersonPointerDown={onPersonPointerDown}
+          hideHeaderIfSingleGroup
+        />
+      </div>
     </Card>
   );
 }

@@ -99,17 +99,17 @@ export function CarpoolPage() {
     );
   }, [event]);
 
-  const handleDrop = ({ member, sourceZoneId, targetZoneId, targetAnchorKey }: DropResult) => {
+  const handleDrop = ({ member, sourceZoneId, targetZoneId }: DropResult) => {
     if (!eventId) {
       return;
     }
     setMoveError(null);
-    moveCarpoolMember(eventId, member, sourceZoneId, targetZoneId, targetAnchorKey, carpools)
+    moveCarpoolMember(eventId, member, sourceZoneId, targetZoneId, carpools)
       .then(refreshCarpools)
       .catch(() => setMoveError('人の移動に失敗しました'));
   };
 
-  const { dragState, hoveredZoneId, insertionAnchorKey, createPointerDownHandler } = useDragAndDrop({
+  const { dragState, hoveredZoneId, createPointerDownHandler } = useDragAndDrop({
     onDrop: handleDrop,
     topEdgePx: stickyHeaderHeight + AUTO_SCROLL_TOP_BUFFER_PX,
   });
@@ -256,7 +256,6 @@ export function CarpoolPage() {
                     car={car}
                     isDropTarget={dragState !== null && hoveredZoneId === car.id}
                     draggingPersonId={dragState?.personId ?? null}
-                    insertionAnchorKey={hoveredZoneId === car.id ? insertionAnchorKey : null}
                     onPersonPointerDown={(person) => createPointerDownHandler(person, car.id)}
                   />
                 ))}

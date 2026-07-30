@@ -1,5 +1,6 @@
 import type { PointerEvent as ReactPointerEvent } from 'react';
-import { PersonCard, type PersonCardData } from './PersonCard';
+import type { PersonCardData } from './PersonCard';
+import { LocationGroupedList } from './LocationGroupedList';
 import { UNASSIGNED_ZONE_ID } from '../../services/carpool/carpoolMember';
 import { Card } from '../common/Card';
 
@@ -58,25 +59,13 @@ export function UnassignedArea({
         {'未配車　' + people.length + '名'}
       </h2>
 
-      <ul
-        style={{
-          listStyle: 'none',
-          margin: 0,
-          padding: 0,
-          display: 'flex',
-          flexDirection: 'column',
-        }}
-      >
-        {people.map((person) => (
-          <li key={person.id} style={{ borderTop: '1px solid var(--border)' }}>
-            <PersonCard
-              person={person}
-              onPointerDown={onPersonPointerDown?.(person)}
-              isDragging={person.id === draggingPersonId}
-            />
-          </li>
-        ))}
-      </ul>
+      <div style={{ padding: '10px 12px' }}>
+        <LocationGroupedList
+          members={people}
+          draggingPersonId={draggingPersonId}
+          onPersonPointerDown={onPersonPointerDown}
+        />
+      </div>
     </Card>
   );
 }
