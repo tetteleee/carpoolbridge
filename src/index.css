@@ -7,12 +7,12 @@
   --panel-bg: #f9f8f4;
 
   /* 役割カラー（選手・コーチ・保護者）。背景＋枠線＋左帯の3点セットで使う */
-  --player-bg: #f5ead8;
-  --player-border: #e6ddc8;
-  --player-accent: #b8823c;
-  --coach-bg: #e6ecf5;
-  --coach-border: #d7dce3;
-  --coach-accent: #5b7290;
+  --player-bg: #e6ecf5;
+  --player-border: #d7dce3;
+  --player-accent: #5b7290;
+  --coach-bg: #f5ead8;
+  --coach-border: #e6ddc8;
+  --coach-accent: #b8823c;
   --parent-bg: #eee3f7;
   --parent-border: #ddd2ea;
   --parent-accent: #8a5aa8;
