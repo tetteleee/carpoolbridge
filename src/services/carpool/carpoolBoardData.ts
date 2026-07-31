@@ -22,6 +22,8 @@ import {
   isCoachNoRideNeededForDirection,
   isFamilyMemberRidingForDirection,
   isFamilyMemberNoRideNeededForDirection,
+  isTemporaryParticipantRidingForDirection,
+  isTemporaryParticipantNoRideNeededForDirection,
   type EligibilityMasterData,
 } from './eligibility';
 import { getSchoolGrade } from '../../utils/schoolGrade';
@@ -49,11 +51,22 @@ function toGradeLabel(schoolEntryYear: number): string | null {
   return grade === null ? null : `小${grade}`;
 }
 
-/** 乗車メンバー（CarpoolMember）の集合場所IDを取得する。対応するマスタが見つからない場合はnull */
+/**
+ * 乗車メンバー（CarpoolMember）の集合場所IDを取得する。対応するマスタが見つからない場合はnull。
+ * type: "temporary"のみ、所属家庭のFamily.pickupLocationIdではなく、追加時に指定した
+ * Response.temporaryParticipants[].pickupLocationIdを直接参照する（05_データ設計.md#10参照）。
+ */
 function getMemberPickupLocationId(
   member: CarpoolMember,
   masterData: BoardMasterData
 ): string | null {
+  if (member.type === 'temporary') {
+    const temporaryParticipant = masterData.responseByFamilyId
+      .get(member.familyId)
+      ?.temporaryParticipants?.find((t) => t.id === member.temporaryParticipantId);
+    return temporaryParticipant?.pickupLocationId ?? null;
+  }
+
   let familyId: string | undefined;
   if (member.type === 'player') {
     familyId = masterData.playerById.get(member.playerId)?.familyId;
@@ -118,6 +131,23 @@ function toPersonCardData(
     return {
       id: familyMember.id,
       name: familyMember.name,
+      grade: null,
+      pickupLocationId: pickupLocationId ?? '',
+      pickupLocationName,
+      member,
+    };
+  }
+
+  if (member.type === 'temporary') {
+    const temporaryParticipant = masterData.responseByFamilyId
+      .get(member.familyId)
+      ?.temporaryParticipants?.find((t) => t.id === member.temporaryParticipantId);
+    if (!temporaryParticipant) {
+      return null;
+    }
+    return {
+      id: temporaryParticipant.id,
+      name: temporaryParticipant.name,
       grade: null,
       pickupLocationId: pickupLocationId ?? '',
       pickupLocationName,
@@ -203,6 +233,16 @@ function buildEligibleMembers(masterData: BoardMasterData, direction: Direction)
       }
     }
 
+    for (const temporaryParticipant of response.temporaryParticipants ?? []) {
+      if (isTemporaryParticipantRidingForDirection(temporaryParticipant, direction)) {
+        members.push({
+          type: 'temporary',
+          familyId,
+          temporaryParticipantId: temporaryParticipant.id,
+        });
+      }
+    }
+
     if (isCoachRidingForDirection(family, response, direction)) {
       members.push({ type: 'coach', familyId });
     }
@@ -212,7 +252,7 @@ function buildEligibleMembers(masterData: BoardMasterData, direction: Direction)
 }
 
 /**
- * 対象方向において「参加かつ送迎不要」（配車不要エリアの対象）となる選手・コーチ・家族一覧を算出する。
+ * 対象方向において「参加かつ送迎不要」（配車不要エリアの対象）となる選手・コーチ・家族・一時参加者一覧を算出する。
  * ref: docs/04_画面設計.md#8 配車不要エリア
  */
 function buildNoRideNeededMembers(masterData: BoardMasterData, direction: Direction): CarpoolMember[] {
@@ -246,6 +286,16 @@ function buildNoRideNeededMembers(masterData: BoardMasterData, direction: Direct
       }
     }
 
+    for (const temporaryParticipant of response.temporaryParticipants ?? []) {
+      if (isTemporaryParticipantNoRideNeededForDirection(temporaryParticipant, direction)) {
+        members.push({
+          type: 'temporary',
+          familyId,
+          temporaryParticipantId: temporaryParticipant.id,
+        });
+      }
+    }
+
     if (isCoachNoRideNeededForDirection(family, response, direction)) {
       members.push({ type: 'coach', familyId });
     }
@@ -254,10 +304,11 @@ function buildNoRideNeededMembers(masterData: BoardMasterData, direction: Direct
   return members;
 }
 
-/** 乗車メンバー（player/coach/family）を一意に識別するキーを生成する（services/carpool/carpoolMember.tsのmemberKeyと同一基準） */
+/** 乗車メンバー（player/coach/family/temporary）を一意に識別するキーを生成する（services/carpool/carpoolMember.tsのmemberKeyと同一基準） */
 function memberKey(member: CarpoolMember): string {
   if (member.type === 'player') return `player:${member.playerId}`;
   if (member.type === 'family') return `family:${member.familyMemberId}`;
+  if (member.type === 'temporary') return `temporary:${member.temporaryParticipantId}`;
   return `coach:${member.familyId}`;
 }
 

@@ -53,6 +53,29 @@ export interface ResponseFamilyMember {
 }
 
 /**
+ * イベント回答における一時参加者（今回だけ参加する人）個別の情報を表す型。
+ * マスタ（FamilyMember）には存在せず、このResponseドキュメント内にのみ保持する
+ * （05_データ設計.md#9 一時参加者情報）。
+ */
+export interface ResponseTemporaryParticipant {
+  /** 一時参加者ID。イベント・家庭内で一意な値（追加時に生成） */
+  id: string;
+  /** 名前（自由入力） */
+  name: string;
+  /**
+   * 集合場所ID。選手・家族と異なり、所属家庭のFamily.pickupLocationIdを
+   * 自動参照するのではなく、追加時に指定したこの値を直接使用する
+   */
+  pickupLocationId: string;
+  /** イベントに参加するかどうか。選手・家族と異なりnull（未選択）を経由せず、追加した時点で常にtrue */
+  isParticipating: boolean;
+  /** 行きの配車が不要かどうか（現地集合、午後から参加など） */
+  noOutwardRide: boolean;
+  /** 帰りの配車が不要かどうか（保護者迎え、現地解散など） */
+  noReturnRide: boolean;
+}
+
+/**
  * イベント回答（家庭情報）を表す型
  */
 export interface Response {
@@ -74,6 +97,8 @@ export interface Response {
   players: ResponsePlayer[];
   /** 家族情報の配列。家族が1人も登録されていない家庭では空配列 */
   familyMembers: ResponseFamilyMember[];
+  /** 一時参加者（今回だけ参加する人）情報の配列。1人もいない家庭では空配列 */
+  temporaryParticipants: ResponseTemporaryParticipant[];
 }
 
 /**
@@ -101,9 +126,25 @@ export interface CarpoolMemberFamily {
 }
 
 /**
+ * 乗車メンバー（一時参加者。今回だけ参加する人）
+ * 他の3種と異なりマスタに存在しないため、名前・集合場所は
+ * events/{eventId}/responses/{familyId}のtemporaryParticipants[]から解決する
+ * （05_データ設計.md#10 type: "temporary" について）。
+ */
+export interface CarpoolMemberTemporary {
+  type: 'temporary';
+  familyId: string;
+  temporaryParticipantId: string;
+}
+
+/**
  * 乗車メンバーを表すUnion型
  */
-export type CarpoolMember = CarpoolMemberPlayer | CarpoolMemberCoach | CarpoolMemberFamily;
+export type CarpoolMember =
+  | CarpoolMemberPlayer
+  | CarpoolMemberCoach
+  | CarpoolMemberFamily
+  | CarpoolMemberTemporary;
 
 /**
  * 配車結果を表す型
