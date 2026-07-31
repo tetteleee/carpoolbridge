@@ -86,22 +86,8 @@ export function FamilyMemberResponseRow({
     >
       <div style={rowStyle}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          {/* 並び順は「不参加」→「参加」。行き・帰りミニスイッチ（ON＝右側）と同じ「肯定＝右」の向きに揃える（04_画面設計.md#7） */}
           <div style={segmentTrackStyle}>
-            <button
-              id={`family-member-participating-yes-${familyMemberId}`}
-              type="button"
-              aria-pressed={isParticipating === true}
-              onClick={() => onChangeIsParticipating(true)}
-              style={{
-                ...segmentButtonBaseStyle,
-                ...(isParticipating === true
-                  ? { ...segmentSelectedStyle, color: 'var(--positive)' }
-                  : {}),
-              }}
-            >
-              {isParticipating === true && <CheckIcon size={14} />}
-              参加
-            </button>
             <button
               id={`family-member-participating-no-${familyMemberId}`}
               type="button"
@@ -116,6 +102,21 @@ export function FamilyMemberResponseRow({
             >
               {isParticipating === false && <CloseIcon size={14} />}
               不参加
+            </button>
+            <button
+              id={`family-member-participating-yes-${familyMemberId}`}
+              type="button"
+              aria-pressed={isParticipating === true}
+              onClick={() => onChangeIsParticipating(true)}
+              style={{
+                ...segmentButtonBaseStyle,
+                ...(isParticipating === true
+                  ? { ...segmentSelectedStyle, color: 'var(--positive)' }
+                  : {}),
+              }}
+            >
+              {isParticipating === true && <CheckIcon size={14} />}
+              参加
             </button>
           </div>
 
