@@ -47,72 +47,88 @@ export function CarCard({
   const isOverCapacity = occupantCount > car.capacity;
 
   return (
-    <Card
-      as="section"
-      data-drop-zone-id={car.id}
-      style={{
-        border: isOverCapacity
-          ? '3.0px solid var(--negative-border)'
-          : isDropTarget
-            ? '2px dashed var(--drop-target-border)'
-            : undefined,
-        overflow: 'hidden',
-        background: isDropTarget ? 'var(--drop-target-bg)' : undefined,
-        userSelect: 'none',
-        WebkitUserSelect: 'none',
-      }}
+    // LINE共有の共有用画像はhtml2canvasでキャプチャするが、html2canvasはCard側のbox-shadowを
+    // 描画できない（Canvas2Dのshadow*がclip()と併用されると反映されない制約による）。
+    // そのためdense（共有用画像）の場合のみ、影の代わりに背景色を塗ったリングをCardの外側に
+    // paddingとして敷き、実際の配車画面と同じ「影で境界を示す」見た目を疑似的に再現する。
+    <div
+      style={
+        dense
+          ? {
+              borderRadius: '18px',
+              background: 'rgba(0, 0, 0, 0.14)',
+              padding: '1px 1px 4px',
+            }
+          : undefined
+      }
     >
-      <div
+      <Card
+        as="section"
+        data-drop-zone-id={car.id}
         style={{
-          padding: dense ? '7px 10px' : '10px 12px',
-          borderBottom: '1px solid var(--border)',
+          border: isOverCapacity
+            ? '3.0px solid var(--negative-border)'
+            : isDropTarget
+              ? '2px dashed var(--drop-target-border)'
+              : undefined,
+          overflow: 'hidden',
+          background: isDropTarget ? 'var(--drop-target-bg)' : undefined,
+          userSelect: 'none',
+          WebkitUserSelect: 'none',
         }}
       >
         <div
           style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
+            padding: dense ? '7px 10px' : '10px 12px',
+            borderBottom: '1px solid var(--border)',
           }}
         >
-          <span
+          <div
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '6px',
-              flexShrink: 0,
-              fontSize: '14px',
-              fontWeight: 700,
-              color: 'var(--text-h)',
+              gap: '8px',
             }}
           >
-            <CarIcon size={18} />
-            {toCarName(car.familyName)}
-          </span>
-          <RouteLocationList locationNames={car.routeLocationNames} />
-          <span
-            style={{
-              flexShrink: 0,
-              fontSize: '14px',
-              fontWeight: 700,
-              color: isOverCapacity ? 'var(--negative)' : 'var(--text-h)',
-            }}
-          >
-            {occupantCount}/{car.capacity}
-          </span>
+            <span
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                flexShrink: 0,
+                fontSize: '14px',
+                fontWeight: 700,
+                color: 'var(--text-h)',
+              }}
+            >
+              <CarIcon size={18} />
+              {toCarName(car.familyName)}
+            </span>
+            <RouteLocationList locationNames={car.routeLocationNames} />
+            <span
+              style={{
+                flexShrink: 0,
+                fontSize: '14px',
+                fontWeight: 700,
+                color: isOverCapacity ? 'var(--negative)' : 'var(--text-h)',
+              }}
+            >
+              {occupantCount}/{car.capacity}
+            </span>
+          </div>
         </div>
-      </div>
 
-      <div style={{ padding: dense ? '6px 8px' : '8px 10px' }}>
-        <LocationGroupedList
-          members={car.members}
-          draggingPersonId={draggingPersonId}
-          onPersonPointerDown={onPersonPointerDown}
-          hideHeaderIfSingleGroup
-          hideLeadingIcon={hideLeadingIcon}
-          dense={dense}
-        />
-      </div>
-    </Card>
+        <div style={{ padding: dense ? '6px 8px' : '8px 10px' }}>
+          <LocationGroupedList
+            members={car.members}
+            draggingPersonId={draggingPersonId}
+            onPersonPointerDown={onPersonPointerDown}
+            hideHeaderIfSingleGroup
+            hideLeadingIcon={hideLeadingIcon}
+            dense={dense}
+          />
+        </div>
+      </Card>
+    </div>
   );
 }
