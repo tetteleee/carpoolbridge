@@ -19,6 +19,16 @@ interface LocationGroupedListProps {
    * 未配車エリアには集合場所を表示する箇所が他にないため、常に見出しを表示する（省略時＝false）。
    */
   hideHeaderIfSingleGroup?: boolean;
+  /**
+   * 人カードの先頭アイコン（ドラッグハンドル）を表示しないかどうか。
+   * LINE共有の共有用画像（静的な表示専用）で使用する（04_画面設計.md#9.2）。
+   */
+  hideLeadingIcon?: boolean;
+  /**
+   * グループ間・チップ間の余白を詰めるかどうか。
+   * LINE共有の共有用画像で、縦に長くなりすぎないようにするために使用する。
+   */
+  dense?: boolean;
 }
 
 /**
@@ -33,12 +43,14 @@ export function LocationGroupedList({
   draggingPersonId = null,
   onPersonPointerDown,
   hideHeaderIfSingleGroup = false,
+  hideLeadingIcon = false,
+  dense = false,
 }: LocationGroupedListProps) {
   const groups = groupMembersByLocation(members);
   const showHeader = !(hideHeaderIfSingleGroup && groups.length <= 1);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: dense ? '6px' : '10px' }}>
       {groups.map((group) => (
         <div key={group.locationId}>
           {showHeader && (
@@ -50,19 +62,20 @@ export function LocationGroupedList({
                 fontSize: '12px',
                 fontWeight: 700,
                 color: 'var(--text)',
-                marginBottom: '4px',
+                marginBottom: dense ? '3px' : '4px',
               }}
             >
               <MapPinIcon size={12} />
               {`${group.locationName}（${group.members.length}人）`}
             </div>
           )}
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: dense ? '6px' : '10px' }}>
             {group.members.map((person) => (
               <PersonCard
                 key={person.id}
                 person={person}
                 compact
+                hideLeadingIcon={hideLeadingIcon}
                 onPointerDown={onPersonPointerDown?.(person)}
                 isDragging={person.id === draggingPersonId}
               />

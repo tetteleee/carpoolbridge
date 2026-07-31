@@ -12,6 +12,7 @@ import { DirectionToggle } from '../components/carpool/DirectionToggle';
 import { NoRideNeededArea } from '../components/carpool/NoRideNeededArea';
 import { OperationArea } from '../components/carpool/OperationArea';
 import { UnassignedArea } from '../components/carpool/UnassignedArea';
+import { ShareModal } from '../components/lineShare/ShareModal';
 import { useCarpoolDirection } from '../hooks/useCarpoolDirection';
 import { useCarpoolBoardData } from '../hooks/useCarpoolBoardData';
 import { useCarpoolValidation } from '../hooks/useCarpoolValidation';
@@ -56,6 +57,7 @@ export function CarpoolPage() {
   } = useCarpoolBoardData(eventId, direction, carpools, refreshCarpools);
   const [moveError, setMoveError] = useState<string | null>(null);
   const [isSummaryVisible, setIsSummaryVisible] = useState(true);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const { hasWarning, message: validationMessage } = useCarpoolValidation(
     carCards,
     unassignedPeople
@@ -124,8 +126,7 @@ export function CarpoolPage() {
     navigate(`/events/${eventId}/edit`);
   };
 
-  // LINE共有画面への遷移先接続はT46aで行う
-  const handleShareClick = () => {};
+  const handleShareClick = () => setIsShareModalOpen(true);
 
   return (
     <div
@@ -184,7 +185,6 @@ export function CarpoolPage() {
                   <SummaryIcon size={16} />
                 </Button>
                 <OperationArea
-                  direction={direction}
                   onEditAnswers={handleEditAnswersClick}
                   onShare={handleShareClick}
                 />
@@ -298,6 +298,14 @@ export function CarpoolPage() {
           {dragState.personName}
         </div>
       )}
+
+      <ShareModal
+        open={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
+        eventId={eventId}
+        event={event}
+        destinationName={destinationName}
+      />
     </div>
   );
 }

@@ -17,6 +17,16 @@ interface CarCardProps {
   onPersonPointerDown?: (
     person: PersonCardData
   ) => (event: ReactPointerEvent<Element>) => void;
+  /**
+   * 人カードの先頭アイコン（ドラッグハンドル）を表示しないかどうか。
+   * LINE共有の共有用画像（静的な表示専用）で使用する（04_画面設計.md#9.2）。
+   */
+  hideLeadingIcon?: boolean;
+  /**
+   * 内側の余白を詰めた表示にするかどうか。
+   * LINE共有の共有用画像で、複数の車カードが並んでも縦に長くなりすぎないようにするために使用する。
+   */
+  dense?: boolean;
 }
 
 /**
@@ -30,6 +40,8 @@ export function CarCard({
   isDropTarget = false,
   draggingPersonId = null,
   onPersonPointerDown,
+  hideLeadingIcon = false,
+  dense = false,
 }: CarCardProps) {
   const occupantCount = computeOccupantCount(car);
   const isOverCapacity = occupantCount > car.capacity;
@@ -52,7 +64,7 @@ export function CarCard({
     >
       <div
         style={{
-          padding: '10px 12px',
+          padding: dense ? '7px 10px' : '10px 12px',
           borderBottom: '1px solid var(--border)',
         }}
       >
@@ -91,12 +103,14 @@ export function CarCard({
         </div>
       </div>
 
-      <div style={{ padding: '8px 10px' }}>
+      <div style={{ padding: dense ? '6px 8px' : '8px 10px' }}>
         <LocationGroupedList
           members={car.members}
           draggingPersonId={draggingPersonId}
           onPersonPointerDown={onPersonPointerDown}
           hideHeaderIfSingleGroup
+          hideLeadingIcon={hideLeadingIcon}
+          dense={dense}
         />
       </div>
     </Card>

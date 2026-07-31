@@ -2,21 +2,13 @@ import { useEffect, useMemo, useState } from 'react';
 import type { CarCardData } from '../utils/carCard';
 import type { UnassignedPerson } from '../components/carpool/UnassignedArea';
 import type { PersonCardData } from '../components/carpool/PersonCard';
-import { getFamilies } from '../services/master/familyService';
-import { getPlayersByFamilyId } from '../services/master/playerService';
-import { getPickupLocations } from '../services/master/pickupLocationService';
-import { getResponses } from '../services/event/responseService';
 import {
-  isPlayerNoRideNeededForDirection,
-  isPlayerRidingForDirection,
-  isCoachParticipating,
-  type EligibilityMasterData,
-} from '../services/carpool/eligibility';
+  loadBoardMasterData,
+  buildCarpoolBoardData,
+  type BoardMasterData,
+} from '../services/carpool/carpoolBoardData';
 import { reconcileCarpools } from '../services/carpool/reconcileCarpools';
-import { memberKey } from '../services/carpool/carpoolMember';
-import { getSchoolGrade } from '../utils/schoolGrade';
-import type { Carpool, CarpoolMember, Direction } from '../types/event';
-import type { Family, PickupLocation } from '../types/master';
+import type { Carpool, Direction } from '../types/event';
 
 interface UseCarpoolBoardDataResult {
   /** 選択中タブ（行き／帰り）の未配車の人カード一覧 */
@@ -33,164 +25,15 @@ interface UseCarpoolBoardDataResult {
   error: string | null;
 }
 
-/** 表示用データ変換に必要なマスタ・回答データ */
-interface BoardMasterData extends EligibilityMasterData {
-  pickupLocationById: Map<string, PickupLocation>;
-}
-
-/** 学年表記（例：「小4」）を生成する。対象学年外の場合はnullを返す */
-function toGradeLabel(schoolEntryYear: number): string | null {
-  const grade = getSchoolGrade(schoolEntryYear);
-  return grade === null ? null : `小${grade}`;
-}
-
-/** 乗車メンバー（CarpoolMember）の集合場所IDを取得する。対応するマスタが見つからない場合はnull */
-function getMemberPickupLocationId(
-  member: CarpoolMember,
-  masterData: BoardMasterData
-): string | null {
-  const familyId = member.type === 'player'
-    ? masterData.playerById.get(member.playerId)?.familyId
-    : member.familyId;
-  if (!familyId) {
-    return null;
-  }
-  return masterData.familyById.get(familyId)?.pickupLocationId ?? null;
-}
-
-/** 乗車メンバー（CarpoolMember）を人カード表示用データへ変換する。対応するマスタが見つからない場合はnull */
-function toPersonCardData(
-  member: CarpoolMember,
-  masterData: BoardMasterData
-): PersonCardData | null {
-  const pickupLocationId = getMemberPickupLocationId(member, masterData);
-  const pickupLocationName = pickupLocationId
-    ? (masterData.pickupLocationById.get(pickupLocationId)?.name ?? '（削除済み）')
-    : '';
-
-  if (member.type === 'player') {
-    const player = masterData.playerById.get(member.playerId);
-    if (!player) {
-      return null;
-    }
-    return {
-      id: player.id,
-      name: player.name,
-      grade: toGradeLabel(player.schoolEntryYear),
-      pickupLocationId: pickupLocationId ?? '',
-      pickupLocationName,
-      member,
-    };
-  }
-
-  const family = masterData.familyById.get(member.familyId);
-  if (!family || family.coachName === null) {
-    return null;
-  }
-  return {
-    id: family.id,
-    name: family.coachName,
-    grade: null,
-    pickupLocationId: pickupLocationId ?? '',
-    pickupLocationName,
-    member,
-  };
-}
-
-/**
- * 車カードの経由地一覧（集合場所名）を動的に算出する。
- * 運転者の集合場所を先頭とし、以降は乗車メンバーの並び順で重複を除いて追加する。
- * ref: docs/05_データ設計.md#9 経由地一覧（集合場所）
- */
-function buildRouteLocationNames(carpool: Carpool, masterData: BoardMasterData): string[] {
-  const driverPickupLocationId = masterData.familyById.get(
-    carpool.driverFamilyId
-  )?.pickupLocationId;
-
-  const locationIds: string[] = [];
-  if (driverPickupLocationId) {
-    locationIds.push(driverPickupLocationId);
-  }
-  for (const member of carpool.members) {
-    const locationId = getMemberPickupLocationId(member, masterData);
-    if (locationId && !locationIds.includes(locationId)) {
-      locationIds.push(locationId);
-    }
-  }
-
-  return locationIds.map(
-    (locationId) => masterData.pickupLocationById.get(locationId)?.name ?? '（削除済み）'
-  );
-}
-
-/**
- * 対象方向において配車対象となる乗車メンバー（選手・コーチ）一覧を算出する。
- * ref: docs/05_データ設計.md#9 type: "player" について・type: "coach" について
- */
-function buildEligibleMembers(masterData: BoardMasterData, direction: Direction): CarpoolMember[] {
-  const members: CarpoolMember[] = [];
-
-  for (const [familyId, response] of masterData.responseByFamilyId) {
-    const family = masterData.familyById.get(familyId);
-    if (!family || !family.isActive) {
-      continue;
-    }
-
-    for (const player of response.players) {
-      const playerMaster = masterData.playerById.get(player.playerId);
-      if (
-        playerMaster?.isActive &&
-        playerMaster.familyId === familyId &&
-        isPlayerRidingForDirection(player, direction)
-      ) {
-        members.push({ type: 'player', playerId: player.playerId });
-      }
-    }
-
-    if (isCoachParticipating(family, response)) {
-      members.push({ type: 'coach', familyId });
-    }
-  }
-
-  return members;
-}
-
-/**
- * 対象方向において「参加かつ送迎不要」（配車不要エリアの対象）となる選手一覧を算出する。
- * コーチには送迎要否の概念がないため対象外とする。
- * ref: docs/04_画面設計.md#8 配車不要エリア
- */
-function buildNoRideNeededMembers(masterData: BoardMasterData, direction: Direction): CarpoolMember[] {
-  const members: CarpoolMember[] = [];
-
-  for (const [familyId, response] of masterData.responseByFamilyId) {
-    const family = masterData.familyById.get(familyId);
-    if (!family || !family.isActive) {
-      continue;
-    }
-
-    for (const player of response.players) {
-      const playerMaster = masterData.playerById.get(player.playerId);
-      if (
-        playerMaster?.isActive &&
-        playerMaster.familyId === familyId &&
-        isPlayerNoRideNeededForDirection(player, direction)
-      ) {
-        members.push({ type: 'player', playerId: player.playerId });
-      }
-    }
-  }
-
-  return members;
-}
-
 /**
  * 配車画面（メイン）の未配車エリア・車カードに表示する実データを算出するフック。
  * ref: docs/04_画面設計.md#8 未配車エリア・車カード, docs/05_データ設計.md#8,#9
  *
- * T20のCarpool読み取り処理・マスタデータ（Family・Player・PickupLocation）・回答（Response）を
- * 突き合わせ、選択中タブ（行き／帰り）の未配車人数・人カード一覧と、車カードごとの
- * 乗車メンバー・乗車率・巡回集合場所を算出する。
+ * T20のCarpool読み取り処理・マスタデータ（Family・Player・PickupLocation）・回答（Response）の
+ * 取得と突き合わせ自体はservices/carpool/carpoolBoardData.tsに切り出しており、
+ * 本フックはReactの状態管理（取得中・エラー・自動整合の副作用）を担う薄いラッパーとする。
+ * 突き合わせ処理自体を方向を指定して呼び出せる形にしているのは、LINE共有の共有用画像生成
+ * （行き・帰り両方向分が必要）でも同じ変換処理を再利用するため。
  *
  * @param eventId 対象のイベントID
  * @param direction 選択中タブ（行き／帰り）
@@ -219,28 +62,12 @@ export function useCarpoolBoardData(
       .then(() => {
         setLoading(true);
         setError(null);
-        return Promise.all([getFamilies(), getResponses(eventId), getPickupLocations()]);
+        return loadBoardMasterData(eventId);
       })
-      .then(async ([families, responses, pickupLocations]) => {
-        const playersLists = await Promise.all(
-          families.map((family) => getPlayersByFamilyId(family.id))
-        );
-        if (ignore) {
-          return;
+      .then((data) => {
+        if (!ignore) {
+          setMasterData(data);
         }
-
-        const familyById = new Map(families.map((family) => [family.id, family]));
-        const playerById = new Map(
-          playersLists.flat().map((player) => [player.id, player])
-        );
-        const responseByFamilyId = new Map(
-          responses.map((response) => [response.familyId, response])
-        );
-        const pickupLocationById = new Map(
-          pickupLocations.map((location) => [location.id, location])
-        );
-
-        setMasterData({ familyById, playerById, responseByFamilyId, pickupLocationById });
       })
       .catch(() => {
         if (!ignore) {
@@ -281,53 +108,14 @@ export function useCarpoolBoardData(
     };
   }, [eventId, direction, carpools, masterData, onCarpoolsReconciled]);
 
-  const unassignedPeople = useMemo<UnassignedPerson[]>(() => {
+  const boardData = useMemo(() => {
     if (!masterData) {
-      return [];
+      return { unassignedPeople: [], noRideNeededPeople: [], carCards: [] };
     }
-
-    const assignedKeys = new Set(
-      carpools.flatMap((carpool) => carpool.members).map(memberKey)
-    );
-
-    return buildEligibleMembers(masterData, direction)
-      .filter((member) => !assignedKeys.has(memberKey(member)))
-      .map((member) => toPersonCardData(member, masterData))
-      .filter((person): person is PersonCardData => person !== null);
+    return buildCarpoolBoardData(direction, carpools, masterData);
   }, [masterData, carpools, direction]);
-
-  const noRideNeededPeople = useMemo<PersonCardData[]>(() => {
-    if (!masterData) {
-      return [];
-    }
-
-    return buildNoRideNeededMembers(masterData, direction)
-      .map((member) => toPersonCardData(member, masterData))
-      .filter((person): person is PersonCardData => person !== null);
-  }, [masterData, direction]);
-
-  const carCards = useMemo<CarCardData[]>(() => {
-    if (!masterData) {
-      return [];
-    }
-
-    return carpools.map((carpool) => {
-      const family = masterData.familyById.get(carpool.driverFamilyId);
-      const response = masterData.responseByFamilyId.get(carpool.driverFamilyId);
-      return {
-        id: carpool.id,
-        familyName: family?.familyName ?? '',
-        capacity: carpool.capacity,
-        routeLocationNames: buildRouteLocationNames(carpool, masterData),
-        expectedCoachPersonId: isCoachParticipating(family, response) ? (family as Family).id : null,
-        members: carpool.members
-          .map((member) => toPersonCardData(member, masterData))
-          .filter((person): person is PersonCardData => person !== null),
-      };
-    });
-  }, [masterData, carpools]);
 
   const hasNoResponses = masterData !== null && masterData.responseByFamilyId.size === 0;
 
-  return { unassignedPeople, noRideNeededPeople, carCards, hasNoResponses, loading, error };
+  return { ...boardData, hasNoResponses, loading, error };
 }

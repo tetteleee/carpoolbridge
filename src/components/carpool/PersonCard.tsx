@@ -40,6 +40,12 @@ interface PersonCardProps {
    * 省略時はfalse＝既存の1行フルカード（配車不要エリアで使用）。
    */
   compact?: boolean;
+  /**
+   * 左端の先頭アイコン（ドラッグハンドル／旗）自体を表示しないかどうか。
+   * LINE共有の共有用画像（静的な表示専用）で、操作専用のUI要素であるドラッグハンドルを
+   * 除くために使用する（04_画面設計.md#9.2）。省略時はfalse＝既存どおりアイコンを表示する。
+   */
+  hideLeadingIcon?: boolean;
 }
 
 /**
@@ -60,6 +66,7 @@ export function PersonCard({
   isDragging = false,
   draggable = true,
   compact = false,
+  hideLeadingIcon = false,
 }: PersonCardProps) {
   // 学年（person.grade）は対象学年外の選手もnullになりうるため、コーチ判定には使わない（04_画面設計.md#色分けルール）
   const isCoach = person.member.type === 'coach';
@@ -98,31 +105,33 @@ export function PersonCard({
         cursor: onPointerDown ? 'grab' : undefined,
       }}
     >
-      <span
-        aria-label={draggable ? 'ドラッグハンドル' : '配車不要'}
-        onPointerDown={draggable ? handleHandlePointerDown : undefined}
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          flexShrink: 0,
-          color: 'var(--text)',
-          position: 'relative',
-          zIndex: 1,
-          // タッチ操作の当たり判定を広げるため、見た目を変えずにmargin/paddingで
-          // タップ領域のみ拡大する。三本線は左端にあり指が届きにくいため、右方向だけ
-          // さらに広く取る（非対称）。右側の拡大分は隣の名前テキストの領域と重なるが、
-          // z-indexで手前に出しているため、その範囲を触ってもドラッグハンドルとして反応する。
-          // コンパクト表示（チップ）は隣のチップとの間隔が狭いため、隣のチップを覆わない
-          // 範囲で全方向に均等拡大する（チップ間の余白はLocationGroupedList側で確保している）。
-          margin: compact ? '-8px' : '-10px -34px -10px -10px',
-          padding: compact ? '8px' : '10px 34px 10px 10px',
-          touchAction: draggable && onPointerDown ? 'none' : undefined,
-          opacity: draggable ? 1 : 0.55,
-        }}
-      >
-        {draggable ? <DragHandleIcon size={compact ? 14 : 16} /> : <FlagIcon size={compact ? 14 : 16} />}
-      </span>
+      {!hideLeadingIcon && (
+        <span
+          aria-label={draggable ? 'ドラッグハンドル' : '配車不要'}
+          onPointerDown={draggable ? handleHandlePointerDown : undefined}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+            color: 'var(--text)',
+            position: 'relative',
+            zIndex: 1,
+            // タッチ操作の当たり判定を広げるため、見た目を変えずにmargin/paddingで
+            // タップ領域のみ拡大する。三本線は左端にあり指が届きにくいため、右方向だけ
+            // さらに広く取る（非対称）。右側の拡大分は隣の名前テキストの領域と重なるが、
+            // z-indexで手前に出しているため、その範囲を触ってもドラッグハンドルとして反応する。
+            // コンパクト表示（チップ）は隣のチップとの間隔が狭いため、隣のチップを覆わない
+            // 範囲で全方向に均等拡大する（チップ間の余白はLocationGroupedList側で確保している）。
+            margin: compact ? '-8px' : '-10px -34px -10px -10px',
+            padding: compact ? '8px' : '10px 34px 10px 10px',
+            touchAction: draggable && onPointerDown ? 'none' : undefined,
+            opacity: draggable ? 1 : 0.55,
+          }}
+        >
+          {draggable ? <DragHandleIcon size={compact ? 14 : 16} /> : <FlagIcon size={compact ? 14 : 16} />}
+        </span>
+      )}
       <span style={{ fontWeight: 700, color: 'var(--text-h)' }}>
         {person.name}
         {person.grade && (
