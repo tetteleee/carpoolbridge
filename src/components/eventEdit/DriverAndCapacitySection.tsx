@@ -94,17 +94,12 @@ interface DriverOfferOptionDef {
   requiresCapacity: boolean;
 }
 
+/**
+ * 並び順は「不可」→「行きのみ」→「帰りのみ」→「可」。
+ * 左＝送迎負担なし、右＝送迎負担フルという段階的な並びにし、
+ * 行き・帰りのミニスイッチ（ON＝送迎あり＝右側）と同じ「肯定＝右」の向きに揃える（04_画面設計.md#7）。
+ */
 const DRIVER_OFFER_OPTIONS: DriverOfferOptionDef[] = [
-  {
-    key: 'both',
-    label: '可',
-    idSuffix: 'both',
-    selectedColor: 'var(--positive)',
-    SelectedIcon: CheckIcon,
-    outward: true,
-    return: true,
-    requiresCapacity: true,
-  },
   {
     key: 'none',
     label: '不可',
@@ -132,6 +127,16 @@ const DRIVER_OFFER_OPTIONS: DriverOfferOptionDef[] = [
     selectedColor: 'var(--accent)',
     SelectedIcon: ChevronLeftIcon,
     outward: false,
+    return: true,
+    requiresCapacity: true,
+  },
+  {
+    key: 'both',
+    label: '可',
+    idSuffix: 'both',
+    selectedColor: 'var(--positive)',
+    SelectedIcon: CheckIcon,
+    outward: true,
     return: true,
     requiresCapacity: true,
   },
