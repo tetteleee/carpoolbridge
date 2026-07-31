@@ -9,10 +9,11 @@ import { updateCarpool } from '../event/carpoolService';
 /** 未配車エリアを表すドロップゾーンID（車カードはCarpool.idをそのままドロップゾーンIDとして使う） */
 export const UNASSIGNED_ZONE_ID = 'unassigned';
 
-/** 乗車メンバー（player/coach/family）を一意に識別するキーを生成する */
+/** 乗車メンバー（player/coach/family/temporary）を一意に識別するキーを生成する */
 export function memberKey(member: CarpoolMember): string {
   if (member.type === 'player') return `player:${member.playerId}`;
   if (member.type === 'family') return `family:${member.familyMemberId}`;
+  if (member.type === 'temporary') return `temporary:${member.temporaryParticipantId}`;
   return `coach:${member.familyId}`;
 }
 
