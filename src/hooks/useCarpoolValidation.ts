@@ -5,7 +5,7 @@ import type { UnassignedPerson } from '../components/carpool/UnassignedArea';
 interface UseCarpoolValidationResult {
   /** 定員超過の車が存在するかどうか */
   hasOverCapacityCar: boolean;
-  /** 未配車の選手・コーチが存在するかどうか */
+  /** 未配車の選手・コーチ・家族が存在するかどうか */
   hasUnassignedPerson: boolean;
   /** いずれかの問題が存在するかどうか */
   hasWarning: boolean;

@@ -1,6 +1,6 @@
 /**
  * 配車画面（メイン）における乗車メンバーの識別・移動処理
- * ref: docs/04_画面設計.md#8 ドラッグ＆ドロップ, docs/05_データ設計.md#9 Carpool（配車結果）
+ * ref: docs/04_画面設計.md#8 ドラッグ＆ドロップ, docs/05_データ設計.md#10 Carpool（配車結果）
  */
 
 import type { Carpool, CarpoolMember } from '../../types/event';
@@ -9,9 +9,11 @@ import { updateCarpool } from '../event/carpoolService';
 /** 未配車エリアを表すドロップゾーンID（車カードはCarpool.idをそのままドロップゾーンIDとして使う） */
 export const UNASSIGNED_ZONE_ID = 'unassigned';
 
-/** 乗車メンバー（player/coach）を一意に識別するキーを生成する */
+/** 乗車メンバー（player/coach/family）を一意に識別するキーを生成する */
 export function memberKey(member: CarpoolMember): string {
-  return member.type === 'player' ? `player:${member.playerId}` : `coach:${member.familyId}`;
+  if (member.type === 'player') return `player:${member.playerId}`;
+  if (member.type === 'family') return `family:${member.familyMemberId}`;
+  return `coach:${member.familyId}`;
 }
 
 /**

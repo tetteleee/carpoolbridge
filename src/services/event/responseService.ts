@@ -103,7 +103,7 @@ export async function isUnanswered(eventId: string, familyId: string): Promise<b
 
 /**
  * 指定イベント配下の回答（Response）をすべて物理削除します。
- * 05_データ設計.md#11の例外（開発用「サンプル回答生成」機能）としてのみ利用する処理であり、
+ * 05_データ設計.md#12の例外（開発用「サンプル回答生成」機能）としてのみ利用する処理であり、
  * 開発環境限定の当該機能の確認ダイアログで「実行」が選択された場合にのみ呼び出す。
  *
  * @param eventId 対象のイベントID

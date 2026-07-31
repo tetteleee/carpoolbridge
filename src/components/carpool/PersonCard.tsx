@@ -51,7 +51,7 @@ interface PersonCardProps {
 /**
  * 配車画面（メイン）の人カード。
  * 未配車エリア・車カードのどちらの中でも同じ見た目・情報構成で表示する。
- * 乗車メンバー種別（member.type）で選手・コーチを判定し、色分けで区別する。
+ * 乗車メンバー種別（member.type）で選手・コーチ・家族を判定し、色分けで区別する。
  *
  * ドラッグ起点はデバイスにより異なる（ref: docs/04_画面設計.md#ドラッグ＆ドロップ）。
  * マウスはカード全体、タッチ／ペンはドラッグハンドル（≡）部分のみとする。
@@ -68,8 +68,9 @@ export function PersonCard({
   compact = false,
   hideLeadingIcon = false,
 }: PersonCardProps) {
-  // 学年（person.grade）は対象学年外の選手もnullになりうるため、コーチ判定には使わない（04_画面設計.md#色分けルール）
+  // 学年（person.grade）は対象学年外の選手もnullになりうるため、コーチ・家族の判定には使わない（04_画面設計.md#色分けルール）
   const isCoach = person.member.type === 'coach';
+  const isFamily = person.member.type === 'family';
 
   const handleCardPointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
     if (!onPointerDown || event.pointerType !== 'mouse') {
@@ -96,9 +97,17 @@ export function PersonCard({
         borderRadius: compact ? '6px' : undefined,
         fontSize: '14px',
         color: 'var(--text)',
-        background: isCoach ? 'var(--coach-bg)' : 'var(--player-bg)',
-        border: isCoach ? '1px solid var(--coach-border)' : '1px solid var(--player-border)',
-        borderLeft: isCoach ? '5px solid var(--coach-accent)' : '5px solid var(--player-accent)',
+        background: isCoach ? 'var(--coach-bg)' : isFamily ? 'var(--parent-bg)' : 'var(--player-bg)',
+        border: isCoach
+          ? '1px solid var(--coach-border)'
+          : isFamily
+            ? '1px solid var(--parent-border)'
+            : '1px solid var(--player-border)',
+        borderLeft: isCoach
+          ? '5px solid var(--coach-accent)'
+          : isFamily
+            ? '5px solid var(--parent-accent)'
+            : '5px solid var(--player-accent)',
         opacity: isDragging ? 'var(--drag-ghost-opacity)' : 1,
         userSelect: onPointerDown ? 'none' : undefined,
         WebkitUserSelect: onPointerDown ? 'none' : undefined,

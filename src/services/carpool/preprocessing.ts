@@ -28,7 +28,7 @@ export interface Vehicle {
   remainingCapacity: number;
   /** 経由予定の集合場所IDセット（O(1)検索用） */
   pickupLocationIds: Set<string>;
-  /** 乗車メンバー（選手・コーチ） */
+  /** 乗車メンバー（選手・コーチ・家族） */
   members: CarpoolMember[];
 }
 

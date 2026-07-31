@@ -25,12 +25,14 @@ import { getFirestore, Timestamp, type Firestore } from 'firebase-admin/firestor
 import { firestorePaths } from '../../src/constants';
 import {
   PLAYERS,
+  FAMILY_MEMBERS,
   DESTINATIONS,
   EVENTS,
   FAMILIES,
   PICKUP_LOCATIONS,
   schoolEntryYearOf,
   type SeedPlayer,
+  type SeedFamilyMember,
   type SeedDestination,
   type SeedEvent,
   type SeedFamily,
@@ -48,6 +50,7 @@ interface SeedSourceData {
   destinations: SeedDestination[];
   families: SeedFamily[];
   players: SeedPlayer[];
+  familyMembers: SeedFamilyMember[];
   events: SeedEvent[];
 }
 
@@ -66,6 +69,7 @@ function loadSeedSourceData(): SeedSourceData {
       destinations: DESTINATIONS,
       families: FAMILIES,
       players: PLAYERS,
+      familyMembers: FAMILY_MEMBERS,
       events: EVENTS,
     };
   }
@@ -132,13 +136,15 @@ async function seedCollection<T extends { id: string }>(
 
 async function main(): Promise<void> {
   const projectId = readProjectId();
-  const { pickupLocations, destinations, families, players, events } = loadSeedSourceData();
+  const { pickupLocations, destinations, families, players, familyMembers, events } =
+    loadSeedSourceData();
   console.log(`[seed] 投入先: 実Firebaseプロジェクト / project=${projectId}`);
 
   const app = initializeApp({ projectId });
   const db = getFirestore(app);
 
   await deleteCollectionRecursively(db, firestorePaths.playersCollection());
+  await deleteCollectionRecursively(db, firestorePaths.familyMembersCollection());
   await deleteCollectionRecursively(db, firestorePaths.familiesCollection());
   await deleteCollectionRecursively(db, firestorePaths.pickupLocationsCollection());
   await deleteCollectionRecursively(db, firestorePaths.destinationsCollection());
@@ -161,6 +167,11 @@ async function main(): Promise<void> {
     })),
     { createdAt: SEED_TIMESTAMP, updatedAt: SEED_TIMESTAMP }
   );
+
+  await seedCollection(db, firestorePaths.familyMembersCollection(), familyMembers, {
+    createdAt: SEED_TIMESTAMP,
+    updatedAt: SEED_TIMESTAMP,
+  });
 
   await seedCollection(db, firestorePaths.eventsCollection(), events, {
     createdAt: SEED_TIMESTAMP,

@@ -1,7 +1,7 @@
 /**
  * 配車画面（メイン）・LINE共有（共有用画像）の双方で使う、
  * 配車結果（Carpool）と回答・マスタデータを突き合わせた表示用データへの変換処理
- * ref: docs/04_画面設計.md#8 未配車エリア・車カード, docs/05_データ設計.md#8,#9
+ * ref: docs/04_画面設計.md#8 未配車エリア・車カード, docs/05_データ設計.md#9,#10
  *
  * 配車画面（メイン）は選択中タブ（行き／帰り）1方向分のみを表示するが、
  * LINE共有の共有用画像は行き・帰り両方向を1枚にまとめるため、
@@ -12,6 +12,7 @@ import type { CarCardData } from '../../utils/carCard';
 import type { PersonCardData } from '../../components/carpool/PersonCard';
 import { getFamilies } from '../master/familyService';
 import { getPlayersByFamilyId } from '../master/playerService';
+import { getFamilyMembersByFamilyId } from '../master/familyMemberService';
 import { getPickupLocations } from '../master/pickupLocationService';
 import { getResponses } from '../event/responseService';
 import {
@@ -19,6 +20,8 @@ import {
   isPlayerRidingForDirection,
   isCoachRidingForDirection,
   isCoachNoRideNeededForDirection,
+  isFamilyMemberRidingForDirection,
+  isFamilyMemberNoRideNeededForDirection,
   type EligibilityMasterData,
 } from './eligibility';
 import { getSchoolGrade } from '../../utils/schoolGrade';
@@ -51,9 +54,14 @@ function getMemberPickupLocationId(
   member: CarpoolMember,
   masterData: BoardMasterData
 ): string | null {
-  const familyId = member.type === 'player'
-    ? masterData.playerById.get(member.playerId)?.familyId
-    : member.familyId;
+  let familyId: string | undefined;
+  if (member.type === 'player') {
+    familyId = masterData.playerById.get(member.playerId)?.familyId;
+  } else if (member.type === 'family') {
+    familyId = masterData.familyMemberById.get(member.familyMemberId)?.familyId;
+  } else {
+    familyId = member.familyId;
+  }
   if (!familyId) {
     return null;
   }
@@ -85,6 +93,21 @@ function toPersonCardData(
     };
   }
 
+  if (member.type === 'family') {
+    const familyMember = masterData.familyMemberById.get(member.familyMemberId);
+    if (!familyMember) {
+      return null;
+    }
+    return {
+      id: familyMember.id,
+      name: familyMember.name,
+      grade: null,
+      pickupLocationId: pickupLocationId ?? '',
+      pickupLocationName,
+      member,
+    };
+  }
+
   const family = masterData.familyById.get(member.familyId);
   if (!family || family.coachName === null) {
     return null;
@@ -102,7 +125,7 @@ function toPersonCardData(
 /**
  * 車カードの経由地一覧（集合場所名）を動的に算出する。
  * 運転者の集合場所を先頭とし、以降は乗車メンバーの並び順で重複を除いて追加する。
- * ref: docs/05_データ設計.md#9 経由地一覧（集合場所）
+ * ref: docs/05_データ設計.md#10 経由地一覧（集合場所）
  */
 function buildRouteLocationNames(carpool: Carpool, masterData: BoardMasterData): string[] {
   const driverPickupLocationId = masterData.familyById.get(
@@ -126,8 +149,8 @@ function buildRouteLocationNames(carpool: Carpool, masterData: BoardMasterData):
 }
 
 /**
- * 対象方向において配車対象となる乗車メンバー（選手・コーチ）一覧を算出する。
- * ref: docs/05_データ設計.md#9 type: "player" について・type: "coach" について
+ * 対象方向において配車対象となる乗車メンバー（選手・コーチ・家族）一覧を算出する。
+ * ref: docs/05_データ設計.md#10 type: "player" について・type: "coach" について・type: "family" について
  */
 function buildEligibleMembers(masterData: BoardMasterData, direction: Direction): CarpoolMember[] {
   const members: CarpoolMember[] = [];
@@ -149,6 +172,17 @@ function buildEligibleMembers(masterData: BoardMasterData, direction: Direction)
       }
     }
 
+    for (const familyMemberResponse of response.familyMembers ?? []) {
+      const familyMemberMaster = masterData.familyMemberById.get(familyMemberResponse.familyMemberId);
+      if (
+        familyMemberMaster?.isActive &&
+        familyMemberMaster.familyId === familyId &&
+        isFamilyMemberRidingForDirection(familyMemberResponse, direction)
+      ) {
+        members.push({ type: 'family', familyMemberId: familyMemberResponse.familyMemberId });
+      }
+    }
+
     if (isCoachRidingForDirection(family, response, direction)) {
       members.push({ type: 'coach', familyId });
     }
@@ -158,7 +192,7 @@ function buildEligibleMembers(masterData: BoardMasterData, direction: Direction)
 }
 
 /**
- * 対象方向において「参加かつ送迎不要」（配車不要エリアの対象）となる選手・コーチ一覧を算出する。
+ * 対象方向において「参加かつ送迎不要」（配車不要エリアの対象）となる選手・コーチ・家族一覧を算出する。
  * ref: docs/04_画面設計.md#8 配車不要エリア
  */
 function buildNoRideNeededMembers(masterData: BoardMasterData, direction: Direction): CarpoolMember[] {
@@ -181,6 +215,17 @@ function buildNoRideNeededMembers(masterData: BoardMasterData, direction: Direct
       }
     }
 
+    for (const familyMemberResponse of response.familyMembers ?? []) {
+      const familyMemberMaster = masterData.familyMemberById.get(familyMemberResponse.familyMemberId);
+      if (
+        familyMemberMaster?.isActive &&
+        familyMemberMaster.familyId === familyId &&
+        isFamilyMemberNoRideNeededForDirection(familyMemberResponse, direction)
+      ) {
+        members.push({ type: 'family', familyMemberId: familyMemberResponse.familyMemberId });
+      }
+    }
+
     if (isCoachNoRideNeededForDirection(family, response, direction)) {
       members.push({ type: 'coach', familyId });
     }
@@ -189,9 +234,11 @@ function buildNoRideNeededMembers(masterData: BoardMasterData, direction: Direct
   return members;
 }
 
-/** 乗車メンバー（player/coach）を一意に識別するキーを生成する（services/carpool/carpoolMember.tsのmemberKeyと同一基準） */
+/** 乗車メンバー（player/coach/family）を一意に識別するキーを生成する（services/carpool/carpoolMember.tsのmemberKeyと同一基準） */
 function memberKey(member: CarpoolMember): string {
-  return member.type === 'player' ? `player:${member.playerId}` : `coach:${member.familyId}`;
+  if (member.type === 'player') return `player:${member.playerId}`;
+  if (member.type === 'family') return `family:${member.familyMemberId}`;
+  return `coach:${member.familyId}`;
 }
 
 /**
@@ -205,12 +252,16 @@ export async function loadBoardMasterData(eventId: string): Promise<BoardMasterD
     getResponses(eventId),
     getPickupLocations(),
   ]);
-  const playersLists = await Promise.all(
-    families.map((family) => getPlayersByFamilyId(family.id))
-  );
+  const [playersLists, familyMembersLists] = await Promise.all([
+    Promise.all(families.map((family) => getPlayersByFamilyId(family.id))),
+    Promise.all(families.map((family) => getFamilyMembersByFamilyId(family.id))),
+  ]);
 
   const familyById = new Map(families.map((family) => [family.id, family]));
   const playerById = new Map(playersLists.flat().map((player) => [player.id, player]));
+  const familyMemberById = new Map(
+    familyMembersLists.flat().map((familyMember) => [familyMember.id, familyMember])
+  );
   const responseByFamilyId = new Map(
     responses.map((response) => [response.familyId, response])
   );
@@ -218,7 +269,7 @@ export async function loadBoardMasterData(eventId: string): Promise<BoardMasterD
     pickupLocations.map((location) => [location.id, location])
   );
 
-  return { familyById, playerById, responseByFamilyId, pickupLocationById };
+  return { familyById, playerById, familyMemberById, responseByFamilyId, pickupLocationById };
 }
 
 /**

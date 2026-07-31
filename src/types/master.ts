@@ -13,7 +13,7 @@ export interface Family {
   coachName: string | null;
   /** 車の総定員（運転者本人を含む。車を持たない場合は0） */
   vehicleCapacity: number;
-  /** 家庭の集合場所（家庭に属する選手・コーチは全員この集合場所から乗車する） */
+  /** 家庭の集合場所（家庭に属する選手・コーチ・家族は全員この集合場所から乗車する） */
   pickupLocationId: string;
   /** 在籍中（falseで卒団・非表示扱い） */
   isActive: boolean;
@@ -31,6 +31,20 @@ export interface Player {
   /** 小学校の入学年度（例：2026）。学年はこの値から自動計算する */
   schoolEntryYear: number;
   /** 在籍中（falseで卒団・非表示扱い） */
+  isActive: boolean;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+/**
+ * 家族（FamilyMember）を表す型
+ * 選手・コーチ以外で配車の対象になり得る人（兄弟・祖父母など）
+ */
+export interface FamilyMember {
+  id: string;
+  familyId: string;
+  name: string;
+  /** 在籍中（falseで非表示扱い） */
   isActive: boolean;
   createdAt: Timestamp;
   updatedAt: Timestamp;

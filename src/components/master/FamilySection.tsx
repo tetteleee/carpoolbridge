@@ -10,9 +10,15 @@ import {
   getPlayersByFamilyId,
   updatePlayer,
 } from '../../services/master/playerService';
+import {
+  createFamilyMember,
+  getFamilyMembersByFamilyId,
+  updateFamilyMember,
+} from '../../services/master/familyMemberService';
 import { getPickupLocations } from '../../services/master/pickupLocationService';
-import type { Player, Family, PickupLocation } from '../../types/master';
+import type { Player, Family, FamilyMember, PickupLocation } from '../../types/master';
 import { PlayerSection } from './PlayerSection';
+import { FamilyMemberSection } from './FamilyMemberSection';
 import { AddRow } from '../common/AddRow';
 import { CollapsibleListRow } from '../common/CollapsibleListRow';
 import { FieldRow } from '../common/FieldRow';
@@ -34,6 +40,8 @@ type FamilyUpdatableFields = Partial<
 type PlayerUpdatableFields = Partial<
   Pick<Player, 'name' | 'schoolEntryYear' | 'isActive'>
 >;
+
+type FamilyMemberUpdatableFields = Partial<Pick<FamilyMember, 'name' | 'isActive'>>;
 
 export interface FamilySectionHandle {
   /** 下書き内容をまとめてFirestoreへ反映する */
@@ -130,6 +138,9 @@ export function FamilySection({ ref }: FamilySectionProps) {
   const [players, setPlayers] = useState<Player[]>([]);
   const [savedPlayers, setSavedPlayers] = useState<Player[]>([]);
   const [newPlayerIds, setNewPlayerIds] = useState<Set<string>>(new Set());
+  const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([]);
+  const [savedFamilyMembers, setSavedFamilyMembers] = useState<FamilyMember[]>([]);
+  const [newFamilyMemberIds, setNewFamilyMemberIds] = useState<Set<string>>(new Set());
   const [pickupLocations, setPickupLocations] = useState<PickupLocation[]>([]);
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
@@ -140,12 +151,17 @@ export function FamilySection({ ref }: FamilySectionProps) {
       .then(async ([familiesData, pickupLocationsData]) => {
         setPickupLocations(pickupLocationsData);
 
-        const playersByFamily = await Promise.all(
-          familiesData.map((family) => getPlayersByFamilyId(family.id))
-        );
+        const [playersByFamily, familyMembersByFamily] = await Promise.all([
+          Promise.all(familiesData.map((family) => getPlayersByFamilyId(family.id))),
+          Promise.all(familiesData.map((family) => getFamilyMembersByFamilyId(family.id))),
+        ]);
         const playersData = playersByFamily.flat();
         setPlayers(playersData);
         setSavedPlayers(playersData);
+
+        const familyMembersData = familyMembersByFamily.flat();
+        setFamilyMembers(familyMembersData);
+        setSavedFamilyMembers(familyMembersData);
 
         const sortedFamilies = sortFamilies(familiesData, playersData);
         setFamilies(sortedFamilies);
@@ -258,10 +274,43 @@ export function FamilySection({ ref }: FamilySectionProps) {
     ]);
   };
 
+  const handleFamilyMemberNameChange = (familyMemberId: string, name: string) => {
+    setFamilyMembers((prev) =>
+      prev.map((familyMember) =>
+        familyMember.id === familyMemberId ? { ...familyMember, name } : familyMember
+      )
+    );
+  };
+
+  const handleFamilyMemberActiveToggle = (familyMemberId: string) => {
+    setFamilyMembers((prev) =>
+      prev.map((familyMember) =>
+        familyMember.id === familyMemberId
+          ? { ...familyMember, isActive: !familyMember.isActive }
+          : familyMember
+      )
+    );
+  };
+
+  const handleFamilyMemberAdd = (familyId: string) => {
+    const id = crypto.randomUUID();
+    setNewFamilyMemberIds((prev) => new Set(prev).add(id));
+    setFamilyMembers((prev) => [
+      ...prev,
+      {
+        id,
+        familyId,
+        name: '',
+        isActive: true,
+      } as FamilyMember,
+    ]);
+  };
+
   useImperativeHandle(ref, () => ({
     hasChanges: () =>
       newIds.size > 0 ||
       newPlayerIds.size > 0 ||
+      newFamilyMemberIds.size > 0 ||
       families.some((family) => {
         const original = savedFamilies.find((f) => f.id === family.id);
         return (
@@ -280,6 +329,13 @@ export function FamilySection({ ref }: FamilySectionProps) {
           (original.name !== player.name ||
             original.schoolEntryYear !== player.schoolEntryYear ||
             original.isActive !== player.isActive)
+        );
+      }) ||
+      familyMembers.some((familyMember) => {
+        const original = savedFamilyMembers.find((f) => f.id === familyMember.id);
+        return (
+          original &&
+          (original.name !== familyMember.name || original.isActive !== familyMember.isActive)
         );
       }),
     save: async () => {
@@ -356,18 +412,53 @@ export function FamilySection({ ref }: FamilySectionProps) {
               await updatePlayer(player.id, playerChanges);
             }
           }
+
+          const familyMemberList = familyMembers.filter(
+            (familyMember) => familyMember.familyId === family.id
+          );
+
+          for (const familyMember of familyMemberList) {
+            if (newFamilyMemberIds.has(familyMember.id)) {
+              await createFamilyMember({
+                familyId,
+                name: familyMember.name,
+              });
+              continue;
+            }
+
+            const originalFamilyMember = savedFamilyMembers.find((f) => f.id === familyMember.id);
+            if (!originalFamilyMember) continue;
+
+            const familyMemberChanges: FamilyMemberUpdatableFields = {};
+            if (originalFamilyMember.name !== familyMember.name) {
+              familyMemberChanges.name = familyMember.name;
+            }
+            if (originalFamilyMember.isActive !== familyMember.isActive) {
+              familyMemberChanges.isActive = familyMember.isActive;
+            }
+
+            if (Object.keys(familyMemberChanges).length > 0) {
+              await updateFamilyMember(familyMember.id, familyMemberChanges);
+            }
+          }
         }
 
         const refreshedFamilies = await getFamilies();
         setNewIds(new Set());
 
-        const refreshedPlayersByFamily = await Promise.all(
-          refreshedFamilies.map((family) => getPlayersByFamilyId(family.id))
-        );
+        const [refreshedPlayersByFamily, refreshedFamilyMembersByFamily] = await Promise.all([
+          Promise.all(refreshedFamilies.map((family) => getPlayersByFamilyId(family.id))),
+          Promise.all(refreshedFamilies.map((family) => getFamilyMembersByFamilyId(family.id))),
+        ]);
         const refreshedPlayers = refreshedPlayersByFamily.flat();
         setPlayers(refreshedPlayers);
         setSavedPlayers(refreshedPlayers);
         setNewPlayerIds(new Set());
+
+        const refreshedFamilyMembers = refreshedFamilyMembersByFamily.flat();
+        setFamilyMembers(refreshedFamilyMembers);
+        setSavedFamilyMembers(refreshedFamilyMembers);
+        setNewFamilyMemberIds(new Set());
 
         const sortedFamilies = sortFamilies(refreshedFamilies, refreshedPlayers);
         setFamilies(sortedFamilies);
@@ -375,7 +466,7 @@ export function FamilySection({ ref }: FamilySectionProps) {
 
         setError(null);
       } catch {
-        setError('家庭・選手の保存に失敗しました');
+        setError('家庭・選手・家族の保存に失敗しました');
         throw new Error('family save failed');
       }
     },
@@ -412,6 +503,9 @@ export function FamilySection({ ref }: FamilySectionProps) {
             const familyPlayers = players.filter(
               (player) => player.familyId === family.id
             );
+            const familyMemberList = familyMembers.filter(
+              (familyMember) => familyMember.familyId === family.id
+            );
             const pickupName =
               pickupLocations.find((location) => location.id === family.pickupLocationId)
                 ?.name ?? '未設定';
@@ -429,6 +523,7 @@ export function FamilySection({ ref }: FamilySectionProps) {
                 meta={
                   <span style={dimStyle}>
                     選手{familyPlayers.length}名
+                    {familyMemberList.length > 0 ? `・家族${familyMemberList.length}名` : ''}
                     {family.coachName ? '・コーチあり' : ''}・{pickupName}
                   </span>
                 }
@@ -529,6 +624,15 @@ export function FamilySection({ ref }: FamilySectionProps) {
                   onSchoolEntryYearChange={handlePlayerSchoolEntryYearChange}
                   onActiveToggle={handlePlayerActiveToggle}
                   onAdd={() => handlePlayerAdd(family.id)}
+                />
+
+                <div style={sectionLabelStyle}>家族 {familyMemberList.length}名</div>
+
+                <FamilyMemberSection
+                  familyMemberList={familyMemberList}
+                  onNameChange={handleFamilyMemberNameChange}
+                  onActiveToggle={handleFamilyMemberActiveToggle}
+                  onAdd={() => handleFamilyMemberAdd(family.id)}
                 />
               </CollapsibleListRow>
             );

@@ -38,6 +38,21 @@ export interface ResponsePlayer {
 }
 
 /**
+ * イベント回答における家族個別の情報を表す型
+ * ResponsePlayerと全く同じ構造・意味を持つ（05_データ設計.md#9 家族情報）
+ */
+export interface ResponseFamilyMember {
+  /** 家族ID */
+  familyMemberId: string;
+  /** イベントに参加するかどうか。未選択=null、参加=true、欠席=false */
+  isParticipating: boolean | null;
+  /** 行きの配車が不要かどうか（現地集合、午後から参加など） */
+  noOutwardRide: boolean;
+  /** 帰りの配車が不要かどうか（保護者迎え、現地解散など） */
+  noReturnRide: boolean;
+}
+
+/**
  * イベント回答（家庭情報）を表す型
  */
 export interface Response {
@@ -57,6 +72,8 @@ export interface Response {
   remarks: string;
   /** 選手情報の配列 */
   players: ResponsePlayer[];
+  /** 家族情報の配列。家族が1人も登録されていない家庭では空配列 */
+  familyMembers: ResponseFamilyMember[];
 }
 
 /**
@@ -76,9 +93,17 @@ export interface CarpoolMemberCoach {
 }
 
 /**
+ * 乗車メンバー（家族）
+ */
+export interface CarpoolMemberFamily {
+  type: 'family';
+  familyMemberId: string;
+}
+
+/**
  * 乗車メンバーを表すUnion型
  */
-export type CarpoolMember = CarpoolMemberPlayer | CarpoolMemberCoach;
+export type CarpoolMember = CarpoolMemberPlayer | CarpoolMemberCoach | CarpoolMemberFamily;
 
 /**
  * 配車結果を表す型

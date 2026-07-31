@@ -27,7 +27,7 @@ interface UseCarpoolBoardDataResult {
 
 /**
  * 配車画面（メイン）の未配車エリア・車カードに表示する実データを算出するフック。
- * ref: docs/04_画面設計.md#8 未配車エリア・車カード, docs/05_データ設計.md#8,#9
+ * ref: docs/04_画面設計.md#8 未配車エリア・車カード, docs/05_データ設計.md#9,#10
  *
  * T20のCarpool読み取り処理・マスタデータ（Family・Player・PickupLocation）・回答（Response）の
  * 取得と突き合わせ自体はservices/carpool/carpoolBoardData.tsに切り出しており、
