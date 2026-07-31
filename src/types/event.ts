@@ -49,6 +49,10 @@ export interface Response {
   capacityToday: number | null;
   /** コーチが参加するかどうか。コーチが紐づかない家庭ではnull */
   coachParticipating: boolean | null;
+  /** 行きのコーチの配車が不要かどうか（現地集合など） */
+  coachNoOutwardRide: boolean;
+  /** 帰りのコーチの配車が不要かどうか（保護者迎えなど） */
+  coachNoReturnRide: boolean;
   /** 特記事項（選手個別の特殊ケースもここに集約する） */
   remarks: string;
   /** 選手情報の配列 */

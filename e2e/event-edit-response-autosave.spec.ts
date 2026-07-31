@@ -98,9 +98,19 @@ test('回答入力画面の各項目を変更すると、都度Firestoreへ自�
       { playerId: playerRef.id, isParticipating: true, noOutwardRide: true, noReturnRide: false },
     ]);
 
+  // 「参加」を○にした瞬間、コーチの行き・帰りの送迎スイッチも両方ON（送迎あり）になる
   await page.click(`#coach-participating-yes-${familyRef.id}`);
   await expect
     .poll(async () => (await responseDocRef.get()).data()?.coachParticipating)
+    .toBe(true);
+  saved = (await responseDocRef.get()).data();
+  expect(saved?.coachNoOutwardRide).toBe(false);
+  expect(saved?.coachNoReturnRide).toBe(false);
+
+  // コーチの行きの送迎スイッチをOFF（不要）にする
+  await page.click(`#coach-no-outward-ride-${familyRef.id}`);
+  await expect
+    .poll(async () => (await responseDocRef.get()).data()?.coachNoOutwardRide)
     .toBe(true);
 
   await page.fill(`#remarks-input-${familyRef.id}`, '雨天時は現地集合');
@@ -138,6 +148,16 @@ test('回答入力画面の各項目を変更すると、都度Firestoreへ自�
   );
   await expect(page.locator(`#coach-participating-yes-${familyRef.id}`)).toHaveAttribute(
     'aria-pressed',
+    'true'
+  );
+  // コーチの行きの送迎スイッチはOFF（不要）のまま＝aria-checkedはfalse
+  await expect(page.locator(`#coach-no-outward-ride-${familyRef.id}`)).toHaveAttribute(
+    'aria-checked',
+    'false'
+  );
+  // コーチの帰りの送迎スイッチは未操作のためON（送迎あり）のまま＝aria-checkedはtrue
+  await expect(page.locator(`#coach-no-return-ride-${familyRef.id}`)).toHaveAttribute(
+    'aria-checked',
     'true'
   );
   await expect(page.locator(`#remarks-input-${familyRef.id}`)).toHaveValue('雨天時は現地集合');

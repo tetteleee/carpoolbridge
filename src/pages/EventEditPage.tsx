@@ -149,6 +149,8 @@ export function EventEditPage() {
             driverReturn: null,
             capacityToday: null,
             coachParticipating: null,
+            coachNoOutwardRide: false,
+            coachNoReturnRide: false,
             remarks: '',
             players: [],
           };

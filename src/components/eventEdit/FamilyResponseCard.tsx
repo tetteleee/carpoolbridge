@@ -128,6 +128,8 @@ function buildInitialResponse(playerList: Player[], response: Response | undefin
     driverReturn: null,
     capacityToday: null,
     coachParticipating: null,
+    coachNoOutwardRide: false,
+    coachNoReturnRide: false,
     remarks: '',
     players: playerList.map((player) => buildInitialResponsePlayer(player.id)),
   };
@@ -301,7 +303,19 @@ export function FamilyResponseCard({
                 <CoachResponseRow
                   familyId={family.id}
                   coachParticipating={current.coachParticipating}
-                  onChange={(value) => applyPatch({ coachParticipating: value })}
+                  coachNoOutwardRide={current.coachNoOutwardRide}
+                  coachNoReturnRide={current.coachNoReturnRide}
+                  onChange={(value) =>
+                    applyPatch(
+                      // 参加（○）にした瞬間、行き・帰りの送迎は両方ON（送迎あり）を既定にする
+                      // （04_画面設計.md#7）。不参加（✕）にする場合は既存の送迎要否をそのまま保持する
+                      value === true
+                        ? { coachParticipating: true, coachNoOutwardRide: false, coachNoReturnRide: false }
+                        : { coachParticipating: value }
+                    )
+                  }
+                  onChangeNoOutwardRide={(value) => applyPatch({ coachNoOutwardRide: value })}
+                  onChangeNoReturnRide={(value) => applyPatch({ coachNoReturnRide: value })}
                 />
               </Card>
             )}

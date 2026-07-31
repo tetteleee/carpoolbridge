@@ -29,7 +29,7 @@ import {
   DriverGroupCapacityExceededError,
   buildAssignmentWarnings,
 } from './assignmentErrors';
-import { isDriverForDirection, isPlayerRidingForDirection } from './eligibility';
+import { isDriverForDirection, isPlayerRidingForDirection, isCoachRidingForDirection } from './eligibility';
 
 /**
  * runCarpoolAssignmentの戻り値。
@@ -95,7 +95,7 @@ export async function runCarpoolAssignment(
     const hasRidingPlayer = response.players.some(
       (player) => activePlayerIds.has(player.playerId) && isPlayerRidingForDirection(player, direction)
     );
-    const hasRidingCoach = family.coachName !== null && response.coachParticipating === true;
+    const hasRidingCoach = isCoachRidingForDirection(family, response, direction);
 
     if (
       (driving || hasRidingPlayer || hasRidingCoach) &&
@@ -133,7 +133,7 @@ export async function runCarpoolAssignment(
   for (const family of answeredFamilies) {
     const response = responseByFamilyId.get(family.id) as Response;
     const activePlayerIds = activePlayerIdsByFamilyId.get(family.id) as Set<string>;
-    const hasParticipatingCoach = family.coachName !== null && response.coachParticipating === true;
+    const hasParticipatingCoach = isCoachRidingForDirection(family, response, direction);
     const vehicleCapacity = response.capacityToday ?? family.vehicleCapacity;
 
     vehicleCapacityByFamilyId.set(family.id, vehicleCapacity);
