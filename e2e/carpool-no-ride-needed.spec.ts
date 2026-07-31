@@ -23,7 +23,7 @@ async function signInAndOpenCarpoolPage(
   await expect(page.getByText('読み込み中...')).toHaveCount(0);
 }
 
-test('参加かつ送迎不要の選手が配車不要エリアに表示され、未配車エリア・車カードには表示されない。未回答・不参加・コーチは含まれない', async ({ page }) => {
+test('参加かつ送迎不要の選手が配車不要エリアに表示され、未配車エリア・車カードには表示されない。未回答・不参加は含まれない', async ({ page }) => {
   const db = getEmulatorFirestore();
   const now = Timestamp.now();
 
@@ -69,7 +69,7 @@ test('参加かつ送迎不要の選手が配車不要エリアに表示され�
     familyId: familyDeclined.id, name: '不参加花子', schoolEntryYear: 2019, isActive: true, createdAt: now, updatedAt: now,
   });
 
-  // 参加コーチ（送迎要否の概念を持たないため配車不要エリアには含まれない）
+  // 参加コーチ（送迎要否スイッチは未設定＝送迎ありのため配車不要エリアには含まれない）
   const familyCoach = await db.collection('families').add({
     familyName: '佐藤家', coachName: '佐藤父', vehicleCapacity: 0, pickupLocationId: locA.id,
     isActive: true, createdAt: now, updatedAt: now,
@@ -131,6 +131,40 @@ test('参加かつ送迎不要の選手が配車不要エリアに表示され�
   // 未回答・不参加の選手は画面上どこにも表示されない
   await expect(page.getByText('未回答太郎')).toHaveCount(0);
   await expect(page.getByText('不参加花子')).toHaveCount(0);
+});
+
+test('参加かつ送迎不要のコーチが配車不要エリアに表示され、未配車エリアには表示されない', async ({ page }) => {
+  const db = getEmulatorFirestore();
+  const now = Timestamp.now();
+
+  const locA = await db.collection('pickupLocations').add({ name: '西公園', latitude: 35.0, longitude: 139.0 });
+  const destinationRef = await db.collection('destinations').add({ name: '目的地A', latitude: 35.1, longitude: 139.1 });
+
+  const familyCoach = await db.collection('families').add({
+    familyName: '佐藤家', coachName: '佐藤父', vehicleCapacity: 0, pickupLocationId: locA.id,
+    isActive: true, createdAt: now, updatedAt: now,
+  });
+
+  const eventRef = await db.collection('events').add({
+    name: '練習試合', date: '2026-08-01', destinationId: destinationRef.id, createdAt: now, updatedAt: now,
+  });
+  await eventRef.collection('responses').doc(familyCoach.id).set({
+    driverOutward: false, driverReturn: false, capacityToday: null, coachParticipating: true,
+    coachNoOutwardRide: true, coachNoReturnRide: false, remarks: '', players: [],
+  });
+
+  await signInAndOpenCarpoolPage(page, db, eventRef.id);
+
+  // 行きタブ（初期表示）：コーチの行き送迎スイッチがOFFのため配車不要エリアに表示される
+  await expect(page.getByRole('heading', { name: '配車不要　1名' })).toBeVisible();
+  await expect(page.getByText('佐藤父')).toBeVisible();
+  await expect(page.getByRole('heading', { name: /未配車/ })).toHaveCount(0);
+
+  // 帰りタブ：コーチの帰り送迎スイッチはONのため未配車エリアに表示される
+  await page.getByRole('tab', { name: '帰り' }).click();
+  await expect(page.getByRole('heading', { name: /配車不要/ })).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: '未配車　1名' })).toBeVisible();
+  await expect(page.getByText('佐藤父')).toBeVisible();
 });
 
 test('配車不要が0人の場合、配車不要エリア・サマリー帯のチップがいずれも表示されない', async ({ page }) => {

@@ -87,12 +87,18 @@ function buildRandomResponse(
   const capacityToday = randomCapacityToday(vehicleCapacity);
   const effectiveCapacity = capacityToday ?? vehicleCapacity;
   const { driverOutward, driverReturn } = randomDriverOffer(effectiveCapacity);
+  const coachParticipating = hasCoach ? randomTriState() : null;
+  // 送迎要否スイッチは「参加」が○の場合のみ意味を持つため、それ以外は既定値（送迎あり＝false）のままにする
+  const coachNoOutwardRide = coachParticipating === true && Math.random() < NO_RIDE_PROBABILITY;
+  const coachNoReturnRide = coachParticipating === true && Math.random() < NO_RIDE_PROBABILITY;
 
   return {
     driverOutward,
     driverReturn,
     capacityToday,
-    coachParticipating: hasCoach ? randomTriState() : null,
+    coachParticipating,
+    coachNoOutwardRide,
+    coachNoReturnRide,
     remarks: randomRemarks(),
     players: playerIds.map((playerId) => randomResponsePlayer(playerId)),
   };

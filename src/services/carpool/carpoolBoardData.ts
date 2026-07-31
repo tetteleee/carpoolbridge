@@ -17,12 +17,13 @@ import { getResponses } from '../event/responseService';
 import {
   isPlayerNoRideNeededForDirection,
   isPlayerRidingForDirection,
-  isCoachParticipating,
+  isCoachRidingForDirection,
+  isCoachNoRideNeededForDirection,
   type EligibilityMasterData,
 } from './eligibility';
 import { getSchoolGrade } from '../../utils/schoolGrade';
 import type { Carpool, CarpoolMember, Direction } from '../../types/event';
-import type { Family, PickupLocation } from '../../types/master';
+import type { PickupLocation } from '../../types/master';
 
 /** 表示用データ変換に必要なマスタ・回答データ */
 export interface BoardMasterData extends EligibilityMasterData {
@@ -148,7 +149,7 @@ function buildEligibleMembers(masterData: BoardMasterData, direction: Direction)
       }
     }
 
-    if (isCoachParticipating(family, response)) {
+    if (isCoachRidingForDirection(family, response, direction)) {
       members.push({ type: 'coach', familyId });
     }
   }
@@ -157,8 +158,7 @@ function buildEligibleMembers(masterData: BoardMasterData, direction: Direction)
 }
 
 /**
- * 対象方向において「参加かつ送迎不要」（配車不要エリアの対象）となる選手一覧を算出する。
- * コーチには送迎要否の概念がないため対象外とする。
+ * 対象方向において「参加かつ送迎不要」（配車不要エリアの対象）となる選手・コーチ一覧を算出する。
  * ref: docs/04_画面設計.md#8 配車不要エリア
  */
 function buildNoRideNeededMembers(masterData: BoardMasterData, direction: Direction): CarpoolMember[] {
@@ -179,6 +179,10 @@ function buildNoRideNeededMembers(masterData: BoardMasterData, direction: Direct
       ) {
         members.push({ type: 'player', playerId: player.playerId });
       }
+    }
+
+    if (isCoachNoRideNeededForDirection(family, response, direction)) {
+      members.push({ type: 'coach', familyId });
     }
   }
 
@@ -245,13 +249,11 @@ export function buildCarpoolBoardData(
 
   const carCards = carpools.map((carpool) => {
     const family = masterData.familyById.get(carpool.driverFamilyId);
-    const response = masterData.responseByFamilyId.get(carpool.driverFamilyId);
     return {
       id: carpool.id,
       familyName: family?.familyName ?? '',
       capacity: carpool.capacity,
       routeLocationNames: buildRouteLocationNames(carpool, masterData),
-      expectedCoachPersonId: isCoachParticipating(family, response) ? (family as Family).id : null,
       members: carpool.members
         .map((member) => toPersonCardData(member, masterData))
         .filter((person): person is PersonCardData => person !== null),

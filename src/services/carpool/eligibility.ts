@@ -48,12 +48,31 @@ export function isPlayerNoRideNeededForDirection(
   return direction === 'OUTWARD' ? player.noOutwardRide : player.noReturnRide;
 }
 
-/** 家庭に参加するコーチが紐づいているかどうか（車出し可否に関わらず判定） */
-export function isCoachParticipating(
+/** 対象方向におけるコーチの配車要否（coachParticipating・coachNoOutwardRide/coachNoReturnRide）を判定する */
+export function isCoachRidingForDirection(
   family: Family | undefined,
-  response: Response | undefined
+  response: Response | undefined,
+  direction: Direction
 ): boolean {
-  return !!family && family.coachName !== null && response?.coachParticipating === true;
+  if (!family || family.coachName === null || response?.coachParticipating !== true) {
+    return false;
+  }
+  return direction === 'OUTWARD' ? !response.coachNoOutwardRide : !response.coachNoReturnRide;
+}
+
+/**
+ * 対象方向において、コーチが「参加かつ送迎不要」（配車不要エリアの対象）かどうかを判定する。
+ * ref: docs/04_画面設計.md#8 配車不要エリア
+ */
+export function isCoachNoRideNeededForDirection(
+  family: Family | undefined,
+  response: Response | undefined,
+  direction: Direction
+): boolean {
+  if (!family || family.coachName === null || response?.coachParticipating !== true) {
+    return false;
+  }
+  return direction === 'OUTWARD' ? !!response.coachNoOutwardRide : !!response.coachNoReturnRide;
 }
 
 /**
@@ -88,5 +107,9 @@ export function isMemberEligibleForDirection(
   if (!family || !family.isActive) {
     return false;
   }
-  return isCoachParticipating(family, masterData.responseByFamilyId.get(member.familyId));
+  return isCoachRidingForDirection(
+    family,
+    masterData.responseByFamilyId.get(member.familyId),
+    direction
+  );
 }
