@@ -5,13 +5,17 @@ import {
   getDoc,
   getDocs,
   updateDoc,
+  deleteDoc,
   serverTimestamp,
 } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { firestorePaths } from '../../constants';
 import type { Family } from '../../types/master';
-import { deactivatePlayersByFamilyId } from './playerService';
-import { deactivateFamilyMembersByFamilyId } from './familyMemberService';
+import { deactivatePlayersByFamilyId, deletePlayersByFamilyId } from './playerService';
+import {
+  deactivateFamilyMembersByFamilyId,
+  deleteFamilyMembersByFamilyId,
+} from './familyMemberService';
 
 /**
  * 家庭を新規登録します。
@@ -88,4 +92,18 @@ export async function updateFamily(
     await deactivatePlayersByFamilyId(familyId);
     await deactivateFamilyMembersByFamilyId(familyId);
   }
+}
+
+/**
+ * 家庭を物理削除します（登録ミスの取り消し用）。
+ * 所属する選手・家族も道連れで物理削除します。
+ * 過去の回答・配車結果から参照中でも削除する（05_データ設計.md#12 削除方針）。
+ *
+ * @param familyId 削除対象のドキュメントID
+ */
+export async function deleteFamily(familyId: string): Promise<void> {
+  await deletePlayersByFamilyId(familyId);
+  await deleteFamilyMembersByFamilyId(familyId);
+  const docRef = doc(db, firestorePaths.familyDocument(familyId));
+  await deleteDoc(docRef);
 }

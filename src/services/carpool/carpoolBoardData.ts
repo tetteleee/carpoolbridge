@@ -68,7 +68,24 @@ function getMemberPickupLocationId(
   return masterData.familyById.get(familyId)?.pickupLocationId ?? null;
 }
 
-/** 乗車メンバー（CarpoolMember）を人カード表示用データへ変換する。対応するマスタが見つからない場合はnull */
+/** 参照先マスタが削除済みで解決できない乗車メンバー用の人カードデータを生成する（05_データ設計.md#12 削除方針） */
+function toDeletedPersonCardData(id: string, member: CarpoolMember): PersonCardData {
+  return {
+    id,
+    name: '（削除済み）',
+    grade: null,
+    pickupLocationId: '',
+    pickupLocationName: '（削除済み）',
+    member,
+  };
+}
+
+/**
+ * 乗車メンバー（CarpoolMember）を人カード表示用データへ変換する。
+ * 対応するマスタ（選手・家族・家庭）が物理削除済みで見つからない場合は、
+ * nullを返して非表示にするのではなく「（削除済み）」の人カードを返す
+ * （過去の配車結果で乗車していた事実自体が分からなくなることを防ぐため。05_データ設計.md#12 削除方針）。
+ */
 function toPersonCardData(
   member: CarpoolMember,
   masterData: BoardMasterData
@@ -81,7 +98,7 @@ function toPersonCardData(
   if (member.type === 'player') {
     const player = masterData.playerById.get(member.playerId);
     if (!player) {
-      return null;
+      return toDeletedPersonCardData(member.playerId, member);
     }
     return {
       id: player.id,
@@ -96,7 +113,7 @@ function toPersonCardData(
   if (member.type === 'family') {
     const familyMember = masterData.familyMemberById.get(member.familyMemberId);
     if (!familyMember) {
-      return null;
+      return toDeletedPersonCardData(member.familyMemberId, member);
     }
     return {
       id: familyMember.id,
@@ -109,7 +126,10 @@ function toPersonCardData(
   }
 
   const family = masterData.familyById.get(member.familyId);
-  if (!family || family.coachName === null) {
+  if (!family) {
+    return toDeletedPersonCardData(member.familyId, member);
+  }
+  if (family.coachName === null) {
     return null;
   }
   return {
@@ -302,7 +322,7 @@ export function buildCarpoolBoardData(
     const family = masterData.familyById.get(carpool.driverFamilyId);
     return {
       id: carpool.id,
-      familyName: family?.familyName ?? '',
+      familyName: family?.familyName ?? null,
       capacity: carpool.capacity,
       routeLocationNames: buildRouteLocationNames(carpool, masterData),
       members: carpool.members

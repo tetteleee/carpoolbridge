@@ -5,6 +5,7 @@ import {
   getSchoolEntryYearOptions,
 } from '../../utils/schoolGrade';
 import { AddRow } from '../common/AddRow';
+import { Button } from '../common/Button';
 import { RoleBox } from '../common/RoleBox';
 import { Switch } from '../common/Switch';
 import { UserIcon } from '../icons';
@@ -15,7 +16,15 @@ interface PlayerSectionProps {
   onSchoolEntryYearChange: (playerId: string, schoolEntryYear: number) => void;
   onActiveToggle: (playerId: string) => void;
   onAdd: () => void;
+  /** 選手の削除ボタン押下時（実際の削除は確認ダイアログを経由する。04_画面設計.md#10.4） */
+  onDelete: (playerId: string) => void;
 }
+
+const deleteButtonStyle: CSSProperties = {
+  padding: '6px 12px',
+  minHeight: '30px',
+  fontSize: '12px',
+};
 
 const nameInputStyle: CSSProperties = {
   flex: 1,
@@ -70,6 +79,7 @@ export function PlayerSection({
   onSchoolEntryYearChange,
   onActiveToggle,
   onAdd,
+  onDelete,
 }: PlayerSectionProps) {
   const schoolEntryYearOptions = getSchoolEntryYearOptions();
 
@@ -112,11 +122,21 @@ export function PlayerSection({
 
           <div style={statusRowStyle}>
             <span style={statusLabelStyle}>在籍中</span>
-            <Switch
-              checked={player.isActive}
-              onChange={() => onActiveToggle(player.id)}
-              ariaLabel={`${player.name || '選手'}の在籍状態`}
-            />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Switch
+                checked={player.isActive}
+                onChange={() => onActiveToggle(player.id)}
+                ariaLabel={`${player.name || '選手'}の在籍状態`}
+              />
+              <Button
+                variant="danger"
+                size="sm"
+                style={deleteButtonStyle}
+                onClick={() => onDelete(player.id)}
+              >
+                削除
+              </Button>
+            </div>
           </div>
         </RoleBox>
       ))}

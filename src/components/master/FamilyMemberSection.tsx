@@ -1,6 +1,7 @@
 import type { CSSProperties } from 'react';
 import type { FamilyMember } from '../../types/master';
 import { AddRow } from '../common/AddRow';
+import { Button } from '../common/Button';
 import { RoleBox } from '../common/RoleBox';
 import { Switch } from '../common/Switch';
 import { UserIcon } from '../icons';
@@ -10,7 +11,15 @@ interface FamilyMemberSectionProps {
   onNameChange: (familyMemberId: string, name: string) => void;
   onActiveToggle: (familyMemberId: string) => void;
   onAdd: () => void;
+  /** 家族の削除ボタン押下時（実際の削除は確認ダイアログを経由する。04_画面設計.md#10.4） */
+  onDelete: (familyMemberId: string) => void;
 }
+
+const deleteButtonStyle: CSSProperties = {
+  padding: '6px 12px',
+  minHeight: '30px',
+  fontSize: '12px',
+};
 
 const nameInputStyle: CSSProperties = {
   flex: 1,
@@ -52,6 +61,7 @@ export function FamilyMemberSection({
   onNameChange,
   onActiveToggle,
   onAdd,
+  onDelete,
 }: FamilyMemberSectionProps) {
   return (
     <div id="family-member-section" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -76,11 +86,21 @@ export function FamilyMemberSection({
 
           <div style={statusRowStyle}>
             <span style={statusLabelStyle}>在籍中</span>
-            <Switch
-              checked={familyMember.isActive}
-              onChange={() => onActiveToggle(familyMember.id)}
-              ariaLabel={`${familyMember.name || '家族'}の在籍状態`}
-            />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Switch
+                checked={familyMember.isActive}
+                onChange={() => onActiveToggle(familyMember.id)}
+                ariaLabel={`${familyMember.name || '家族'}の在籍状態`}
+              />
+              <Button
+                variant="danger"
+                size="sm"
+                style={deleteButtonStyle}
+                onClick={() => onDelete(familyMember.id)}
+              >
+                削除
+              </Button>
+            </div>
           </div>
         </RoleBox>
       ))}

@@ -8,8 +8,8 @@ import type { PersonCardData } from '../components/carpool/PersonCard';
 export interface CarCardData {
   /** 配車ID */
   id: string;
-  /** 家庭名（例：「山田家」）。カード上は「家」を除き「号」を付与した車名として表示する */
-  familyName: string;
+  /** 家庭名（例：「山田家」）。カード上は「家」を除き「号」を付与した車名として表示する。運転者の家庭が削除済みで解決できない場合はnull（05_データ設計.md#12 削除方針） */
+  familyName: string | null;
   /** 運転者本人を含む総定員 */
   capacity: number;
   /** 経由する集合場所名の一覧（表示順は巡回順を意味しない。実際の順番は当日ドライバーが判断する） */

@@ -2,16 +2,19 @@ import { useEffect, useImperativeHandle, useState } from 'react';
 import type { CSSProperties } from 'react';
 import {
   createFamily,
+  deleteFamily,
   getFamilies,
   updateFamily,
 } from '../../services/master/familyService';
 import {
   createPlayer,
+  deletePlayer,
   getPlayersByFamilyId,
   updatePlayer,
 } from '../../services/master/playerService';
 import {
   createFamilyMember,
+  deleteFamilyMember,
   getFamilyMembersByFamilyId,
   updateFamilyMember,
 } from '../../services/master/familyMemberService';
@@ -19,14 +22,23 @@ import { getPickupLocations } from '../../services/master/pickupLocationService'
 import type { Player, Family, FamilyMember, PickupLocation } from '../../types/master';
 import { PlayerSection } from './PlayerSection';
 import { FamilyMemberSection } from './FamilyMemberSection';
+import { MasterDeleteDialog } from './MasterDeleteDialog';
 import { AddRow } from '../common/AddRow';
+import { Button } from '../common/Button';
 import { CollapsibleListRow } from '../common/CollapsibleListRow';
 import { FieldRow } from '../common/FieldRow';
 import { RoleBox } from '../common/RoleBox';
 import { Stepper } from '../common/Stepper';
 import { Switch } from '../common/Switch';
 import { getFamilyHighestGrade, getSchoolEntryYearOptions } from '../../utils/schoolGrade';
-import { HomeIcon, LoadingIndicator, UserIcon } from '../icons';
+import { HomeIcon, LoadingIndicator, UserIcon, WarningIcon } from '../icons';
+
+/** 削除確認ダイアログの対象 */
+interface DeleteTarget {
+  type: 'family' | 'player' | 'familyMember';
+  id: string;
+  name: string;
+}
 
 type EditableField = 'familyName' | 'coachName' | 'vehicleCapacity';
 
@@ -145,6 +157,8 @@ export function FamilySection({ ref }: FamilySectionProps) {
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<DeleteTarget | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     Promise.all([getFamilies(), getPickupLocations()])
@@ -304,6 +318,130 @@ export function FamilySection({ ref }: FamilySectionProps) {
         isActive: true,
       } as FamilyMember,
     ]);
+  };
+
+  const openFamilyDelete = (family: Family) => {
+    setDeleteTarget({ type: 'family', id: family.id, name: family.familyName || '（家庭名未設定）' });
+  };
+
+  const openPlayerDelete = (playerId: string) => {
+    const player = players.find((p) => p.id === playerId);
+    setDeleteTarget({ type: 'player', id: playerId, name: player?.name || '（名前未設定）' });
+  };
+
+  const openFamilyMemberDelete = (familyMemberId: string) => {
+    const familyMember = familyMembers.find((f) => f.id === familyMemberId);
+    setDeleteTarget({
+      type: 'familyMember',
+      id: familyMemberId,
+      name: familyMember?.name || '（名前未設定）',
+    });
+  };
+
+  const closeDeleteDialog = () => setDeleteTarget(null);
+
+  const removeIdFromSet = (set: Set<string>, id: string): Set<string> => {
+    const next = new Set(set);
+    next.delete(id);
+    return next;
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteTarget) {
+      return;
+    }
+    const { type, id } = deleteTarget;
+
+    if (type === 'player') {
+      if (newPlayerIds.has(id)) {
+        setPlayers((prev) => prev.filter((player) => player.id !== id));
+        setNewPlayerIds((prev) => removeIdFromSet(prev, id));
+        setDeleteTarget(null);
+        return;
+      }
+      setDeleting(true);
+      try {
+        await deletePlayer(id);
+        setPlayers((prev) => prev.filter((player) => player.id !== id));
+        setSavedPlayers((prev) => prev.filter((player) => player.id !== id));
+        setError(null);
+        setDeleteTarget(null);
+      } catch {
+        setError('選手の削除に失敗しました');
+      } finally {
+        setDeleting(false);
+      }
+      return;
+    }
+
+    if (type === 'familyMember') {
+      if (newFamilyMemberIds.has(id)) {
+        setFamilyMembers((prev) => prev.filter((familyMember) => familyMember.id !== id));
+        setNewFamilyMemberIds((prev) => removeIdFromSet(prev, id));
+        setDeleteTarget(null);
+        return;
+      }
+      setDeleting(true);
+      try {
+        await deleteFamilyMember(id);
+        setFamilyMembers((prev) => prev.filter((familyMember) => familyMember.id !== id));
+        setSavedFamilyMembers((prev) => prev.filter((familyMember) => familyMember.id !== id));
+        setError(null);
+        setDeleteTarget(null);
+      } catch {
+        setError('家族の削除に失敗しました');
+      } finally {
+        setDeleting(false);
+      }
+      return;
+    }
+
+    // 家庭の削除（所属する選手・家族も道連れで削除する）
+    if (newIds.has(id)) {
+      const removedPlayerIds = players.filter((player) => player.familyId === id).map((p) => p.id);
+      const removedFamilyMemberIds = familyMembers
+        .filter((familyMember) => familyMember.familyId === id)
+        .map((f) => f.id);
+
+      setPlayers((prev) => prev.filter((player) => player.familyId !== id));
+      setFamilyMembers((prev) => prev.filter((familyMember) => familyMember.familyId !== id));
+      setNewPlayerIds((prev) => {
+        let next = prev;
+        removedPlayerIds.forEach((playerId) => {
+          next = removeIdFromSet(next, playerId);
+        });
+        return next;
+      });
+      setNewFamilyMemberIds((prev) => {
+        let next = prev;
+        removedFamilyMemberIds.forEach((familyMemberId) => {
+          next = removeIdFromSet(next, familyMemberId);
+        });
+        return next;
+      });
+      setFamilies((prev) => prev.filter((family) => family.id !== id));
+      setNewIds((prev) => removeIdFromSet(prev, id));
+      setDeleteTarget(null);
+      return;
+    }
+
+    setDeleting(true);
+    try {
+      await deleteFamily(id);
+      setFamilies((prev) => prev.filter((family) => family.id !== id));
+      setSavedFamilies((prev) => prev.filter((family) => family.id !== id));
+      setPlayers((prev) => prev.filter((player) => player.familyId !== id));
+      setSavedPlayers((prev) => prev.filter((player) => player.familyId !== id));
+      setFamilyMembers((prev) => prev.filter((familyMember) => familyMember.familyId !== id));
+      setSavedFamilyMembers((prev) => prev.filter((familyMember) => familyMember.familyId !== id));
+      setExpandedIds((prev) => removeIdFromSet(prev, id));
+      setError(null);
+      setDeleteTarget(null);
+    } catch {
+      setError('家庭の削除に失敗しました');
+    } finally {
+      setDeleting(false);
+    }
   };
 
   useImperativeHandle(ref, () => ({
@@ -624,6 +762,7 @@ export function FamilySection({ ref }: FamilySectionProps) {
                   onSchoolEntryYearChange={handlePlayerSchoolEntryYearChange}
                   onActiveToggle={handlePlayerActiveToggle}
                   onAdd={() => handlePlayerAdd(family.id)}
+                  onDelete={openPlayerDelete}
                 />
 
                 <div style={sectionLabelStyle}>家族 {familyMemberList.length}名</div>
@@ -633,7 +772,42 @@ export function FamilySection({ ref }: FamilySectionProps) {
                   onNameChange={handleFamilyMemberNameChange}
                   onActiveToggle={handleFamilyMemberActiveToggle}
                   onAdd={() => handleFamilyMemberAdd(family.id)}
+                  onDelete={openFamilyMemberDelete}
                 />
+
+                <div
+                  style={{
+                    marginTop: '6px',
+                    paddingTop: '12px',
+                    borderTop: '1px dashed var(--negative-border)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '8px',
+                  }}
+                >
+                  <div
+                    style={{
+                      display: 'flex',
+                      gap: '6px',
+                      alignItems: 'flex-start',
+                      fontSize: '11.5px',
+                      lineHeight: 1.6,
+                      color: 'var(--negative)',
+                    }}
+                  >
+                    <WarningIcon size={14} />
+                    <span>家庭を削除すると、所属する選手・家族もすべて削除されます。</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                    <Button
+                      variant="danger"
+                      size="sm"
+                      onClick={() => openFamilyDelete(family)}
+                    >
+                      家庭を削除
+                    </Button>
+                  </div>
+                </div>
               </CollapsibleListRow>
             );
           })}
@@ -641,6 +815,15 @@ export function FamilySection({ ref }: FamilySectionProps) {
         <AddRow onClick={handleAdd}>+ 家庭を追加</AddRow>
         </>
       )}
+
+      <MasterDeleteDialog
+        open={deleteTarget !== null}
+        targetType={deleteTarget?.type ?? 'family'}
+        targetName={deleteTarget?.name ?? ''}
+        processing={deleting}
+        onCancel={closeDeleteDialog}
+        onConfirm={handleDeleteConfirm}
+      />
     </section>
   );
 }

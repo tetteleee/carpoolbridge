@@ -6,6 +6,7 @@ import {
   query,
   where,
   updateDoc,
+  deleteDoc,
   writeBatch,
   serverTimestamp,
 } from 'firebase/firestore';
@@ -99,5 +100,35 @@ export async function deactivatePlayersByFamilyId(familyId: string): Promise<voi
       updatedAt: serverTimestamp(),
     });
   });
+  await batch.commit();
+}
+
+/**
+ * 選手を物理削除します（登録ミスの取り消し用）。
+ * 過去の回答・配車結果から参照中でも削除する（05_データ設計.md#12 削除方針）。
+ *
+ * @param playerId 削除対象のドキュメントID
+ */
+export async function deletePlayer(playerId: string): Promise<void> {
+  const docRef = doc(db, firestorePaths.playerDocument(playerId));
+  await deleteDoc(docRef);
+}
+
+/**
+ * 指定した家庭に属する選手を、全て物理削除します。
+ * 家庭が削除された際に道連れで呼び出されます（05_データ設計.md#12 削除方針）。
+ *
+ * @param familyId 対象の家庭ID
+ */
+export async function deletePlayersByFamilyId(familyId: string): Promise<void> {
+  const colRef = collection(db, firestorePaths.playersCollection());
+  const q = query(colRef, where('familyId', '==', familyId));
+  const snapshot = await getDocs(q);
+  if (snapshot.empty) {
+    return;
+  }
+
+  const batch = writeBatch(db);
+  snapshot.docs.forEach((d) => batch.delete(d.ref));
   await batch.commit();
 }
