@@ -199,6 +199,11 @@ npx playwright install chromium
 
 ## デプロイ
 
+`main`ブランチへのpush時、GitHub Actions（`.github/workflows/firebase-deploy.yml`）が
+Firestore Security RulesとHostingを自動デプロイする。手動デプロイは通常不要。
+
+手動でデプロイする場合：
+
 ```bash
 firebase deploy
 ```
@@ -211,7 +216,8 @@ firebase deploy --only hosting
 
 ## Firestore Security Rules変更時
 
-Rulesを変更した場合はデプロイが必要です。
+`firestore.rules`はGitHub Actionsで自動デプロイされるため、`main`へのマージ後は
+手動デプロイ不要。マージ前に手元で反映を急ぐ場合のみ、以下を手動実行する。
 
 ```bash
 firebase deploy --only firestore:rules
