@@ -1,6 +1,6 @@
 import type { CSSProperties, ReactNode } from 'react';
 
-type Role = 'player' | 'coach';
+type Role = 'player' | 'coach' | 'family';
 
 interface RoleBoxProps {
   role: Role;
@@ -18,10 +18,15 @@ const roleStyle: Record<Role, CSSProperties> = {
     border: '1px solid var(--coach-border)',
     borderLeft: '4px solid var(--coach-accent)',
   },
+  family: {
+    background: 'var(--parent-bg)',
+    border: '1px solid var(--parent-border)',
+    borderLeft: '4px solid var(--parent-accent)',
+  },
 };
 
 /**
- * 選手・コーチの役割色（背景＋枠線＋左帯）を持つボックス。
+ * 選手・コーチ・家族の役割色（背景＋枠線＋左帯）を持つボックス。
  * 配車画面・回答編集画面と同じ役割色を使う（04_画面設計.md#色分けルール）。
  */
 export function RoleBox({ role, children }: RoleBoxProps) {

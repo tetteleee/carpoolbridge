@@ -51,6 +51,13 @@ export interface SeedPlayer {
   isActive: boolean;
 }
 
+export interface SeedFamilyMember {
+  id: string;
+  familyId: string;
+  name: string;
+  isActive: boolean;
+}
+
 export interface SeedEvent {
   id: string;
   name: string;
@@ -274,6 +281,28 @@ export const PLAYERS: SeedPlayer[] = [
     name: '中村大雅',
     grade: 6,
     // 家庭の卒団に連動して選手も論理削除される想定のサンプル
+    isActive: false,
+  },
+];
+
+export const FAMILY_MEMBERS: SeedFamilyMember[] = [
+  {
+    id: 'family-member-sato-sobo',
+    familyId: 'family-sato',
+    name: '佐藤祖母',
+    isActive: true,
+  },
+  {
+    id: 'family-member-watanabe-imouto',
+    familyId: 'family-watanabe',
+    name: '渡辺妹',
+    isActive: true,
+  },
+  {
+    id: 'family-member-nakamura-sofu',
+    familyId: 'family-nakamura',
+    name: '中村祖父',
+    // 家庭（卒団済み）の無効化に連動して家族も論理削除される想定のサンプル
     isActive: false,
   },
 ];

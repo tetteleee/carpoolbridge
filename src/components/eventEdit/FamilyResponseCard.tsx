@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
-import type { Response, ResponsePlayer } from '../../types/event';
-import type { Player, Family } from '../../types/master';
+import type { Response, ResponseFamilyMember, ResponsePlayer } from '../../types/event';
+import type { Player, Family, FamilyMember } from '../../types/master';
 import { getSchoolGrade } from '../../utils/schoolGrade';
 import { computeResponseStatus, type ResponseStatus } from '../../utils/responseStatus';
 import { createResponse, updateResponse } from '../../services/event/responseService';
@@ -8,6 +8,7 @@ import { HomeIcon, UserIcon, ChevronDownIcon } from '../icons';
 import { Card } from '../common/Card';
 import { PlayerResponseRow } from './PlayerResponseRow';
 import { CoachResponseRow } from './CoachResponseRow';
+import { FamilyMemberResponseRow } from './FamilyMemberResponseRow';
 import { DriverAndCapacitySection } from './DriverAndCapacitySection';
 import { RemarksSection } from './RemarksSection';
 import { FamilyStatusChips } from './FamilyStatusChips';
@@ -19,6 +20,8 @@ interface FamilyResponseCardProps {
   family: Family;
   /** この家庭に属する有効な選手一覧 */
   playerList: Player[];
+  /** この家庭に属する有効な家族一覧 */
+  familyMemberList: FamilyMember[];
   /** 対象家庭の既存回答（未回答の場合はundefined） */
   response: Response | undefined;
   /** カードが展開表示かどうか（折りたたみ状態は呼び出し側で一括管理する） */
@@ -76,7 +79,7 @@ const memberNameStyle: CSSProperties = {
   color: 'var(--text-h)',
 };
 
-/** 選手・コーチ1人ごとの回答をまとめる内側ボックスの共通スタイル */
+/** 選手・コーチ・家族1人ごとの回答をまとめる内側ボックスの共通スタイル */
 const memberBoxBaseStyle: CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
@@ -100,6 +103,14 @@ const coachMemberBoxStyle: CSSProperties = {
   borderLeft: '5px solid var(--coach-accent)',
 };
 
+/** 家族カードの内側ボックス（役割色：背景＋枠線＋左帯） */
+const familyMemberBoxStyle: CSSProperties = {
+  ...memberBoxBaseStyle,
+  background: 'var(--parent-bg)',
+  border: '1px solid var(--parent-border)',
+  borderLeft: '5px solid var(--parent-accent)',
+};
+
 /**
  * 学年表示ラベルを返す（例：小6）。対象学年外の場合は空文字を返す。
  */
@@ -118,10 +129,26 @@ function buildInitialResponsePlayer(playerId: string): ResponsePlayer {
   };
 }
 
+/** 家族個別回答の初期値（未回答）。選手（buildInitialResponsePlayer）と全く同じ構造 */
+function buildInitialResponseFamilyMember(familyMemberId: string): ResponseFamilyMember {
+  return {
+    familyMemberId,
+    isParticipating: null,
+    noOutwardRide: false,
+    noReturnRide: false,
+  };
+}
+
 /** 家庭の回答の初期値（既存回答が存在する場合はそれを使用し、なければ未回答の初期値を組み立てる） */
-function buildInitialResponse(playerList: Player[], response: Response | undefined): Response {
+function buildInitialResponse(
+  playerList: Player[],
+  familyMemberList: FamilyMember[],
+  response: Response | undefined
+): Response {
   if (response) {
-    return response;
+    // 家族追加前に作成された回答ドキュメントにはfamilyMembersが存在しない場合があるため、
+    // 欠けている場合のみ未回答の初期値で補う
+    return response.familyMembers ? response : { ...response, familyMembers: [] };
   }
   return {
     driverOutward: null,
@@ -132,6 +159,9 @@ function buildInitialResponse(playerList: Player[], response: Response | undefin
     coachNoReturnRide: false,
     remarks: '',
     players: playerList.map((player) => buildInitialResponsePlayer(player.id)),
+    familyMembers: familyMemberList.map((familyMember) =>
+      buildInitialResponseFamilyMember(familyMember.id)
+    ),
   };
 }
 
@@ -147,6 +177,7 @@ export function FamilyResponseCard({
   eventId,
   family,
   playerList,
+  familyMemberList,
   response,
   isOpen,
   onToggleOpen,
@@ -154,15 +185,15 @@ export function FamilyResponseCard({
 }: FamilyResponseCardProps) {
   const hasCoach = family.coachName !== null;
   const [current, setCurrent] = useState<Response>(() =>
-    buildInitialResponse(playerList, response)
+    buildInitialResponse(playerList, familyMemberList, response)
   );
   // 対象家庭のResponseドキュメントが既にFirestore上に存在するか（新規作成か更新かの判定に使用）
   const hasDocRef = useRef<boolean>(response !== undefined);
 
   // 回答状況（回答済み／一部回答／未回答）。変更の都度、呼び出し側（ヘッダー集計表示用）へ通知する
   const status = useMemo(
-    () => computeResponseStatus(current, playerList, hasCoach),
-    [current, playerList, hasCoach]
+    () => computeResponseStatus(current, playerList, hasCoach, familyMemberList),
+    [current, playerList, hasCoach, familyMemberList]
   );
   useEffect(() => {
     onStatusChange(status);
@@ -205,6 +236,19 @@ export function FamilyResponseCard({
     persist(next, { players: nextPlayers });
   };
 
+  /** 家族個別の回答（参加・行き／帰りの配車不要）の変更を反映し、自動保存する */
+  const applyFamilyMemberPatch = (familyMemberId: string, patch: Partial<ResponseFamilyMember>) => {
+    const exists = current.familyMembers.some((f) => f.familyMemberId === familyMemberId);
+    const nextFamilyMembers = exists
+      ? current.familyMembers.map((f) =>
+          f.familyMemberId === familyMemberId ? { ...f, ...patch } : f
+        )
+      : [...current.familyMembers, { ...buildInitialResponseFamilyMember(familyMemberId), ...patch }];
+    const next = { ...current, familyMembers: nextFamilyMembers };
+    setCurrent(next);
+    persist(next, { familyMembers: nextFamilyMembers });
+  };
+
   return (
     <Card as="section" id={`family-response-card-${family.id}`} style={{ padding: 0 }}>
       <button
@@ -227,6 +271,8 @@ export function FamilyResponseCard({
           responsePlayers={current.players}
           hasCoach={hasCoach}
           coachParticipating={current.coachParticipating}
+          familyMemberList={familyMemberList}
+          responseFamilyMembers={current.familyMembers}
         />
         <span aria-hidden="true" style={{ flexShrink: 0, color: 'var(--text)', display: 'flex', transform: isOpen ? undefined : 'rotate(-90deg)' }}>
           <ChevronDownIcon size={18} />
@@ -319,6 +365,44 @@ export function FamilyResponseCard({
                 />
               </Card>
             )}
+
+            {familyMemberList.map((familyMember) => {
+              const responseFamilyMember =
+                current.familyMembers.find((f) => f.familyMemberId === familyMember.id) ??
+                buildInitialResponseFamilyMember(familyMember.id);
+
+              return (
+                <Card key={familyMember.id} variant="compact" style={familyMemberBoxStyle}>
+                  <span style={memberNameStyle}>
+                    <UserIcon size={14} />
+                    {familyMember.name}
+                    <span style={{ fontSize: '12px', fontWeight: 400 }}>家族</span>
+                  </span>
+                  <FamilyMemberResponseRow
+                    familyMemberId={familyMember.id}
+                    isParticipating={responseFamilyMember.isParticipating}
+                    noOutwardRide={responseFamilyMember.noOutwardRide}
+                    noReturnRide={responseFamilyMember.noReturnRide}
+                    onChangeIsParticipating={(value) =>
+                      applyFamilyMemberPatch(
+                        familyMember.id,
+                        // 参加（○）にした瞬間、行き・帰りの送迎は両方ON（送迎あり）を既定にする
+                        // （04_画面設計.md#7）。不参加（✕）にする場合は既存の送迎要否をそのまま保持する
+                        value === true
+                          ? { isParticipating: true, noOutwardRide: false, noReturnRide: false }
+                          : { isParticipating: value }
+                      )
+                    }
+                    onChangeNoOutwardRide={(value) =>
+                      applyFamilyMemberPatch(familyMember.id, { noOutwardRide: value })
+                    }
+                    onChangeNoReturnRide={(value) =>
+                      applyFamilyMemberPatch(familyMember.id, { noReturnRide: value })
+                    }
+                  />
+                </Card>
+              );
+            })}
           </div>
 
           <hr style={dividerStyle} />

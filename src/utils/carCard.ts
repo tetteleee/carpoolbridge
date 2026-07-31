@@ -14,7 +14,7 @@ export interface CarCardData {
   capacity: number;
   /** 経由する集合場所名の一覧（表示順は巡回順を意味しない。実際の順番は当日ドライバーが判断する） */
   routeLocationNames: string[];
-  /** 乗車メンバー（選手・コーチ） */
+  /** 乗車メンバー（選手・コーチ・家族） */
   members: PersonCardData[];
 }
 

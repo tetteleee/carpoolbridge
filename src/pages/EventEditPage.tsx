@@ -11,6 +11,7 @@ import { getEvent } from '../services/event/eventService';
 import { getDestination } from '../services/master/destinationService';
 import { getFamilies } from '../services/master/familyService';
 import { getPlayersByFamilyId } from '../services/master/playerService';
+import { getFamilyMembersByFamilyId } from '../services/master/familyMemberService';
 import { getResponses } from '../services/event/responseService';
 import { getCarpools, deleteAllCarpools } from '../services/event/carpoolService';
 import { runCarpoolAssignment } from '../services/carpool/runCarpoolAssignment';
@@ -18,7 +19,7 @@ import { formatDateWithWeekday } from '../utils/date';
 import { getFamilyHighestGrade } from '../utils/schoolGrade';
 import { computeResponseStatus, type ResponseStatus } from '../utils/responseStatus';
 import type { Event, Response } from '../types/event';
-import type { Player, Family } from '../types/master';
+import type { Player, Family, FamilyMember } from '../types/master';
 
 /**
  * 対象イベントの行き・帰り両方向の配車を作成する。
@@ -81,6 +82,9 @@ export function EventEditPage() {
   const [playersByFamilyId, setPlayersByFamilyId] = useState<
     Record<string, Player[]>
   >({});
+  const [familyMembersByFamilyId, setFamilyMembersByFamilyId] = useState<
+    Record<string, FamilyMember[]>
+  >({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [responsesByFamilyId, setResponsesByFamilyId] = useState<
@@ -110,16 +114,22 @@ export function EventEditPage() {
 
         const activeFamilies = familiesData.filter((family) => family.isActive);
 
-        const playersByFamily = await Promise.all(
-          activeFamilies.map((family) => getPlayersByFamilyId(family.id))
-        );
+        const [playersByFamily, familyMembersByFamily] = await Promise.all([
+          Promise.all(activeFamilies.map((family) => getPlayersByFamilyId(family.id))),
+          Promise.all(activeFamilies.map((family) => getFamilyMembersByFamilyId(family.id))),
+        ]);
         const playersMap: Record<string, Player[]> = {};
+        const familyMembersMap: Record<string, FamilyMember[]> = {};
         activeFamilies.forEach((family, index) => {
           playersMap[family.id] = playersByFamily[index].filter(
             (player) => player.isActive
           );
+          familyMembersMap[family.id] = familyMembersByFamily[index].filter(
+            (familyMember) => familyMember.isActive
+          );
         });
         setPlayersByFamilyId(playersMap);
+        setFamilyMembersByFamilyId(familyMembersMap);
 
         // 家庭カードの並び順：家庭内の選手の最高学年で降順、同学年は家庭名順（04_画面設計.md#7）
         const sortedFamilies = [...activeFamilies].sort((a, b) => {
@@ -153,11 +163,13 @@ export function EventEditPage() {
             coachNoReturnRide: false,
             remarks: '',
             players: [],
+            familyMembers: [],
           };
           initialStatusMap[family.id] = computeResponseStatus(
             familyResponse,
             playersMap[family.id] ?? [],
-            family.coachName !== null
+            family.coachName !== null,
+            familyMembersMap[family.id] ?? []
           );
         });
         setStatusByFamilyId(initialStatusMap);
@@ -425,6 +437,7 @@ export function EventEditPage() {
                 eventId={eventId}
                 family={family}
                 playerList={playersByFamilyId[family.id] ?? []}
+                familyMemberList={familyMembersByFamilyId[family.id] ?? []}
                 response={responsesByFamilyId[family.id]}
                 isOpen={!collapsedFamilyIds.has(family.id)}
                 onToggleOpen={() => handleToggleFamilyOpen(family.id)}

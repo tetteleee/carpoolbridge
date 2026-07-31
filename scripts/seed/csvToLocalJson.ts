@@ -57,6 +57,13 @@ interface OutputPlayer {
   isActive: boolean;
 }
 
+interface OutputFamilyMember {
+  id: string;
+  familyId: string;
+  name: string;
+  isActive: boolean;
+}
+
 interface OutputEvent {
   id: string;
   name: string;
@@ -285,6 +292,33 @@ function buildPlayers(familyIdByName: Map<string, string>): OutputPlayer[] {
   });
 }
 
+/**
+ * family_members.csvは省略可（未作成の場合は家族0件として出力する。events.csvと同様の扱い）。
+ */
+function buildFamilyMembers(familyIdByName: Map<string, string>): OutputFamilyMember[] {
+  const filePath = resolve(CSV_DIR, 'family_members.csv');
+  if (!existsSync(filePath)) {
+    console.log('[seed:from-csv] family_members.csvが見つからないため、家族0件として出力します');
+    return [];
+  }
+  const records = parseCsvText(readFileSync(filePath, 'utf-8'));
+  return records.map((record, index) => {
+    const context = `family_members.csv ${index + 2}行目`;
+    const familyName = requireField(record, 'familyName', context);
+    const familyId = familyIdByName.get(familyName);
+    if (!familyId) {
+      throw new Error(`${context}: 家庭名「${familyName}」がfamilies.csvに見つかりません`);
+    }
+    const name = requireField(record, 'familyMemberName', context);
+    return {
+      id: `family-member-${index + 1}`,
+      familyId,
+      name,
+      isActive: parseBoolean(record.isActive, 'isActive', context),
+    };
+  });
+}
+
 function buildEvents(destinationIdByName: Map<string, string>): OutputEvent[] {
   const filePath = resolve(CSV_DIR, 'events.csv');
   if (!existsSync(filePath)) {
@@ -312,9 +346,10 @@ function main(): void {
   const { destinations, idByName: destinationIdByName } = buildDestinations();
   const { families, idByName: familyIdByName } = buildFamilies(pickupLocationIdByName);
   const players = buildPlayers(familyIdByName);
+  const familyMembers = buildFamilyMembers(familyIdByName);
   const events = buildEvents(destinationIdByName);
 
-  const output = { pickupLocations, destinations, families, players, events };
+  const output = { pickupLocations, destinations, families, players, familyMembers, events };
   writeFileSync(OUTPUT_PATH, `${JSON.stringify(output, null, 2)}\n`, 'utf-8');
 
   console.log(`[seed:from-csv] ${OUTPUT_PATH} を生成しました`);
@@ -322,6 +357,7 @@ function main(): void {
   console.log(`[seed:from-csv]   目的地: ${destinations.length}件`);
   console.log(`[seed:from-csv]   家庭: ${families.length}件`);
   console.log(`[seed:from-csv]   選手: ${players.length}件`);
+  console.log(`[seed:from-csv]   家族: ${familyMembers.length}件`);
   console.log(`[seed:from-csv]   イベント: ${events.length}件`);
 }
 

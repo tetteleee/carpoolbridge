@@ -3,8 +3,9 @@ import { db } from '../../firebase';
 import { firestorePaths } from '../../constants';
 import { getFamilies } from '../master/familyService';
 import { getPlayersByFamilyId } from '../master/playerService';
+import { getFamilyMembersByFamilyId } from '../master/familyMemberService';
 import { deleteAllResponses } from '../event/responseService';
-import type { Response, ResponsePlayer } from '../../types/event';
+import type { Response, ResponseFamilyMember, ResponsePlayer } from '../../types/event';
 
 /** 備考のサンプル文言（一定確率で空文字も選ばれるようにし、未入力のケースも再現する） */
 const SAMPLE_REMARKS = ['', '', '', '本日は妹も同乗します', '集合場所を変更希望', '早退の可能性あり'];
@@ -72,17 +73,33 @@ function randomResponsePlayer(playerId: string): ResponsePlayer {
   };
 }
 
+/** 家族個別のランダム回答を生成する。選手（randomResponsePlayer）と全く同じロジック */
+function randomResponseFamilyMember(familyMemberId: string): ResponseFamilyMember {
+  const isParticipating = randomTriState();
+  if (isParticipating !== true) {
+    return { familyMemberId, isParticipating, noOutwardRide: false, noReturnRide: false };
+  }
+  return {
+    familyMemberId,
+    isParticipating,
+    noOutwardRide: Math.random() < NO_RIDE_PROBABILITY,
+    noReturnRide: Math.random() < NO_RIDE_PROBABILITY,
+  };
+}
+
 /**
  * 家庭・選手のマスタデータを基に、1家庭分のランダムな回答を生成する。
  *
  * @param vehicleCapacity 対象家庭の通常定員（Family.vehicleCapacity）
  * @param hasCoach 対象家庭にコーチが紐づくか（coachNameが設定されているか）
  * @param playerIds 対象家庭に属する有効な選手IDの一覧
+ * @param familyMemberIds 対象家庭に属する有効な家族IDの一覧
  */
 function buildRandomResponse(
   vehicleCapacity: number,
   hasCoach: boolean,
-  playerIds: string[]
+  playerIds: string[],
+  familyMemberIds: string[]
 ): Response {
   const capacityToday = randomCapacityToday(vehicleCapacity);
   const effectiveCapacity = capacityToday ?? vehicleCapacity;
@@ -101,6 +118,9 @@ function buildRandomResponse(
     coachNoReturnRide,
     remarks: randomRemarks(),
     players: playerIds.map((playerId) => randomResponsePlayer(playerId)),
+    familyMembers: familyMemberIds.map((familyMemberId) =>
+      randomResponseFamilyMember(familyMemberId)
+    ),
   };
 }
 
@@ -120,9 +140,10 @@ export async function generateSampleResponses(eventId: string): Promise<void> {
   const families = await getFamilies();
   const activeFamilies = families.filter((family) => family.isActive);
 
-  const playersByFamily = await Promise.all(
-    activeFamilies.map((family) => getPlayersByFamilyId(family.id))
-  );
+  const [playersByFamily, familyMembersByFamily] = await Promise.all([
+    Promise.all(activeFamilies.map((family) => getPlayersByFamilyId(family.id))),
+    Promise.all(activeFamilies.map((family) => getFamilyMembersByFamilyId(family.id))),
+  ]);
 
   await deleteAllResponses(eventId);
 
@@ -132,11 +153,15 @@ export async function generateSampleResponses(eventId: string): Promise<void> {
     const activePlayerIds = playersByFamily[index]
       .filter((player) => player.isActive)
       .map((player) => player.id);
+    const activeFamilyMemberIds = familyMembersByFamily[index]
+      .filter((familyMember) => familyMember.isActive)
+      .map((familyMember) => familyMember.id);
 
     const response = buildRandomResponse(
       family.vehicleCapacity,
       family.coachName !== null,
-      activePlayerIds
+      activePlayerIds,
+      activeFamilyMemberIds
     );
 
     batch.set(doc(db, firestorePaths.responseDocument(eventId, family.id)), response);

@@ -1,18 +1,25 @@
 /**
  * 対象方向（行き／帰り）における配車対象者の判定処理
- * ref: docs/05_データ設計.md#9 Carpool（配車結果） type: "player" について・type: "coach" について
+ * ref: docs/05_データ設計.md#10 Carpool（配車結果） type: "player" について・type: "coach" について・type: "family" について
  *
  * runCarpoolAssignment（配車生成アルゴリズム）とuseCarpoolBoardData（配車画面表示用データ変換）の
  * 双方で同一の判定基準を使うため、共通処理として切り出す。
  */
 
-import type { CarpoolMember, Direction, Response, ResponsePlayer } from '../../types/event';
-import type { Player, Family } from '../../types/master';
+import type {
+  CarpoolMember,
+  Direction,
+  Response,
+  ResponseFamilyMember,
+  ResponsePlayer,
+} from '../../types/event';
+import type { Player, Family, FamilyMember } from '../../types/master';
 
 /** メンバーの参加可否判定に必要なマスタ・回答データ */
 export interface EligibilityMasterData {
   familyById: Map<string, Family>;
   playerById: Map<string, Player>;
+  familyMemberById: Map<string, FamilyMember>;
   responseByFamilyId: Map<string, Response>;
 }
 
@@ -48,6 +55,31 @@ export function isPlayerNoRideNeededForDirection(
   return direction === 'OUTWARD' ? player.noOutwardRide : player.noReturnRide;
 }
 
+/** 対象方向における家族の配車要否（isParticipating・noOutwardRide/noReturnRide）を判定する。選手（isPlayerRidingForDirection）と全く同じロジック */
+export function isFamilyMemberRidingForDirection(
+  familyMember: ResponseFamilyMember,
+  direction: Direction
+): boolean {
+  if (familyMember.isParticipating !== true) {
+    return false;
+  }
+  return direction === 'OUTWARD' ? !familyMember.noOutwardRide : !familyMember.noReturnRide;
+}
+
+/**
+ * 対象方向において、家族が「参加かつ送迎不要」（配車不要エリアの対象）かどうかを判定する。
+ * ref: docs/04_画面設計.md#8 配車不要エリア
+ */
+export function isFamilyMemberNoRideNeededForDirection(
+  familyMember: ResponseFamilyMember,
+  direction: Direction
+): boolean {
+  if (familyMember.isParticipating !== true) {
+    return false;
+  }
+  return direction === 'OUTWARD' ? familyMember.noOutwardRide : familyMember.noReturnRide;
+}
+
 /** 対象方向におけるコーチの配車要否（coachParticipating・coachNoOutwardRide/coachNoReturnRide）を判定する */
 export function isCoachRidingForDirection(
   family: Family | undefined,
@@ -76,7 +108,7 @@ export function isCoachNoRideNeededForDirection(
 }
 
 /**
- * 対象方向において、乗車メンバー（選手・コーチ）が現在の回答内容でも引き続き配車対象かどうかを判定する。
+ * 対象方向において、乗車メンバー（選手・コーチ・家族）が現在の回答内容でも引き続き配車対象かどうかを判定する。
  * Carpool.members に残っているメンバーが、回答変更後も対象のままかを確認するために使用する
  * （回答変更後の配車結果の自動整合処理向け）。
  */
@@ -101,6 +133,24 @@ export function isMemberEligibleForDirection(
       return false;
     }
     return isPlayerRidingForDirection(responsePlayer, direction);
+  }
+
+  if (member.type === 'family') {
+    const familyMember = masterData.familyMemberById.get(member.familyMemberId);
+    if (!familyMember || !familyMember.isActive) {
+      return false;
+    }
+    const family = masterData.familyById.get(familyMember.familyId);
+    if (!family || !family.isActive) {
+      return false;
+    }
+    const responseFamilyMember = masterData.responseByFamilyId
+      .get(familyMember.familyId)
+      ?.familyMembers?.find((c) => c.familyMemberId === member.familyMemberId);
+    if (!responseFamilyMember) {
+      return false;
+    }
+    return isFamilyMemberRidingForDirection(responseFamilyMember, direction);
   }
 
   const family = masterData.familyById.get(member.familyId);

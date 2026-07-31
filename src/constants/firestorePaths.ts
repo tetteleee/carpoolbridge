@@ -6,6 +6,7 @@
 export const FIRESTORE_COLLECTIONS = {
   FAMILIES: 'families',
   PLAYERS: 'players',
+  FAMILY_MEMBERS: 'familyMembers',
   PICKUP_LOCATIONS: 'pickupLocations',
   DESTINATIONS: 'destinations',
   EVENTS: 'events',
@@ -38,6 +39,17 @@ export const firestorePaths = {
    * player ドキュメントパス
    */
   playerDocument: (playerId: string) => `${FIRESTORE_COLLECTIONS.PLAYERS}/${playerId}`,
+
+  /**
+   * familyMembers コレクションパス
+   */
+  familyMembersCollection: () => FIRESTORE_COLLECTIONS.FAMILY_MEMBERS,
+
+  /**
+   * familyMember ドキュメントパス
+   */
+  familyMemberDocument: (familyMemberId: string) =>
+    `${FIRESTORE_COLLECTIONS.FAMILY_MEMBERS}/${familyMemberId}`,
 
   /**
    * pickupLocations コレクションパス

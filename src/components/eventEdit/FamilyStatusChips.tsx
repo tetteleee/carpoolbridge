@@ -1,6 +1,6 @@
 import type { CSSProperties, ReactNode } from 'react';
-import type { ResponsePlayer } from '../../types/event';
-import type { Player } from '../../types/master';
+import type { ResponseFamilyMember, ResponsePlayer } from '../../types/event';
+import type { FamilyMember, Player } from '../../types/master';
 import type { ResponseStatus } from '../../utils/responseStatus';
 import { CarIcon, UserIcon } from '../icons';
 
@@ -13,9 +13,11 @@ interface FamilyStatusChipsProps {
   responsePlayers: ResponsePlayer[];
   hasCoach: boolean;
   coachParticipating: boolean | null;
+  familyMemberList: FamilyMember[];
+  responseFamilyMembers: ResponseFamilyMember[];
 }
 
-type ChipVariant = 'positive' | 'negative' | 'accent' | 'pending' | 'neutral' | 'player' | 'coach' | 'unanswered';
+type ChipVariant = 'positive' | 'negative' | 'accent' | 'pending' | 'neutral' | 'player' | 'coach' | 'family' | 'unanswered';
 
 interface ChipDef {
   icon?: ReactNode;
@@ -51,6 +53,12 @@ const chipVariantStyle: Record<ChipVariant, CSSProperties> = {
     color: 'var(--coach-accent)',
     background: 'var(--coach-bg)',
     border: '1px solid var(--coach-border)',
+  },
+  // 家族カードの役割色（背景＋枠線＋アクセント）に揃える
+  family: {
+    color: 'var(--parent-accent)',
+    background: 'var(--parent-bg)',
+    border: '1px solid var(--parent-border)',
   },
   unanswered: {
     color: 'var(--text)',
@@ -103,6 +111,32 @@ function resolvePlayersChip(playerList: Player[], responsePlayers: ResponsePlaye
 }
 
 /**
+ * 家族全員の参加状況をチップ定義へ変換する。選手（resolvePlayersChip）と全く同じロジック。
+ */
+function resolveFamilyMembersChip(
+  familyMemberList: FamilyMember[],
+  responseFamilyMembers: ResponseFamilyMember[]
+): ChipDef {
+  const icon = <UserIcon size={11} />;
+  const participations = familyMemberList.map(
+    (familyMember) =>
+      responseFamilyMembers.find((f) => f.familyMemberId === familyMember.id)?.isParticipating
+  );
+
+  if (participations.some((isParticipating) => isParticipating === undefined || isParticipating === null)) {
+    return { icon, label: '未回答', variant: 'family' };
+  }
+
+  const total = familyMemberList.length;
+  const participatingCount = participations.filter((isParticipating) => isParticipating === true).length;
+
+  if (participatingCount === 0) {
+    return { icon, label: `${participatingCount}/${total}`, variant: 'neutral' };
+  }
+  return { icon, label: `${participatingCount}/${total}`, variant: 'family' };
+}
+
+/**
  * コーチの参加状況をチップ定義へ変換する。
  * 不参加の場合のみ灰色（neutral）にし、それ以外（参加・未回答）はコーチカードの役割色にする。
  */
@@ -140,6 +174,8 @@ export function FamilyStatusChips({
   responsePlayers,
   hasCoach,
   coachParticipating,
+  familyMemberList,
+  responseFamilyMembers,
 }: FamilyStatusChipsProps) {
   if (status === 'unanswered') {
     return (
@@ -152,12 +188,17 @@ export function FamilyStatusChips({
   const driverChip = resolveDriverChip(driverOutward, driverReturn);
   const playersChip = resolvePlayersChip(playerList, responsePlayers);
   const coachChip = hasCoach ? resolveCoachChip(coachParticipating) : null;
+  const familyMembersChip =
+    familyMemberList.length > 0
+      ? resolveFamilyMembersChip(familyMemberList, responseFamilyMembers)
+      : null;
 
   return (
     <span style={{ display: 'flex', flex: 1, minWidth: '40px', flexWrap: 'wrap', alignItems: 'center', gap: '6px' }}>
       <Chip {...driverChip} />
       <Chip {...playersChip} />
       {coachChip && <Chip {...coachChip} />}
+      {familyMembersChip && <Chip {...familyMembersChip} />}
     </span>
   );
 }

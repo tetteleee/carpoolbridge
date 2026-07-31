@@ -1,6 +1,6 @@
 /**
  * 自動配車アルゴリズムの統合関数（Response→Carpool生成・Firestore保存）
- * ref: docs/07_配車アルゴリズム.md（全体）, docs/05_データ設計.md#9 Carpool（配車結果）
+ * ref: docs/07_配車アルゴリズム.md（全体）, docs/05_データ設計.md#10 Carpool（配車結果）
  *
  * 指定イベント・指定方向（行き／帰り）のResponseデータを入力として、
  * 前処理（T33・T34）→割当（T35）→例外系ハンドリング（T36）を実行し、
@@ -11,6 +11,7 @@ import type { Carpool, Direction, Response } from '../../types/event';
 import type { PickupLocation } from '../../types/master';
 import { getFamilies } from '../master/familyService';
 import { getPlayersByFamilyId } from '../master/playerService';
+import { getFamilyMembersByFamilyId } from '../master/familyMemberService';
 import { getPickupLocations } from '../master/pickupLocationService';
 import { getResponses } from '../event/responseService';
 import { createCarpool } from '../event/carpoolService';
@@ -29,7 +30,12 @@ import {
   DriverGroupCapacityExceededError,
   buildAssignmentWarnings,
 } from './assignmentErrors';
-import { isDriverForDirection, isPlayerRidingForDirection, isCoachRidingForDirection } from './eligibility';
+import {
+  isDriverForDirection,
+  isPlayerRidingForDirection,
+  isCoachRidingForDirection,
+  isFamilyMemberRidingForDirection,
+} from './eligibility';
 
 /**
  * runCarpoolAssignmentの戻り値。
@@ -71,14 +77,24 @@ export async function runCarpoolAssignment(
   );
   const unansweredCount = activeFamilies.length - answeredFamilies.length;
 
-  const playersLists = await Promise.all(
-    answeredFamilies.map((family) => getPlayersByFamilyId(family.id))
-  );
+  const [playersLists, familyMembersLists] = await Promise.all([
+    Promise.all(answeredFamilies.map((family) => getPlayersByFamilyId(family.id))),
+    Promise.all(answeredFamilies.map((family) => getFamilyMembersByFamilyId(family.id))),
+  ]);
   const activePlayerIdsByFamilyId = new Map<string, Set<string>>();
+  const activeFamilyMemberIdsByFamilyId = new Map<string, Set<string>>();
   answeredFamilies.forEach((family, index) => {
     activePlayerIdsByFamilyId.set(
       family.id,
       new Set(playersLists[index].filter((player) => player.isActive).map((player) => player.id))
+    );
+    activeFamilyMemberIdsByFamilyId.set(
+      family.id,
+      new Set(
+        familyMembersLists[index]
+          .filter((familyMember) => familyMember.isActive)
+          .map((familyMember) => familyMember.id)
+      )
     );
   });
 
@@ -91,14 +107,20 @@ export async function runCarpoolAssignment(
   for (const family of answeredFamilies) {
     const response = responseByFamilyId.get(family.id) as Response;
     const activePlayerIds = activePlayerIdsByFamilyId.get(family.id) as Set<string>;
+    const activeFamilyMemberIds = activeFamilyMemberIdsByFamilyId.get(family.id) as Set<string>;
     const driving = isDriverForDirection(response, direction);
     const hasRidingPlayer = response.players.some(
       (player) => activePlayerIds.has(player.playerId) && isPlayerRidingForDirection(player, direction)
     );
+    const hasRidingFamilyMember = (response.familyMembers ?? []).some(
+      (familyMember) =>
+        activeFamilyMemberIds.has(familyMember.familyMemberId) &&
+        isFamilyMemberRidingForDirection(familyMember, direction)
+    );
     const hasRidingCoach = isCoachRidingForDirection(family, response, direction);
 
     if (
-      (driving || hasRidingPlayer || hasRidingCoach) &&
+      (driving || hasRidingPlayer || hasRidingFamilyMember || hasRidingCoach) &&
       !usedLocationIds.has(family.pickupLocationId)
     ) {
       usedLocationIds.add(family.pickupLocationId);
@@ -133,6 +155,7 @@ export async function runCarpoolAssignment(
   for (const family of answeredFamilies) {
     const response = responseByFamilyId.get(family.id) as Response;
     const activePlayerIds = activePlayerIdsByFamilyId.get(family.id) as Set<string>;
+    const activeFamilyMemberIds = activeFamilyMemberIdsByFamilyId.get(family.id) as Set<string>;
     const hasParticipatingCoach = isCoachRidingForDirection(family, response, direction);
     const vehicleCapacity = response.capacityToday ?? family.vehicleCapacity;
 
@@ -155,6 +178,20 @@ export async function runCarpoolAssignment(
           pickupLocationId: family.pickupLocationId,
           pickupLocation: toLocation(family.pickupLocationId),
           member: { type: 'player', playerId: player.playerId },
+        });
+      }
+    }
+
+    for (const familyMember of response.familyMembers ?? []) {
+      if (
+        activeFamilyMemberIds.has(familyMember.familyMemberId) &&
+        isFamilyMemberRidingForDirection(familyMember, direction)
+      ) {
+        passengers.push({
+          familyId: family.id,
+          pickupLocationId: family.pickupLocationId,
+          pickupLocation: toLocation(family.pickupLocationId),
+          member: { type: 'family', familyMemberId: familyMember.familyMemberId },
         });
       }
     }
