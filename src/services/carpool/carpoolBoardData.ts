@@ -95,8 +95,8 @@ function toDeletedPersonCardData(id: string, member: CarpoolMember): PersonCardD
 
 /**
  * 乗車メンバー（CarpoolMember）を人カード表示用データへ変換する。
- * 対応するマスタ（選手・家族・家庭）が物理削除済みで見つからない場合は、
- * nullを返して非表示にするのではなく「（削除済み）」の人カードを返す
+ * 対応するマスタ（選手・家族・家庭）が物理削除済み、または一時参加者が取り消し（×ボタン）
+ * 済みで見つからない場合は、nullを返して非表示にするのではなく「（削除済み）」の人カードを返す
  * （過去の配車結果で乗車していた事実自体が分からなくなることを防ぐため。05_データ設計.md#12 削除方針）。
  */
 function toPersonCardData(
@@ -143,7 +143,10 @@ function toPersonCardData(
       .get(member.familyId)
       ?.temporaryParticipants?.find((t) => t.id === member.temporaryParticipantId);
     if (!temporaryParticipant) {
-      return null;
+      // 一時参加者はマスタを持たず、Response.temporaryParticipants[]の項目自体が実体である。
+      // 削除（×ボタン）はマスタの物理削除と同じ「情報が失われる」操作のため、
+      // 他の種別と同様に「（削除済み）」の人カードを返す（nullで無言消去しない）
+      return toDeletedPersonCardData(member.temporaryParticipantId, member);
     }
     return {
       id: temporaryParticipant.id,
