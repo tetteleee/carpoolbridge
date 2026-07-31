@@ -13,7 +13,7 @@ export const UNASSIGNED_ZONE_ID = 'unassigned';
 export function memberKey(member: CarpoolMember): string {
   if (member.type === 'player') return `player:${member.playerId}`;
   if (member.type === 'family') return `family:${member.familyMemberId}`;
-  return `coach:${member.familyId}`;
+  return `coach:${member.coachId}`;
 }
 
 /**

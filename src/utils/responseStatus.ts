@@ -1,5 +1,5 @@
 import type { Response } from '../types/event';
-import type { Player, FamilyMember } from '../types/master';
+import type { Player, Coach, FamilyMember } from '../types/master';
 
 /**
  * 家庭単位の回答状況（回答済み／一部回答／未回答）。
@@ -10,13 +10,14 @@ export type ResponseStatus = 'answered' | 'partial' | 'unanswered';
 /**
  * 家庭の回答状況（回答済み／一部回答／未回答）を判定する。
  * 判定対象は「車出し（driverOutward・driverReturn）」「全選手のisParticipating」
- * 「コーチが紐づく場合のみcoachParticipating」「家族が1人以上登録されている場合のみ全家族のisParticipating」
- * の各項目（該当時）。capacityToday・remarksは既定値で成立するため判定対象に含めない。
+ * 「コーチが1人以上登録されている場合のみ全コーチのisParticipating」
+ * 「家族が1人以上登録されている場合のみ全家族のisParticipating」の各項目（該当時）。
+ * capacityToday・remarksは既定値で成立するため判定対象に含めない。
  */
 export function computeResponseStatus(
   response: Response,
   playerList: Player[],
-  hasCoach: boolean,
+  coachList: Coach[] = [],
   familyMemberList: FamilyMember[] = []
 ): ResponseStatus {
   const driverAnswered = response.driverOutward !== null && response.driverReturn !== null;
@@ -26,8 +27,12 @@ export function computeResponseStatus(
   });
 
   const checks = [driverAnswered, allPlayersAnswered];
-  if (hasCoach) {
-    checks.push(response.coachParticipating !== null);
+  if (coachList.length > 0) {
+    const allCoachesAnswered = coachList.every((coach) => {
+      const responseCoach = (response.coaches ?? []).find((c) => c.coachId === coach.id);
+      return responseCoach !== undefined && responseCoach.isParticipating !== null;
+    });
+    checks.push(allCoachesAnswered);
   }
   if (familyMemberList.length > 0) {
     const allFamilyMembersAnswered = familyMemberList.every((familyMember) => {

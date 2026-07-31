@@ -21,7 +21,6 @@ test('サンプル回答生成ボタンと確認ダイアログ', async ({ page 
   });
   const familyRef = await db.collection('families').add({
     familyName: '山田家',
-    coachName: '山田父',
     vehicleCapacity: 5,
     pickupLocationId: pickupLocationRef.id,
     isActive: true,
@@ -50,7 +49,6 @@ test('サンプル回答生成ボタンと確認ダイアログ', async ({ page 
     driverOutward: false,
     driverReturn: false,
     capacityToday: null,
-    coachParticipating: null,
     remarks: existingRemarksMarker,
     players: [
       { playerId: playerRef.id, isParticipating: false, noOutwardRide: false, noReturnRide: false },

@@ -43,7 +43,6 @@ interface OutputDestination {
 interface OutputFamily {
   id: string;
   familyName: string;
-  coachName: string | null;
   vehicleCapacity: number;
   pickupLocationId: string;
   isActive: boolean;
@@ -54,6 +53,13 @@ interface OutputPlayer {
   familyId: string;
   name: string;
   grade: number;
+  isActive: boolean;
+}
+
+interface OutputCoach {
+  id: string;
+  familyId: string;
+  name: string;
   isActive: boolean;
 }
 
@@ -255,7 +261,6 @@ function buildFamilies(pickupLocationIdByName: Map<string, string>): {
     return {
       id,
       familyName,
-      coachName: record.coachName ? record.coachName : null,
       vehicleCapacity: parseRequiredInt(
         requireField(record, 'vehicleCapacity', context),
         'vehicleCapacity',
@@ -287,6 +292,34 @@ function buildPlayers(familyIdByName: Map<string, string>): OutputPlayer[] {
       familyId,
       name,
       grade,
+      isActive: parseBoolean(record.isActive, 'isActive', context),
+    };
+  });
+}
+
+/**
+ * coaches.csvは省略可（未作成の場合はコーチ0件として出力する。events.csvと同様の扱い）。
+ * 1家庭に複数コーチを登録できるため、familyNameが重複する行を許容する。
+ */
+function buildCoaches(familyIdByName: Map<string, string>): OutputCoach[] {
+  const filePath = resolve(CSV_DIR, 'coaches.csv');
+  if (!existsSync(filePath)) {
+    console.log('[seed:from-csv] coaches.csvが見つからないため、コーチ0件として出力します');
+    return [];
+  }
+  const records = parseCsvText(readFileSync(filePath, 'utf-8'));
+  return records.map((record, index) => {
+    const context = `coaches.csv ${index + 2}行目`;
+    const familyName = requireField(record, 'familyName', context);
+    const familyId = familyIdByName.get(familyName);
+    if (!familyId) {
+      throw new Error(`${context}: 家庭名「${familyName}」がfamilies.csvに見つかりません`);
+    }
+    const name = requireField(record, 'coachName', context);
+    return {
+      id: `coach-${index + 1}`,
+      familyId,
+      name,
       isActive: parseBoolean(record.isActive, 'isActive', context),
     };
   });
@@ -346,10 +379,11 @@ function main(): void {
   const { destinations, idByName: destinationIdByName } = buildDestinations();
   const { families, idByName: familyIdByName } = buildFamilies(pickupLocationIdByName);
   const players = buildPlayers(familyIdByName);
+  const coaches = buildCoaches(familyIdByName);
   const familyMembers = buildFamilyMembers(familyIdByName);
   const events = buildEvents(destinationIdByName);
 
-  const output = { pickupLocations, destinations, families, players, familyMembers, events };
+  const output = { pickupLocations, destinations, families, players, coaches, familyMembers, events };
   writeFileSync(OUTPUT_PATH, `${JSON.stringify(output, null, 2)}\n`, 'utf-8');
 
   console.log(`[seed:from-csv] ${OUTPUT_PATH} を生成しました`);
@@ -357,6 +391,7 @@ function main(): void {
   console.log(`[seed:from-csv]   目的地: ${destinations.length}件`);
   console.log(`[seed:from-csv]   家庭: ${families.length}件`);
   console.log(`[seed:from-csv]   選手: ${players.length}件`);
+  console.log(`[seed:from-csv]   コーチ: ${coaches.length}件`);
   console.log(`[seed:from-csv]   家族: ${familyMembers.length}件`);
   console.log(`[seed:from-csv]   イベント: ${events.length}件`);
 }

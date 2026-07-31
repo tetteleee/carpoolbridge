@@ -1,10 +1,10 @@
 import type { CSSProperties, ReactNode } from 'react';
 
-type AddRowTint = 'neutral' | 'player' | 'family';
+type AddRowTint = 'neutral' | 'player' | 'coach' | 'family';
 
 interface AddRowProps {
   onClick: () => void;
-  /** neutral=役割色を持たない項目（集合場所・目的地・家庭）、player=選手色、family=家族色 */
+  /** neutral=役割色を持たない項目（集合場所・目的地・家庭）、player=選手色、coach=コーチ色、family=家族色 */
   tint?: AddRowTint;
   children: ReactNode;
 }
@@ -28,6 +28,7 @@ const baseStyle: CSSProperties = {
 const tintStyle: Record<AddRowTint, CSSProperties> = {
   neutral: { border: '1.5px dashed var(--border)', color: 'var(--text)' },
   player: { border: '1.5px dashed var(--player-border)', color: 'var(--player-accent)' },
+  coach: { border: '1.5px dashed var(--coach-border)', color: 'var(--coach-accent)' },
   family: { border: '1.5px dashed var(--parent-border)', color: 'var(--parent-accent)' },
 };
 

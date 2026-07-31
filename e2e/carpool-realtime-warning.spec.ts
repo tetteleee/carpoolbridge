@@ -13,12 +13,12 @@ test('人カードの移動により未配車→定員超過へ警告内容が�
   const destinationRef = await db.collection('destinations').add({ name: '目的地A', latitude: 35.1, longitude: 139.1 });
 
   const familyDriver = await db.collection('families').add({
-    familyName: '鈴木家', coachName: null, vehicleCapacity: 1, pickupLocationId: locA.id,
+    familyName: '鈴木家', vehicleCapacity: 1, pickupLocationId: locA.id,
     isActive: true, createdAt: now, updatedAt: now,
   });
 
   const familyRiderA = await db.collection('families').add({
-    familyName: '山田家', coachName: null, vehicleCapacity: 0, pickupLocationId: locA.id,
+    familyName: '山田家', vehicleCapacity: 0, pickupLocationId: locA.id,
     isActive: true, createdAt: now, updatedAt: now,
   });
   const playerRiderA = await db.collection('players').add({
@@ -26,7 +26,7 @@ test('人カードの移動により未配車→定員超過へ警告内容が�
   });
 
   const familyRiderB = await db.collection('families').add({
-    familyName: '田中家', coachName: null, vehicleCapacity: 0, pickupLocationId: locA.id,
+    familyName: '田中家', vehicleCapacity: 0, pickupLocationId: locA.id,
     isActive: true, createdAt: now, updatedAt: now,
   });
   const playerRiderB = await db.collection('players').add({
@@ -38,15 +38,15 @@ test('人カードの移動により未配車→定員超過へ警告内容が�
   });
 
   await eventRef.collection('responses').doc(familyDriver.id).set({
-    driverOutward: true, driverReturn: true, capacityToday: null, coachParticipating: null, remarks: '',
+    driverOutward: true, driverReturn: true, capacityToday: null, remarks: '',
     players: [],
   });
   await eventRef.collection('responses').doc(familyRiderA.id).set({
-    driverOutward: false, driverReturn: false, capacityToday: null, coachParticipating: null, remarks: '',
+    driverOutward: false, driverReturn: false, capacityToday: null, remarks: '',
     players: [{ playerId: playerRiderA.id, isParticipating: true, noOutwardRide: false, noReturnRide: false }],
   });
   await eventRef.collection('responses').doc(familyRiderB.id).set({
-    driverOutward: false, driverReturn: false, capacityToday: null, coachParticipating: null, remarks: '',
+    driverOutward: false, driverReturn: false, capacityToday: null, remarks: '',
     players: [{ playerId: playerRiderB.id, isParticipating: true, noOutwardRide: false, noReturnRide: false }],
   });
 

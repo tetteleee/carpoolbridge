@@ -25,6 +25,7 @@ import { getFirestore, Timestamp, type Firestore } from 'firebase-admin/firestor
 import { firestorePaths } from '../../src/constants';
 import {
   PLAYERS,
+  COACHES,
   FAMILY_MEMBERS,
   DESTINATIONS,
   EVENTS,
@@ -32,6 +33,7 @@ import {
   PICKUP_LOCATIONS,
   schoolEntryYearOf,
   type SeedPlayer,
+  type SeedCoach,
   type SeedFamilyMember,
   type SeedDestination,
   type SeedEvent,
@@ -50,6 +52,7 @@ interface SeedSourceData {
   destinations: SeedDestination[];
   families: SeedFamily[];
   players: SeedPlayer[];
+  coaches: SeedCoach[];
   familyMembers: SeedFamilyMember[];
   events: SeedEvent[];
 }
@@ -69,6 +72,7 @@ function loadSeedSourceData(): SeedSourceData {
       destinations: DESTINATIONS,
       families: FAMILIES,
       players: PLAYERS,
+      coaches: COACHES,
       familyMembers: FAMILY_MEMBERS,
       events: EVENTS,
     };
@@ -136,7 +140,7 @@ async function seedCollection<T extends { id: string }>(
 
 async function main(): Promise<void> {
   const projectId = readProjectId();
-  const { pickupLocations, destinations, families, players, familyMembers, events } =
+  const { pickupLocations, destinations, families, players, coaches, familyMembers, events } =
     loadSeedSourceData();
   console.log(`[seed] 投入先: 実Firebaseプロジェクト / project=${projectId}`);
 
@@ -144,6 +148,7 @@ async function main(): Promise<void> {
   const db = getFirestore(app);
 
   await deleteCollectionRecursively(db, firestorePaths.playersCollection());
+  await deleteCollectionRecursively(db, firestorePaths.coachesCollection());
   await deleteCollectionRecursively(db, firestorePaths.familyMembersCollection());
   await deleteCollectionRecursively(db, firestorePaths.familiesCollection());
   await deleteCollectionRecursively(db, firestorePaths.pickupLocationsCollection());
@@ -167,6 +172,11 @@ async function main(): Promise<void> {
     })),
     { createdAt: SEED_TIMESTAMP, updatedAt: SEED_TIMESTAMP }
   );
+
+  await seedCollection(db, firestorePaths.coachesCollection(), coaches, {
+    createdAt: SEED_TIMESTAMP,
+    updatedAt: SEED_TIMESTAMP,
+  });
 
   await seedCollection(db, firestorePaths.familyMembersCollection(), familyMembers, {
     createdAt: SEED_TIMESTAMP,

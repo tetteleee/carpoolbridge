@@ -26,7 +26,7 @@ test('家族が1人も登録されていない家庭では、家族の回答欄�
     name: '目的地A', latitude: 35.1, longitude: 139.1,
   });
   const familyRef = await db.collection('families').add({
-    familyName: '山田家', coachName: null, vehicleCapacity: 5, pickupLocationId: pickupLocationRef.id,
+    familyName: '山田家', vehicleCapacity: 5, pickupLocationId: pickupLocationRef.id,
     isActive: true, createdAt: now, updatedAt: now,
   });
   const eventRef = await db.collection('events').add({
@@ -52,7 +52,7 @@ test('家族の参加・行き／帰りの送迎要否の変更が、都度famil
     name: '目的地A', latitude: 35.1, longitude: 139.1,
   });
   const familyRef = await db.collection('families').add({
-    familyName: '山田家', coachName: null, vehicleCapacity: 5, pickupLocationId: pickupLocationRef.id,
+    familyName: '山田家', vehicleCapacity: 5, pickupLocationId: pickupLocationRef.id,
     isActive: true, createdAt: now, updatedAt: now,
   });
   const familyMemberRef = await db.collection('familyMembers').add({
@@ -81,7 +81,7 @@ test('家族の参加・行き／帰りの送迎要否の変更が、都度famil
 
   // 他の項目（家庭情報側）と混在しても、familyMembers以外のフィールドは維持される
   const saved = (await responseDocRef.get()).data();
-  expect(saved?.coachParticipating).toBeNull();
+  expect(saved?.coaches).toEqual([]);
   expect(saved?.players).toEqual([]);
 
   // 行きの送迎スイッチをOFF（不要）にする
@@ -120,7 +120,7 @@ test('家族が複数人いる家庭では、1人ずつ独立して回答でき�
     name: '目的地A', latitude: 35.1, longitude: 139.1,
   });
   const familyRef = await db.collection('families').add({
-    familyName: '渡辺家', coachName: null, vehicleCapacity: 5, pickupLocationId: pickupLocationRef.id,
+    familyName: '渡辺家', vehicleCapacity: 5, pickupLocationId: pickupLocationRef.id,
     isActive: true, createdAt: now, updatedAt: now,
   });
   const memberA = await db.collection('familyMembers').add({

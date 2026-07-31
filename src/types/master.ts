@@ -9,8 +9,6 @@ export interface Family {
   id: string;
   /** 〇〇家 */
   familyName: string;
-  /** コーチ名。この家庭にコーチが紐づく場合のみ入力。空欄（null）はコーチなし */
-  coachName: string | null;
   /** 車の総定員（運転者本人を含む。車を持たない場合は0） */
   vehicleCapacity: number;
   /** 家庭の集合場所（家庭に属する選手・コーチ・家族は全員この集合場所から乗車する） */
@@ -31,6 +29,20 @@ export interface Player {
   /** 小学校の入学年度（例：2026）。学年はこの値から自動計算する */
   schoolEntryYear: number;
   /** 在籍中（falseで卒団・非表示扱い） */
+  isActive: boolean;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+/**
+ * コーチ（Coach）を表す型
+ * 選手の保護者がコーチを兼ねる場合に登録する。1家庭に複数人登録できる。
+ */
+export interface Coach {
+  id: string;
+  familyId: string;
+  name: string;
+  /** 在籍中（falseで非表示扱い） */
   isActive: boolean;
   createdAt: Timestamp;
   updatedAt: Timestamp;

@@ -12,6 +12,7 @@ import { db } from '../../firebase';
 import { firestorePaths } from '../../constants';
 import type { Family } from '../../types/master';
 import { deactivatePlayersByFamilyId, deletePlayersByFamilyId } from './playerService';
+import { deactivateCoachesByFamilyId, deleteCoachesByFamilyId } from './coachService';
 import {
   deactivateFamilyMembersByFamilyId,
   deleteFamilyMembersByFamilyId,
@@ -64,23 +65,18 @@ export async function getFamily(familyId: string): Promise<Family | null> {
 }
 
 /**
- * 家庭の familyName・coachName・vehicleCapacity・pickupLocationId・isActive を更新します。
+ * 家庭の familyName・vehicleCapacity・pickupLocationId・isActive を更新します。
  * isActive を false にすることで論理削除（卒団・非表示扱い）、true に戻すことで在籍復帰を表します。
  * 更新時に updatedAt をサーバー時刻で更新します。
  *
- * isActive を false に更新した場合、この家庭に属する選手・家族も連動して自動で論理削除されます。
+ * isActive を false に更新した場合、この家庭に属する選手・コーチ・家族も連動して自動で論理削除されます。
  *
  * @param familyId 更新対象のドキュメントID
  * @param data 更新するフィールド（部分更新可）
  */
 export async function updateFamily(
   familyId: string,
-  data: Partial<
-    Pick<
-      Family,
-      'familyName' | 'coachName' | 'vehicleCapacity' | 'pickupLocationId' | 'isActive'
-    >
-  >
+  data: Partial<Pick<Family, 'familyName' | 'vehicleCapacity' | 'pickupLocationId' | 'isActive'>>
 ): Promise<void> {
   const docRef = doc(db, firestorePaths.familyDocument(familyId));
   await updateDoc(docRef, {
@@ -90,19 +86,21 @@ export async function updateFamily(
 
   if (data.isActive === false) {
     await deactivatePlayersByFamilyId(familyId);
+    await deactivateCoachesByFamilyId(familyId);
     await deactivateFamilyMembersByFamilyId(familyId);
   }
 }
 
 /**
  * 家庭を物理削除します（登録ミスの取り消し用）。
- * 所属する選手・家族も道連れで物理削除します。
+ * 所属する選手・コーチ・家族も道連れで物理削除します。
  * 過去の回答・配車結果から参照中でも削除する（05_データ設計.md#12 削除方針）。
  *
  * @param familyId 削除対象のドキュメントID
  */
 export async function deleteFamily(familyId: string): Promise<void> {
   await deletePlayersByFamilyId(familyId);
+  await deleteCoachesByFamilyId(familyId);
   await deleteFamilyMembersByFamilyId(familyId);
   const docRef = doc(db, firestorePaths.familyDocument(familyId));
   await deleteDoc(docRef);

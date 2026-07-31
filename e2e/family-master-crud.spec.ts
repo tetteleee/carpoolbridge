@@ -96,7 +96,6 @@ test('家族の在籍中トグルをOFFにして保存すると、isActiveがfal
   const familyName = `E2E在籍テスト家庭_${Date.now()}`;
   const familyRef = await db.collection('families').add({
     familyName,
-    coachName: null,
     vehicleCapacity: 2,
     pickupLocationId: pickupLocationRef.id,
     isActive: true,
@@ -146,7 +145,6 @@ test('家庭を無効化して保存すると、その家庭の在籍中の家�
   const familyName = `E2E卒団テスト家庭_${Date.now()}`;
   const familyRef = await db.collection('families').add({
     familyName,
-    coachName: null,
     vehicleCapacity: 2,
     pickupLocationId: pickupLocationRef.id,
     isActive: true,

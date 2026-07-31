@@ -17,13 +17,13 @@ test('回答が不参加に変更された人だけが車カードとCarpoolデ�
 
   // 運転者家庭（定員4）
   const familyDriver = await db.collection('families').add({
-    familyName: '鈴木家', coachName: null, vehicleCapacity: 4, pickupLocationId: locA.id,
+    familyName: '鈴木家', vehicleCapacity: 4, pickupLocationId: locA.id,
     isActive: true, createdAt: now, updatedAt: now,
   });
 
   // 不参加に変更される選手
   const familyLeaving = await db.collection('families').add({
-    familyName: '山田家', coachName: null, vehicleCapacity: 0, pickupLocationId: locA.id,
+    familyName: '山田家', vehicleCapacity: 0, pickupLocationId: locA.id,
     isActive: true, createdAt: now, updatedAt: now,
   });
   const playerLeaving = await db.collection('players').add({
@@ -32,7 +32,7 @@ test('回答が不参加に変更された人だけが車カードとCarpoolデ�
 
   // 引き続き参加する選手（除去の影響を受けないことを確認する対象）
   const familyStaying = await db.collection('families').add({
-    familyName: '田中家', coachName: null, vehicleCapacity: 0, pickupLocationId: locA.id,
+    familyName: '田中家', vehicleCapacity: 0, pickupLocationId: locA.id,
     isActive: true, createdAt: now, updatedAt: now,
   });
   const playerStaying = await db.collection('players').add({
@@ -41,11 +41,11 @@ test('回答が不参加に変更された人だけが車カードとCarpoolデ�
 
   // 別の車に乗っている、無関係な選手（他の車の配置が変更されないことを確認する対象）
   const familyOtherCar = await db.collection('families').add({
-    familyName: '佐藤家', coachName: null, vehicleCapacity: 4, pickupLocationId: locA.id,
+    familyName: '佐藤家', vehicleCapacity: 4, pickupLocationId: locA.id,
     isActive: true, createdAt: now, updatedAt: now,
   });
   const familyOtherRider = await db.collection('families').add({
-    familyName: '高橋家', coachName: null, vehicleCapacity: 0, pickupLocationId: locA.id,
+    familyName: '高橋家', vehicleCapacity: 0, pickupLocationId: locA.id,
     isActive: true, createdAt: now, updatedAt: now,
   });
   const playerOtherCar = await db.collection('players').add({
@@ -57,24 +57,24 @@ test('回答が不参加に変更された人だけが車カードとCarpoolデ�
   });
 
   await eventRef.collection('responses').doc(familyDriver.id).set({
-    driverOutward: true, driverReturn: true, capacityToday: null, coachParticipating: null, remarks: '',
+    driverOutward: true, driverReturn: true, capacityToday: null, remarks: '',
     players: [],
   });
   // 不参加に変更済み（isParticipating: false）。配車作成時点では参加だったが、その後不参加に変更された状態を表す
   await eventRef.collection('responses').doc(familyLeaving.id).set({
-    driverOutward: false, driverReturn: false, capacityToday: null, coachParticipating: null, remarks: '',
+    driverOutward: false, driverReturn: false, capacityToday: null, remarks: '',
     players: [{ playerId: playerLeaving.id, isParticipating: false, noOutwardRide: false, noReturnRide: false }],
   });
   await eventRef.collection('responses').doc(familyStaying.id).set({
-    driverOutward: false, driverReturn: false, capacityToday: null, coachParticipating: null, remarks: '',
+    driverOutward: false, driverReturn: false, capacityToday: null, remarks: '',
     players: [{ playerId: playerStaying.id, isParticipating: true, noOutwardRide: false, noReturnRide: false }],
   });
   await eventRef.collection('responses').doc(familyOtherCar.id).set({
-    driverOutward: true, driverReturn: true, capacityToday: null, coachParticipating: null, remarks: '',
+    driverOutward: true, driverReturn: true, capacityToday: null, remarks: '',
     players: [],
   });
   await eventRef.collection('responses').doc(familyOtherRider.id).set({
-    driverOutward: false, driverReturn: false, capacityToday: null, coachParticipating: null, remarks: '',
+    driverOutward: false, driverReturn: false, capacityToday: null, remarks: '',
     players: [{ playerId: playerOtherCar.id, isParticipating: true, noOutwardRide: false, noReturnRide: false }],
   });
 

@@ -13,45 +13,50 @@ import {
   updatePlayer,
 } from '../../services/master/playerService';
 import {
+  createCoach,
+  deleteCoach,
+  getCoachesByFamilyId,
+  updateCoach,
+} from '../../services/master/coachService';
+import {
   createFamilyMember,
   deleteFamilyMember,
   getFamilyMembersByFamilyId,
   updateFamilyMember,
 } from '../../services/master/familyMemberService';
 import { getPickupLocations } from '../../services/master/pickupLocationService';
-import type { Player, Family, FamilyMember, PickupLocation } from '../../types/master';
+import type { Player, Coach, Family, FamilyMember, PickupLocation } from '../../types/master';
 import { PlayerSection } from './PlayerSection';
+import { CoachSection } from './CoachSection';
 import { FamilyMemberSection } from './FamilyMemberSection';
 import { MasterDeleteDialog } from './MasterDeleteDialog';
 import { AddRow } from '../common/AddRow';
 import { Button } from '../common/Button';
 import { CollapsibleListRow } from '../common/CollapsibleListRow';
 import { FieldRow } from '../common/FieldRow';
-import { RoleBox } from '../common/RoleBox';
 import { Stepper } from '../common/Stepper';
 import { Switch } from '../common/Switch';
 import { getFamilyHighestGrade, getSchoolEntryYearOptions } from '../../utils/schoolGrade';
-import { HomeIcon, LoadingIndicator, UserIcon, WarningIcon } from '../icons';
+import { HomeIcon, LoadingIndicator, WarningIcon } from '../icons';
 
 /** 削除確認ダイアログの対象 */
 interface DeleteTarget {
-  type: 'family' | 'player' | 'familyMember';
+  type: 'family' | 'player' | 'coach' | 'familyMember';
   id: string;
   name: string;
 }
 
-type EditableField = 'familyName' | 'coachName' | 'vehicleCapacity';
+type EditableField = 'familyName' | 'vehicleCapacity';
 
 type FamilyUpdatableFields = Partial<
-  Pick<
-    Family,
-    'familyName' | 'coachName' | 'vehicleCapacity' | 'pickupLocationId' | 'isActive'
-  >
+  Pick<Family, 'familyName' | 'vehicleCapacity' | 'pickupLocationId' | 'isActive'>
 >;
 
 type PlayerUpdatableFields = Partial<
   Pick<Player, 'name' | 'schoolEntryYear' | 'isActive'>
 >;
+
+type CoachUpdatableFields = Partial<Pick<Coach, 'name' | 'isActive'>>;
 
 type FamilyMemberUpdatableFields = Partial<Pick<FamilyMember, 'name' | 'isActive'>>;
 
@@ -83,19 +88,6 @@ const statusLabelStyle: CSSProperties = {
   fontSize: '12px',
   color: 'var(--text)',
   fontWeight: 600,
-};
-
-const coachTagStyle: CSSProperties = {
-  flexShrink: 0,
-  display: 'inline-flex',
-  alignItems: 'center',
-  gap: '3px',
-  fontSize: '10px',
-  fontWeight: 800,
-  color: '#fff',
-  background: 'var(--coach-accent)',
-  padding: '2px 6px',
-  borderRadius: '5px',
 };
 
 const sectionLabelStyle: CSSProperties = {
@@ -150,6 +142,9 @@ export function FamilySection({ ref }: FamilySectionProps) {
   const [players, setPlayers] = useState<Player[]>([]);
   const [savedPlayers, setSavedPlayers] = useState<Player[]>([]);
   const [newPlayerIds, setNewPlayerIds] = useState<Set<string>>(new Set());
+  const [coaches, setCoaches] = useState<Coach[]>([]);
+  const [savedCoaches, setSavedCoaches] = useState<Coach[]>([]);
+  const [newCoachIds, setNewCoachIds] = useState<Set<string>>(new Set());
   const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([]);
   const [savedFamilyMembers, setSavedFamilyMembers] = useState<FamilyMember[]>([]);
   const [newFamilyMemberIds, setNewFamilyMemberIds] = useState<Set<string>>(new Set());
@@ -165,13 +160,18 @@ export function FamilySection({ ref }: FamilySectionProps) {
       .then(async ([familiesData, pickupLocationsData]) => {
         setPickupLocations(pickupLocationsData);
 
-        const [playersByFamily, familyMembersByFamily] = await Promise.all([
+        const [playersByFamily, coachesByFamily, familyMembersByFamily] = await Promise.all([
           Promise.all(familiesData.map((family) => getPlayersByFamilyId(family.id))),
+          Promise.all(familiesData.map((family) => getCoachesByFamilyId(family.id))),
           Promise.all(familiesData.map((family) => getFamilyMembersByFamilyId(family.id))),
         ]);
         const playersData = playersByFamily.flat();
         setPlayers(playersData);
         setSavedPlayers(playersData);
+
+        const coachesData = coachesByFamily.flat();
+        setCoaches(coachesData);
+        setSavedCoaches(coachesData);
 
         const familyMembersData = familyMembersByFamily.flat();
         setFamilyMembers(familyMembersData);
@@ -240,7 +240,6 @@ export function FamilySection({ ref }: FamilySectionProps) {
       {
         id,
         familyName: '',
-        coachName: null,
         vehicleCapacity: 0,
         pickupLocationId: pickupLocations[0]?.id ?? '',
         isActive: true,
@@ -288,6 +287,34 @@ export function FamilySection({ ref }: FamilySectionProps) {
     ]);
   };
 
+  const handleCoachNameChange = (coachId: string, name: string) => {
+    setCoaches((prev) =>
+      prev.map((coach) => (coach.id === coachId ? { ...coach, name } : coach))
+    );
+  };
+
+  const handleCoachActiveToggle = (coachId: string) => {
+    setCoaches((prev) =>
+      prev.map((coach) =>
+        coach.id === coachId ? { ...coach, isActive: !coach.isActive } : coach
+      )
+    );
+  };
+
+  const handleCoachAdd = (familyId: string) => {
+    const id = crypto.randomUUID();
+    setNewCoachIds((prev) => new Set(prev).add(id));
+    setCoaches((prev) => [
+      ...prev,
+      {
+        id,
+        familyId,
+        name: '',
+        isActive: true,
+      } as Coach,
+    ]);
+  };
+
   const handleFamilyMemberNameChange = (familyMemberId: string, name: string) => {
     setFamilyMembers((prev) =>
       prev.map((familyMember) =>
@@ -327,6 +354,11 @@ export function FamilySection({ ref }: FamilySectionProps) {
   const openPlayerDelete = (playerId: string) => {
     const player = players.find((p) => p.id === playerId);
     setDeleteTarget({ type: 'player', id: playerId, name: player?.name || '（名前未設定）' });
+  };
+
+  const openCoachDelete = (coachId: string) => {
+    const coach = coaches.find((c) => c.id === coachId);
+    setDeleteTarget({ type: 'coach', id: coachId, name: coach?.name || '（名前未設定）' });
   };
 
   const openFamilyMemberDelete = (familyMemberId: string) => {
@@ -374,6 +406,28 @@ export function FamilySection({ ref }: FamilySectionProps) {
       return;
     }
 
+    if (type === 'coach') {
+      if (newCoachIds.has(id)) {
+        setCoaches((prev) => prev.filter((coach) => coach.id !== id));
+        setNewCoachIds((prev) => removeIdFromSet(prev, id));
+        setDeleteTarget(null);
+        return;
+      }
+      setDeleting(true);
+      try {
+        await deleteCoach(id);
+        setCoaches((prev) => prev.filter((coach) => coach.id !== id));
+        setSavedCoaches((prev) => prev.filter((coach) => coach.id !== id));
+        setError(null);
+        setDeleteTarget(null);
+      } catch {
+        setError('コーチの削除に失敗しました');
+      } finally {
+        setDeleting(false);
+      }
+      return;
+    }
+
     if (type === 'familyMember') {
       if (newFamilyMemberIds.has(id)) {
         setFamilyMembers((prev) => prev.filter((familyMember) => familyMember.id !== id));
@@ -396,19 +450,28 @@ export function FamilySection({ ref }: FamilySectionProps) {
       return;
     }
 
-    // 家庭の削除（所属する選手・家族も道連れで削除する）
+    // 家庭の削除（所属する選手・コーチ・家族も道連れで削除する）
     if (newIds.has(id)) {
       const removedPlayerIds = players.filter((player) => player.familyId === id).map((p) => p.id);
+      const removedCoachIds = coaches.filter((coach) => coach.familyId === id).map((c) => c.id);
       const removedFamilyMemberIds = familyMembers
         .filter((familyMember) => familyMember.familyId === id)
         .map((f) => f.id);
 
       setPlayers((prev) => prev.filter((player) => player.familyId !== id));
+      setCoaches((prev) => prev.filter((coach) => coach.familyId !== id));
       setFamilyMembers((prev) => prev.filter((familyMember) => familyMember.familyId !== id));
       setNewPlayerIds((prev) => {
         let next = prev;
         removedPlayerIds.forEach((playerId) => {
           next = removeIdFromSet(next, playerId);
+        });
+        return next;
+      });
+      setNewCoachIds((prev) => {
+        let next = prev;
+        removedCoachIds.forEach((coachId) => {
+          next = removeIdFromSet(next, coachId);
         });
         return next;
       });
@@ -432,6 +495,8 @@ export function FamilySection({ ref }: FamilySectionProps) {
       setSavedFamilies((prev) => prev.filter((family) => family.id !== id));
       setPlayers((prev) => prev.filter((player) => player.familyId !== id));
       setSavedPlayers((prev) => prev.filter((player) => player.familyId !== id));
+      setCoaches((prev) => prev.filter((coach) => coach.familyId !== id));
+      setSavedCoaches((prev) => prev.filter((coach) => coach.familyId !== id));
       setFamilyMembers((prev) => prev.filter((familyMember) => familyMember.familyId !== id));
       setSavedFamilyMembers((prev) => prev.filter((familyMember) => familyMember.familyId !== id));
       setExpandedIds((prev) => removeIdFromSet(prev, id));
@@ -448,13 +513,13 @@ export function FamilySection({ ref }: FamilySectionProps) {
     hasChanges: () =>
       newIds.size > 0 ||
       newPlayerIds.size > 0 ||
+      newCoachIds.size > 0 ||
       newFamilyMemberIds.size > 0 ||
       families.some((family) => {
         const original = savedFamilies.find((f) => f.id === family.id);
         return (
           original &&
           (original.familyName !== family.familyName ||
-            original.coachName !== family.coachName ||
             original.vehicleCapacity !== family.vehicleCapacity ||
             original.pickupLocationId !== family.pickupLocationId ||
             original.isActive !== family.isActive)
@@ -469,6 +534,13 @@ export function FamilySection({ ref }: FamilySectionProps) {
             original.isActive !== player.isActive)
         );
       }) ||
+      coaches.some((coach) => {
+        const original = savedCoaches.find((c) => c.id === coach.id);
+        return (
+          original &&
+          (original.name !== coach.name || original.isActive !== coach.isActive)
+        );
+      }) ||
       familyMembers.some((familyMember) => {
         const original = savedFamilyMembers.find((f) => f.id === familyMember.id);
         return (
@@ -479,16 +551,11 @@ export function FamilySection({ ref }: FamilySectionProps) {
     save: async () => {
       try {
         for (const family of families) {
-          const coachName = family.coachName?.trim()
-            ? family.coachName.trim()
-            : null;
-
           let familyId = family.id;
 
           if (newIds.has(family.id)) {
             familyId = await createFamily({
               familyName: family.familyName,
-              coachName,
               vehicleCapacity: family.vehicleCapacity,
               pickupLocationId: family.pickupLocationId,
             });
@@ -499,9 +566,6 @@ export function FamilySection({ ref }: FamilySectionProps) {
             const changes: FamilyUpdatableFields = {};
             if (original.familyName !== family.familyName) {
               changes.familyName = family.familyName;
-            }
-            if (original.coachName !== coachName) {
-              changes.coachName = coachName;
             }
             if (original.vehicleCapacity !== family.vehicleCapacity) {
               changes.vehicleCapacity = family.vehicleCapacity;
@@ -551,6 +615,33 @@ export function FamilySection({ ref }: FamilySectionProps) {
             }
           }
 
+          const familyCoaches = coaches.filter((coach) => coach.familyId === family.id);
+
+          for (const coach of familyCoaches) {
+            if (newCoachIds.has(coach.id)) {
+              await createCoach({
+                familyId,
+                name: coach.name,
+              });
+              continue;
+            }
+
+            const originalCoach = savedCoaches.find((c) => c.id === coach.id);
+            if (!originalCoach) continue;
+
+            const coachChanges: CoachUpdatableFields = {};
+            if (originalCoach.name !== coach.name) {
+              coachChanges.name = coach.name;
+            }
+            if (originalCoach.isActive !== coach.isActive) {
+              coachChanges.isActive = coach.isActive;
+            }
+
+            if (Object.keys(coachChanges).length > 0) {
+              await updateCoach(coach.id, coachChanges);
+            }
+          }
+
           const familyMemberList = familyMembers.filter(
             (familyMember) => familyMember.familyId === family.id
           );
@@ -584,14 +675,21 @@ export function FamilySection({ ref }: FamilySectionProps) {
         const refreshedFamilies = await getFamilies();
         setNewIds(new Set());
 
-        const [refreshedPlayersByFamily, refreshedFamilyMembersByFamily] = await Promise.all([
-          Promise.all(refreshedFamilies.map((family) => getPlayersByFamilyId(family.id))),
-          Promise.all(refreshedFamilies.map((family) => getFamilyMembersByFamilyId(family.id))),
-        ]);
+        const [refreshedPlayersByFamily, refreshedCoachesByFamily, refreshedFamilyMembersByFamily] =
+          await Promise.all([
+            Promise.all(refreshedFamilies.map((family) => getPlayersByFamilyId(family.id))),
+            Promise.all(refreshedFamilies.map((family) => getCoachesByFamilyId(family.id))),
+            Promise.all(refreshedFamilies.map((family) => getFamilyMembersByFamilyId(family.id))),
+          ]);
         const refreshedPlayers = refreshedPlayersByFamily.flat();
         setPlayers(refreshedPlayers);
         setSavedPlayers(refreshedPlayers);
         setNewPlayerIds(new Set());
+
+        const refreshedCoaches = refreshedCoachesByFamily.flat();
+        setCoaches(refreshedCoaches);
+        setSavedCoaches(refreshedCoaches);
+        setNewCoachIds(new Set());
 
         const refreshedFamilyMembers = refreshedFamilyMembersByFamily.flat();
         setFamilyMembers(refreshedFamilyMembers);
@@ -604,7 +702,7 @@ export function FamilySection({ ref }: FamilySectionProps) {
 
         setError(null);
       } catch {
-        setError('家庭・選手・家族の保存に失敗しました');
+        setError('家庭・選手・コーチ・家族の保存に失敗しました');
         throw new Error('family save failed');
       }
     },
@@ -641,6 +739,7 @@ export function FamilySection({ ref }: FamilySectionProps) {
             const familyPlayers = players.filter(
               (player) => player.familyId === family.id
             );
+            const familyCoaches = coaches.filter((coach) => coach.familyId === family.id);
             const familyMemberList = familyMembers.filter(
               (familyMember) => familyMember.familyId === family.id
             );
@@ -661,8 +760,9 @@ export function FamilySection({ ref }: FamilySectionProps) {
                 meta={
                   <span style={dimStyle}>
                     選手{familyPlayers.length}名
+                    {familyCoaches.length > 0 ? `・コーチ${familyCoaches.length}名` : ''}
                     {familyMemberList.length > 0 ? `・家族${familyMemberList.length}名` : ''}
-                    {family.coachName ? '・コーチあり' : ''}・{pickupName}
+                    ・{pickupName}
                   </span>
                 }
                 expanded={expandedIds.has(family.id)}
@@ -736,24 +836,6 @@ export function FamilySection({ ref }: FamilySectionProps) {
                   />
                 </div>
 
-                <RoleBox role="coach">
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={coachTagStyle}>
-                      <UserIcon size={11} />
-                      コーチ
-                    </span>
-                    <input
-                      type="text"
-                      value={family.coachName ?? ''}
-                      onChange={(e) =>
-                        handleFieldChange(family.id, 'coachName', e.target.value)
-                      }
-                      placeholder="コーチなしの場合は空欄"
-                      style={{ ...fieldInputStyle, background: 'var(--bg)', fontWeight: 700 }}
-                    />
-                  </div>
-                </RoleBox>
-
                 <div style={sectionLabelStyle}>選手 {familyPlayers.length}名</div>
 
                 <PlayerSection
@@ -763,6 +845,16 @@ export function FamilySection({ ref }: FamilySectionProps) {
                   onActiveToggle={handlePlayerActiveToggle}
                   onAdd={() => handlePlayerAdd(family.id)}
                   onDelete={openPlayerDelete}
+                />
+
+                <div style={sectionLabelStyle}>コーチ {familyCoaches.length}名</div>
+
+                <CoachSection
+                  coachList={familyCoaches}
+                  onNameChange={handleCoachNameChange}
+                  onActiveToggle={handleCoachActiveToggle}
+                  onAdd={() => handleCoachAdd(family.id)}
+                  onDelete={openCoachDelete}
                 />
 
                 <div style={sectionLabelStyle}>家族 {familyMemberList.length}名</div>
@@ -796,7 +888,7 @@ export function FamilySection({ ref }: FamilySectionProps) {
                     }}
                   >
                     <WarningIcon size={14} />
-                    <span>家庭を削除すると、所属する選手・家族もすべて削除されます。</span>
+                    <span>家庭を削除すると、所属する選手・コーチ・家族もすべて削除されます。</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                     <Button

@@ -21,7 +21,6 @@ test('配車作成ボタンと配車再作成確認ダイアログ', async ({ pa
   });
   const familyRef = await db.collection('families').add({
     familyName: '山田家',
-    coachName: null,
     vehicleCapacity: 5,
     pickupLocationId: pickupLocationRef.id,
     isActive: true,
@@ -47,7 +46,6 @@ test('配車作成ボタンと配車再作成確認ダイアログ', async ({ pa
     driverOutward: true,
     driverReturn: true,
     capacityToday: null,
-    coachParticipating: null,
     remarks: '',
     players: [
       { playerId: playerRef.id, isParticipating: true, noOutwardRide: false, noReturnRide: false },

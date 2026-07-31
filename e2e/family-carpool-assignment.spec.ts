@@ -23,7 +23,7 @@ test('参加する家族は、選手と同じ乗車メンバーとして自動�
 
   // 選手1人＋家族1人＋運転者本人で定員3ちょうど
   const familyRef = await db.collection('families').add({
-    familyName: '佐藤家', coachName: null, vehicleCapacity: 3, pickupLocationId: pickupLocationRef.id,
+    familyName: '佐藤家', vehicleCapacity: 3, pickupLocationId: pickupLocationRef.id,
     isActive: true, createdAt: now, updatedAt: now,
   });
   const playerRef = await db.collection('players').add({
@@ -36,8 +36,7 @@ test('参加する家族は、選手と同じ乗車メンバーとして自動�
     name: '練習試合', date: '2026-08-01', destinationId: destinationRef.id, createdAt: now, updatedAt: now,
   });
   await eventRef.collection('responses').doc(familyRef.id).set({
-    driverOutward: true, driverReturn: true, capacityToday: null, coachParticipating: null,
-    coachNoOutwardRide: false, coachNoReturnRide: false, remarks: '',
+    driverOutward: true, driverReturn: true, capacityToday: null, remarks: '',
     players: [{ playerId: playerRef.id, isParticipating: true, noOutwardRide: false, noReturnRide: false }],
     familyMembers: [
       { familyMemberId: familyMemberRef.id, isParticipating: true, noOutwardRide: false, noReturnRide: false },
@@ -88,7 +87,7 @@ test('家族のみで満席の場合、選手が乗れずHard Failし、対象�
 
   // 定員1（家族のみでぴったり）なのに選手が1人いるため、優先割り当てグループが定員超過する
   const familyRef = await db.collection('families').add({
-    familyName: '佐藤家', coachName: null, vehicleCapacity: 1, pickupLocationId: pickupLocationRef.id,
+    familyName: '佐藤家', vehicleCapacity: 1, pickupLocationId: pickupLocationRef.id,
     isActive: true, createdAt: now, updatedAt: now,
   });
   const playerRef = await db.collection('players').add({
@@ -101,8 +100,7 @@ test('家族のみで満席の場合、選手が乗れずHard Failし、対象�
     name: '練習試合', date: '2026-08-01', destinationId: destinationRef.id, createdAt: now, updatedAt: now,
   });
   await eventRef.collection('responses').doc(familyRef.id).set({
-    driverOutward: true, driverReturn: true, capacityToday: null, coachParticipating: null,
-    coachNoOutwardRide: false, coachNoReturnRide: false, remarks: '',
+    driverOutward: true, driverReturn: true, capacityToday: null, remarks: '',
     players: [{ playerId: playerRef.id, isParticipating: true, noOutwardRide: false, noReturnRide: false }],
     familyMembers: [
       { familyMemberId: familyMemberRef.id, isParticipating: true, noOutwardRide: false, noReturnRide: false },
@@ -137,11 +135,11 @@ test('家族が行きの送迎不要（現地集合等）の場合、行きタ�
   });
 
   const familyDriver = await db.collection('families').add({
-    familyName: '鈴木家', coachName: null, vehicleCapacity: 4, pickupLocationId: pickupLocationRef.id,
+    familyName: '鈴木家', vehicleCapacity: 4, pickupLocationId: pickupLocationRef.id,
     isActive: true, createdAt: now, updatedAt: now,
   });
   const familyRef = await db.collection('families').add({
-    familyName: '木村家', coachName: null, vehicleCapacity: 0, pickupLocationId: pickupLocationRef.id,
+    familyName: '木村家', vehicleCapacity: 0, pickupLocationId: pickupLocationRef.id,
     isActive: true, createdAt: now, updatedAt: now,
   });
   const familyMemberRef = await db.collection('familyMembers').add({
@@ -151,12 +149,10 @@ test('家族が行きの送迎不要（現地集合等）の場合、行きタ�
     name: '練習試合', date: '2026-08-01', destinationId: destinationRef.id, createdAt: now, updatedAt: now,
   });
   await eventRef.collection('responses').doc(familyDriver.id).set({
-    driverOutward: true, driverReturn: true, capacityToday: null, coachParticipating: null,
-    coachNoOutwardRide: false, coachNoReturnRide: false, remarks: '', players: [], familyMembers: [],
+    driverOutward: true, driverReturn: true, capacityToday: null, remarks: '', players: [], familyMembers: [],
   });
   await eventRef.collection('responses').doc(familyRef.id).set({
-    driverOutward: false, driverReturn: false, capacityToday: null, coachParticipating: null,
-    coachNoOutwardRide: false, coachNoReturnRide: false, remarks: '', players: [],
+    driverOutward: false, driverReturn: false, capacityToday: null, remarks: '', players: [],
     familyMembers: [
       { familyMemberId: familyMemberRef.id, isParticipating: true, noOutwardRide: true, noReturnRide: false },
     ],

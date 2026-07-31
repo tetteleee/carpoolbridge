@@ -12,6 +12,7 @@ import type { CarCardData } from '../../utils/carCard';
 import type { PersonCardData } from '../../components/carpool/PersonCard';
 import { getFamilies } from '../master/familyService';
 import { getPlayersByFamilyId } from '../master/playerService';
+import { getCoachesByFamilyId } from '../master/coachService';
 import { getFamilyMembersByFamilyId } from '../master/familyMemberService';
 import { getPickupLocations } from '../master/pickupLocationService';
 import { getResponses } from '../event/responseService';
@@ -60,7 +61,7 @@ function getMemberPickupLocationId(
   } else if (member.type === 'family') {
     familyId = masterData.familyMemberById.get(member.familyMemberId)?.familyId;
   } else {
-    familyId = member.familyId;
+    familyId = masterData.coachById.get(member.coachId)?.familyId;
   }
   if (!familyId) {
     return null;
@@ -125,16 +126,13 @@ function toPersonCardData(
     };
   }
 
-  const family = masterData.familyById.get(member.familyId);
-  if (!family) {
-    return toDeletedPersonCardData(member.familyId, member);
-  }
-  if (family.coachName === null) {
-    return null;
+  const coach = masterData.coachById.get(member.coachId);
+  if (!coach) {
+    return toDeletedPersonCardData(member.coachId, member);
   }
   return {
-    id: family.id,
-    name: family.coachName,
+    id: coach.id,
+    name: coach.name,
     grade: null,
     pickupLocationId: pickupLocationId ?? '',
     pickupLocationName,
@@ -203,8 +201,15 @@ function buildEligibleMembers(masterData: BoardMasterData, direction: Direction)
       }
     }
 
-    if (isCoachRidingForDirection(family, response, direction)) {
-      members.push({ type: 'coach', familyId });
+    for (const coachResponse of response.coaches ?? []) {
+      const coachMaster = masterData.coachById.get(coachResponse.coachId);
+      if (
+        coachMaster?.isActive &&
+        coachMaster.familyId === familyId &&
+        isCoachRidingForDirection(coachResponse, direction)
+      ) {
+        members.push({ type: 'coach', coachId: coachResponse.coachId });
+      }
     }
   }
 
@@ -246,8 +251,15 @@ function buildNoRideNeededMembers(masterData: BoardMasterData, direction: Direct
       }
     }
 
-    if (isCoachNoRideNeededForDirection(family, response, direction)) {
-      members.push({ type: 'coach', familyId });
+    for (const coachResponse of response.coaches ?? []) {
+      const coachMaster = masterData.coachById.get(coachResponse.coachId);
+      if (
+        coachMaster?.isActive &&
+        coachMaster.familyId === familyId &&
+        isCoachNoRideNeededForDirection(coachResponse, direction)
+      ) {
+        members.push({ type: 'coach', coachId: coachResponse.coachId });
+      }
     }
   }
 
@@ -258,7 +270,7 @@ function buildNoRideNeededMembers(masterData: BoardMasterData, direction: Direct
 function memberKey(member: CarpoolMember): string {
   if (member.type === 'player') return `player:${member.playerId}`;
   if (member.type === 'family') return `family:${member.familyMemberId}`;
-  return `coach:${member.familyId}`;
+  return `coach:${member.coachId}`;
 }
 
 /**
@@ -272,13 +284,15 @@ export async function loadBoardMasterData(eventId: string): Promise<BoardMasterD
     getResponses(eventId),
     getPickupLocations(),
   ]);
-  const [playersLists, familyMembersLists] = await Promise.all([
+  const [playersLists, coachesLists, familyMembersLists] = await Promise.all([
     Promise.all(families.map((family) => getPlayersByFamilyId(family.id))),
+    Promise.all(families.map((family) => getCoachesByFamilyId(family.id))),
     Promise.all(families.map((family) => getFamilyMembersByFamilyId(family.id))),
   ]);
 
   const familyById = new Map(families.map((family) => [family.id, family]));
   const playerById = new Map(playersLists.flat().map((player) => [player.id, player]));
+  const coachById = new Map(coachesLists.flat().map((coach) => [coach.id, coach]));
   const familyMemberById = new Map(
     familyMembersLists.flat().map((familyMember) => [familyMember.id, familyMember])
   );
@@ -289,7 +303,7 @@ export async function loadBoardMasterData(eventId: string): Promise<BoardMasterD
     pickupLocations.map((location) => [location.id, location])
   );
 
-  return { familyById, playerById, familyMemberById, responseByFamilyId, pickupLocationById };
+  return { familyById, playerById, coachById, familyMemberById, responseByFamilyId, pickupLocationById };
 }
 
 /**
