@@ -1,7 +1,7 @@
 import { CarCard } from '../carpool/CarCard';
 import { NoRideNeededArea } from '../carpool/NoRideNeededArea';
 import { UnassignedArea } from '../carpool/UnassignedArea';
-import { MapPinIcon } from '../icons';
+import { CalendarIcon, MapPinIcon } from '../icons';
 import { formatDateWithWeekday } from '../../utils/date';
 import type { CarpoolBoardData } from '../../services/carpool/carpoolBoardData';
 import type { Direction } from '../../types/event';
@@ -57,7 +57,6 @@ export function ShareImageLayout({
     >
       <div
         style={{
-          textAlign: 'center',
           paddingBottom: '10px',
           borderBottom: '1px solid var(--border)',
         }}
@@ -69,23 +68,20 @@ export function ShareImageLayout({
           style={{
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center',
-            gap: '6px',
-            marginTop: '3px',
-            fontSize: '12.5px',
-            fontWeight: 600,
+            gap: '4px',
+            marginTop: '4px',
             color: 'var(--text)',
           }}
         >
-          <span>{formatDateWithWeekday(eventDate)}</span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: '3px', flexShrink: 0 }}>
+            <CalendarIcon size={13} />
+            <span style={{ fontSize: '12.5px' }}>{formatDateWithWeekday(eventDate)}</span>
+          </span>
           {destinationName && (
-            <>
-              <span aria-hidden="true">・</span>
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '2px' }}>
-                <MapPinIcon size={12} />
-                {destinationName}
-              </span>
-            </>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <MapPinIcon size={13} />
+              <span style={{ fontSize: '12.5px' }}>{destinationName}</span>
+            </span>
           )}
         </div>
       </div>
@@ -108,12 +104,11 @@ export function ShareImageLayout({
                 margin: 0,
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center',
                 gap: '6px',
                 padding: '5px 10px',
                 fontSize: '14px',
                 fontWeight: 700,
-                letterSpacing: '0.04em',
+                letterSpacing: '0.02em',
                 color: '#fff',
                 background: 'var(--accent)',
                 borderRadius: '6px',
