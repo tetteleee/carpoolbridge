@@ -12,7 +12,7 @@ import { getSchoolGrade } from '../../utils/schoolGrade';
 import { computeResponseStatus, type ResponseStatus } from '../../utils/responseStatus';
 import { createResponse, updateResponse } from '../../services/event/responseService';
 import { createFamilyMember } from '../../services/master/familyMemberService';
-import { HomeIcon, UserIcon, ChevronDownIcon, CloseIcon } from '../icons';
+import { HomeIcon, UserIcon, ChevronDownIcon, CloseIcon, WarningIcon } from '../icons';
 import { Card } from '../common/Card';
 import { AddRow } from '../common/AddRow';
 import { PlayerResponseRow } from './PlayerResponseRow';
@@ -226,6 +226,9 @@ export function FamilyResponseCard({
   );
   // 対象家庭のResponseドキュメントが既にFirestore上に存在するか（新規作成か更新かの判定に使用）
   const hasDocRef = useRef<boolean>(response !== undefined);
+  // 自動保存の失敗をユーザーへ知らせるためのエラーメッセージ（未失敗時はnull）。
+  // 次の自動保存が成功した時点で自動的に消える
+  const [saveError, setSaveError] = useState<string | null>(null);
   // 一時参加者の追加フォームを展開中かどうか（04_画面設計.md#7 一時参加者の追加）
   const [isAddingTemporaryParticipant, setIsAddingTemporaryParticipant] = useState(false);
 
@@ -245,14 +248,21 @@ export function FamilyResponseCard({
   const persist = (next: Response, patch: Partial<Response>) => {
     if (!hasDocRef.current) {
       hasDocRef.current = true;
-      void createResponse(eventId, family.id, next).catch((error) => {
-        console.error('回答の自動保存（新規作成）に失敗しました', error);
-      });
+      void createResponse(eventId, family.id, next)
+        .then(() => setSaveError(null))
+        .catch((error) => {
+          console.error('回答の自動保存（新規作成）に失敗しました', error);
+          hasDocRef.current = false;
+          setSaveError('回答を保存できませんでした。通信環境をご確認のうえ、もう一度入力してください');
+        });
       return;
     }
-    void updateResponse(eventId, family.id, patch).catch((error) => {
-      console.error('回答の自動保存（更新）に失敗しました', error);
-    });
+    void updateResponse(eventId, family.id, patch)
+      .then(() => setSaveError(null))
+      .catch((error) => {
+        console.error('回答の自動保存（更新）に失敗しました', error);
+        setSaveError('回答を保存できませんでした。通信環境をご確認のうえ、もう一度入力してください');
+      });
   };
 
   /** 家庭情報（車出し・乗車可能人数・コーチ参加・備考）の変更を反映し、自動保存する */
@@ -391,6 +401,15 @@ export function FamilyResponseCard({
           familyMemberList={familyMemberList}
           responseFamilyMembers={current.familyMembers}
         />
+        {saveError && (
+          <span
+            aria-label="保存に失敗しました"
+            role="img"
+            style={{ flexShrink: 0, display: 'flex', color: 'var(--negative)' }}
+          >
+            <WarningIcon size={16} />
+          </span>
+        )}
         <span aria-hidden="true" style={{ flexShrink: 0, color: 'var(--text)', display: 'flex', transform: isOpen ? undefined : 'rotate(-90deg)' }}>
           <ChevronDownIcon size={18} />
         </span>
@@ -398,6 +417,24 @@ export function FamilyResponseCard({
 
       {isOpen && (
         <div id={`family-response-card-body-${family.id}`} style={bodyWrapperStyle}>
+          {saveError && (
+            <p
+              id={`family-response-card-save-error-${family.id}`}
+              role="alert"
+              style={{
+                margin: 0,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                fontSize: '12.5px',
+                fontWeight: 700,
+                color: 'var(--negative)',
+              }}
+            >
+              <WarningIcon size={14} />
+              {saveError}
+            </p>
+          )}
           <DriverAndCapacitySection
             familyId={family.id}
             vehicleCapacity={family.vehicleCapacity}
