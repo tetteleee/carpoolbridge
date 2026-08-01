@@ -125,7 +125,7 @@ export function CarpoolPage() {
       });
   };
 
-  const { dragState, hoveredZoneId, createPointerDownHandler } = useDragAndDrop({
+  const { dragState, hoveredZoneId, handlePersonPointerDown } = useDragAndDrop({
     onDrop: handleDrop,
     topEdgePx: stickyHeaderHeight + AUTO_SCROLL_TOP_BUFFER_PX,
   });
@@ -271,9 +271,7 @@ export function CarpoolPage() {
                   people={unassignedPeople}
                   isDropTarget={dragState !== null && hoveredZoneId === UNASSIGNED_ZONE_ID}
                   draggingPersonId={dragState?.personId ?? null}
-                  onPersonPointerDown={(person) =>
-                    createPointerDownHandler(person, UNASSIGNED_ZONE_ID)
-                  }
+                  onPersonPointerDown={handlePersonPointerDown}
                 />
                 {carCards.map((car) => (
                   <CarCard
@@ -281,7 +279,7 @@ export function CarpoolPage() {
                     car={car}
                     isDropTarget={dragState !== null && hoveredZoneId === car.id}
                     draggingPersonId={dragState?.personId ?? null}
-                    onPersonPointerDown={(person) => createPointerDownHandler(person, car.id)}
+                    onPersonPointerDown={handlePersonPointerDown}
                   />
                 ))}
                 <NoRideNeededArea people={noRideNeededPeople} />

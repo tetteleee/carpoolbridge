@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
 import { PersonCard, type PersonCardData } from './PersonCard';
 import { groupMembersByLocation } from '../../services/carpool/locationGrouping';
@@ -8,10 +9,17 @@ interface LocationGroupedListProps {
   members: PersonCardData[];
   /** ドラッグ中の人カードのID（薄く表示するために使用） */
   draggingPersonId?: string | null;
-  /** 人カードのonPointerDownハンドラーを生成する */
+  /**
+   * 人カードのonPointerDownハンドラー（レンダリングを跨いで参照が変わらない）。
+   * PersonCardへそのまま渡す（人物・sourceZoneIdはPersonCard側で付与する）。
+   */
   onPersonPointerDown?: (
-    person: PersonCardData
-  ) => (event: ReactPointerEvent<Element>) => void;
+    event: ReactPointerEvent<Element>,
+    person: PersonCardData,
+    sourceZoneId: string
+  ) => void;
+  /** ドラッグ元のドロップゾーンID（未配車エリア、またはCarpool.id）。onPersonPointerDown指定時に使用する */
+  sourceZoneId?: string;
   /**
    * 集合場所グループが1つしかない場合に見出しを省略するかどうか。
    * 車カードは既にヘッダー行（車名の横）に経由する集合場所を表示しているため、
@@ -38,10 +46,11 @@ interface LocationGroupedListProps {
  * data-drop-zone-id はゾーンのルート要素（呼び出し元のCard）側に既に設定済みのため、
  * このコンポーネント内では設定しない。
  */
-export function LocationGroupedList({
+function LocationGroupedListComponent({
   members,
   draggingPersonId = null,
   onPersonPointerDown,
+  sourceZoneId,
   hideHeaderIfSingleGroup = false,
   hideLeadingIcon = false,
   dense = false,
@@ -76,7 +85,8 @@ export function LocationGroupedList({
                 person={person}
                 compact
                 hideLeadingIcon={hideLeadingIcon}
-                onPointerDown={onPersonPointerDown?.(person)}
+                onPointerDown={onPersonPointerDown}
+                sourceZoneId={sourceZoneId}
                 isDragging={person.id === draggingPersonId}
               />
             ))}
@@ -86,3 +96,5 @@ export function LocationGroupedList({
     </div>
   );
 }
+
+export const LocationGroupedList = memo(LocationGroupedListComponent);
