@@ -549,16 +549,34 @@ export function FamilySection({ ref }: FamilySectionProps) {
         );
       }),
     save: async () => {
+      let failedLabel: string | null = null;
       try {
         for (const family of families) {
           let familyId = family.id;
 
           if (newIds.has(family.id)) {
+            failedLabel = `家庭「${family.familyName || '（家庭名未設定）'}」`;
+            const oldFamilyId = family.id;
             familyId = await createFamily({
               familyName: family.familyName,
               vehicleCapacity: family.vehicleCapacity,
               pickupLocationId: family.pickupLocationId,
             });
+            // 作成成功分は即座に下書きへ反映する（失敗時に再保存しても重複作成されないようにするため）
+            setFamilies((prev) =>
+              prev.map((f) => (f.id === oldFamilyId ? { ...f, id: familyId } : f))
+            );
+            setSavedFamilies((prev) => [...prev, { ...family, id: familyId }]);
+            setPlayers((prev) =>
+              prev.map((p) => (p.familyId === oldFamilyId ? { ...p, familyId } : p))
+            );
+            setCoaches((prev) =>
+              prev.map((c) => (c.familyId === oldFamilyId ? { ...c, familyId } : c))
+            );
+            setFamilyMembers((prev) =>
+              prev.map((m) => (m.familyId === oldFamilyId ? { ...m, familyId } : m))
+            );
+            setNewIds((prev) => removeIdFromSet(prev, oldFamilyId));
           } else {
             const original = savedFamilies.find((f) => f.id === family.id);
             if (!original) continue;
@@ -578,7 +596,11 @@ export function FamilySection({ ref }: FamilySectionProps) {
             }
 
             if (Object.keys(changes).length > 0) {
+              failedLabel = `家庭「${family.familyName || '（家庭名未設定）'}」`;
               await updateFamily(family.id, changes);
+              setSavedFamilies((prev) =>
+                prev.map((f) => (f.id === family.id ? { ...f, ...changes } : f))
+              );
             }
           }
 
@@ -588,11 +610,23 @@ export function FamilySection({ ref }: FamilySectionProps) {
 
           for (const player of familyPlayers) {
             if (newPlayerIds.has(player.id)) {
-              await createPlayer({
+              failedLabel = `選手「${player.name || '（名前未設定）'}」`;
+              const oldPlayerId = player.id;
+              const newPlayerId = await createPlayer({
                 familyId,
                 name: player.name,
                 schoolEntryYear: player.schoolEntryYear,
               });
+              setPlayers((prev) =>
+                prev.map((p) =>
+                  p.id === oldPlayerId ? { ...p, id: newPlayerId, familyId } : p
+                )
+              );
+              setSavedPlayers((prev) => [
+                ...prev,
+                { ...player, id: newPlayerId, familyId },
+              ]);
+              setNewPlayerIds((prev) => removeIdFromSet(prev, oldPlayerId));
               continue;
             }
 
@@ -611,7 +645,11 @@ export function FamilySection({ ref }: FamilySectionProps) {
             }
 
             if (Object.keys(playerChanges).length > 0) {
+              failedLabel = `選手「${player.name || '（名前未設定）'}」`;
               await updatePlayer(player.id, playerChanges);
+              setSavedPlayers((prev) =>
+                prev.map((p) => (p.id === player.id ? { ...p, ...playerChanges } : p))
+              );
             }
           }
 
@@ -619,10 +657,22 @@ export function FamilySection({ ref }: FamilySectionProps) {
 
           for (const coach of familyCoaches) {
             if (newCoachIds.has(coach.id)) {
-              await createCoach({
+              failedLabel = `コーチ「${coach.name || '（名前未設定）'}」`;
+              const oldCoachId = coach.id;
+              const newCoachId = await createCoach({
                 familyId,
                 name: coach.name,
               });
+              setCoaches((prev) =>
+                prev.map((c) =>
+                  c.id === oldCoachId ? { ...c, id: newCoachId, familyId } : c
+                )
+              );
+              setSavedCoaches((prev) => [
+                ...prev,
+                { ...coach, id: newCoachId, familyId },
+              ]);
+              setNewCoachIds((prev) => removeIdFromSet(prev, oldCoachId));
               continue;
             }
 
@@ -638,7 +688,11 @@ export function FamilySection({ ref }: FamilySectionProps) {
             }
 
             if (Object.keys(coachChanges).length > 0) {
+              failedLabel = `コーチ「${coach.name || '（名前未設定）'}」`;
               await updateCoach(coach.id, coachChanges);
+              setSavedCoaches((prev) =>
+                prev.map((c) => (c.id === coach.id ? { ...c, ...coachChanges } : c))
+              );
             }
           }
 
@@ -648,10 +702,24 @@ export function FamilySection({ ref }: FamilySectionProps) {
 
           for (const familyMember of familyMemberList) {
             if (newFamilyMemberIds.has(familyMember.id)) {
-              await createFamilyMember({
+              failedLabel = `家族「${familyMember.name || '（名前未設定）'}」`;
+              const oldFamilyMemberId = familyMember.id;
+              const newFamilyMemberId = await createFamilyMember({
                 familyId,
                 name: familyMember.name,
               });
+              setFamilyMembers((prev) =>
+                prev.map((m) =>
+                  m.id === oldFamilyMemberId
+                    ? { ...m, id: newFamilyMemberId, familyId }
+                    : m
+                )
+              );
+              setSavedFamilyMembers((prev) => [
+                ...prev,
+                { ...familyMember, id: newFamilyMemberId, familyId },
+              ]);
+              setNewFamilyMemberIds((prev) => removeIdFromSet(prev, oldFamilyMemberId));
               continue;
             }
 
@@ -667,7 +735,13 @@ export function FamilySection({ ref }: FamilySectionProps) {
             }
 
             if (Object.keys(familyMemberChanges).length > 0) {
+              failedLabel = `家族「${familyMember.name || '（名前未設定）'}」`;
               await updateFamilyMember(familyMember.id, familyMemberChanges);
+              setSavedFamilyMembers((prev) =>
+                prev.map((m) =>
+                  m.id === familyMember.id ? { ...m, ...familyMemberChanges } : m
+                )
+              );
             }
           }
         }
@@ -702,7 +776,11 @@ export function FamilySection({ ref }: FamilySectionProps) {
 
         setError(null);
       } catch {
-        setError('家庭・選手・コーチ・家族の保存に失敗しました');
+        setError(
+          failedLabel
+            ? `${failedLabel}の保存に失敗しました。それより前の変更は保存済みです。もう一度保存してください。`
+            : '家庭・選手・コーチ・家族の保存に失敗しました'
+        );
         throw new Error('family save failed');
       }
     },

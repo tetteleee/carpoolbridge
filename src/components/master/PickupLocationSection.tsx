@@ -148,13 +148,26 @@ export function PickupLocationSection({ ref }: PickupLocationSectionProps) {
         );
       }),
     save: async () => {
+      let failedLabel: string | null = null;
       try {
         for (const location of locations) {
           if (newIds.has(location.id)) {
-            await createPickupLocation({
+            failedLabel = location.name || '（名称未設定）';
+            const oldId = location.id;
+            const newId = await createPickupLocation({
               name: location.name,
               latitude: location.latitude,
               longitude: location.longitude,
+            });
+            // 作成成功分は即座に下書きへ反映する（失敗時に再保存しても重複作成されないようにするため）
+            setLocations((prev) =>
+              prev.map((l) => (l.id === oldId ? { ...l, id: newId } : l))
+            );
+            setSavedLocations((prev) => [...prev, { ...location, id: newId }]);
+            setNewIds((prev) => {
+              const next = new Set(prev);
+              next.delete(oldId);
+              return next;
             });
             continue;
           }
@@ -165,11 +178,15 @@ export function PickupLocationSection({ ref }: PickupLocationSectionProps) {
               original.latitude !== location.latitude ||
               original.longitude !== location.longitude)
           ) {
+            failedLabel = location.name || '（名称未設定）';
             await updatePickupLocation(location.id, {
               name: location.name,
               latitude: location.latitude,
               longitude: location.longitude,
             });
+            setSavedLocations((prev) =>
+              prev.map((l) => (l.id === location.id ? { ...location } : l))
+            );
           }
         }
         const refreshed = await getPickupLocations();
@@ -178,7 +195,11 @@ export function PickupLocationSection({ ref }: PickupLocationSectionProps) {
         setNewIds(new Set());
         setError(null);
       } catch {
-        setError('集合場所の保存に失敗しました');
+        setError(
+          failedLabel
+            ? `「${failedLabel}」の保存に失敗しました。それより前の変更は保存済みです。もう一度保存してください。`
+            : '集合場所の保存に失敗しました'
+        );
         throw new Error('pickup location save failed');
       }
     },
