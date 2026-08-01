@@ -10,9 +10,9 @@ import { CarIcon, ChevronDownIcon, LoadingIndicator } from '../components/icons'
 import { getEvent } from '../services/event/eventService';
 import { getDestination } from '../services/master/destinationService';
 import { getFamilies } from '../services/master/familyService';
-import { getPlayersByFamilyId } from '../services/master/playerService';
-import { getCoachesByFamilyId } from '../services/master/coachService';
-import { getFamilyMembersByFamilyId } from '../services/master/familyMemberService';
+import { getAllPlayers } from '../services/master/playerService';
+import { getAllCoaches } from '../services/master/coachService';
+import { getAllFamilyMembers } from '../services/master/familyMemberService';
 import { getPickupLocations } from '../services/master/pickupLocationService';
 import { getResponses } from '../services/event/responseService';
 import { getCarpools, deleteAllCarpools } from '../services/event/carpoolService';
@@ -120,26 +120,36 @@ export function EventEditPage() {
         setPickupLocationList(pickupLocationsData);
 
         const activeFamilies = familiesData.filter((family) => family.isActive);
+        const activeFamilyIds = new Set(activeFamilies.map((family) => family.id));
 
-        const [playersByFamily, coachesByFamily, familyMembersByFamily] = await Promise.all([
-          Promise.all(activeFamilies.map((family) => getPlayersByFamilyId(family.id))),
-          Promise.all(activeFamilies.map((family) => getCoachesByFamilyId(family.id))),
-          Promise.all(activeFamilies.map((family) => getFamilyMembersByFamilyId(family.id))),
+        const [allPlayers, allCoaches, allFamilyMembers] = await Promise.all([
+          getAllPlayers(),
+          getAllCoaches(),
+          getAllFamilyMembers(),
         ]);
         const playersMap: Record<string, Player[]> = {};
         const coachesMap: Record<string, Coach[]> = {};
         const familyMembersMap: Record<string, FamilyMember[]> = {};
-        activeFamilies.forEach((family, index) => {
-          playersMap[family.id] = playersByFamily[index].filter(
-            (player) => player.isActive
-          );
-          coachesMap[family.id] = coachesByFamily[index].filter(
-            (coach) => coach.isActive
-          );
-          familyMembersMap[family.id] = familyMembersByFamily[index].filter(
-            (familyMember) => familyMember.isActive
-          );
-        });
+        for (const family of activeFamilies) {
+          playersMap[family.id] = [];
+          coachesMap[family.id] = [];
+          familyMembersMap[family.id] = [];
+        }
+        for (const player of allPlayers) {
+          if (player.isActive && activeFamilyIds.has(player.familyId)) {
+            playersMap[player.familyId].push(player);
+          }
+        }
+        for (const coach of allCoaches) {
+          if (coach.isActive && activeFamilyIds.has(coach.familyId)) {
+            coachesMap[coach.familyId].push(coach);
+          }
+        }
+        for (const familyMember of allFamilyMembers) {
+          if (familyMember.isActive && activeFamilyIds.has(familyMember.familyId)) {
+            familyMembersMap[familyMember.familyId].push(familyMember);
+          }
+        }
         setPlayersByFamilyId(playersMap);
         setCoachesByFamilyId(coachesMap);
         setFamilyMembersByFamilyId(familyMembersMap);

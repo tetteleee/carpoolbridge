@@ -9,19 +9,19 @@ import {
 import {
   createPlayer,
   deletePlayer,
-  getPlayersByFamilyId,
+  getAllPlayers,
   updatePlayer,
 } from '../../services/master/playerService';
 import {
   createCoach,
   deleteCoach,
-  getCoachesByFamilyId,
+  getAllCoaches,
   updateCoach,
 } from '../../services/master/coachService';
 import {
   createFamilyMember,
   deleteFamilyMember,
-  getFamilyMembersByFamilyId,
+  getAllFamilyMembers,
   updateFamilyMember,
 } from '../../services/master/familyMemberService';
 import { getPickupLocations } from '../../services/master/pickupLocationService';
@@ -156,24 +156,22 @@ export function FamilySection({ ref }: FamilySectionProps) {
   const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
-    Promise.all([getFamilies(), getPickupLocations()])
-      .then(async ([familiesData, pickupLocationsData]) => {
+    Promise.all([
+      getFamilies(),
+      getPickupLocations(),
+      getAllPlayers(),
+      getAllCoaches(),
+      getAllFamilyMembers(),
+    ])
+      .then(([familiesData, pickupLocationsData, playersData, coachesData, familyMembersData]) => {
         setPickupLocations(pickupLocationsData);
 
-        const [playersByFamily, coachesByFamily, familyMembersByFamily] = await Promise.all([
-          Promise.all(familiesData.map((family) => getPlayersByFamilyId(family.id))),
-          Promise.all(familiesData.map((family) => getCoachesByFamilyId(family.id))),
-          Promise.all(familiesData.map((family) => getFamilyMembersByFamilyId(family.id))),
-        ]);
-        const playersData = playersByFamily.flat();
         setPlayers(playersData);
         setSavedPlayers(playersData);
 
-        const coachesData = coachesByFamily.flat();
         setCoaches(coachesData);
         setSavedCoaches(coachesData);
 
-        const familyMembersData = familyMembersByFamily.flat();
         setFamilyMembers(familyMembersData);
         setSavedFamilyMembers(familyMembersData);
 
@@ -746,26 +744,23 @@ export function FamilySection({ ref }: FamilySectionProps) {
           }
         }
 
-        const refreshedFamilies = await getFamilies();
+        const [refreshedFamilies, refreshedPlayers, refreshedCoaches, refreshedFamilyMembers] =
+          await Promise.all([
+            getFamilies(),
+            getAllPlayers(),
+            getAllCoaches(),
+            getAllFamilyMembers(),
+          ]);
         setNewIds(new Set());
 
-        const [refreshedPlayersByFamily, refreshedCoachesByFamily, refreshedFamilyMembersByFamily] =
-          await Promise.all([
-            Promise.all(refreshedFamilies.map((family) => getPlayersByFamilyId(family.id))),
-            Promise.all(refreshedFamilies.map((family) => getCoachesByFamilyId(family.id))),
-            Promise.all(refreshedFamilies.map((family) => getFamilyMembersByFamilyId(family.id))),
-          ]);
-        const refreshedPlayers = refreshedPlayersByFamily.flat();
         setPlayers(refreshedPlayers);
         setSavedPlayers(refreshedPlayers);
         setNewPlayerIds(new Set());
 
-        const refreshedCoaches = refreshedCoachesByFamily.flat();
         setCoaches(refreshedCoaches);
         setSavedCoaches(refreshedCoaches);
         setNewCoachIds(new Set());
 
-        const refreshedFamilyMembers = refreshedFamilyMembersByFamily.flat();
         setFamilyMembers(refreshedFamilyMembers);
         setSavedFamilyMembers(refreshedFamilyMembers);
         setNewFamilyMemberIds(new Set());

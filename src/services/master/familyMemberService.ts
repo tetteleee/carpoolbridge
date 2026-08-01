@@ -48,6 +48,19 @@ export async function getFamilyMembersByFamilyId(familyId: string): Promise<Fami
 }
 
 /**
+ * 全家庭分の家族を一括取得します。
+ * 家庭ごとにgetFamilyMembersByFamilyIdを呼ぶN+1クエリを避けるため、
+ * 呼び出し側で家庭ID単位にグルーピングして使うことを想定する。
+ *
+ * @returns 家族の配列（全家庭分）
+ */
+export async function getAllFamilyMembers(): Promise<FamilyMember[]> {
+  const colRef = collection(db, firestorePaths.familyMembersCollection());
+  const snapshot = await getDocs(colRef);
+  return snapshot.docs.map((d) => ({ id: d.id, ...d.data() } as FamilyMember));
+}
+
+/**
  * 家族の name・isActive を更新します。
  * 更新時に updatedAt をサーバー時刻で更新します。
  *

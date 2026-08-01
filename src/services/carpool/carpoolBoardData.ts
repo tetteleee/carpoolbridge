@@ -11,9 +11,9 @@
 import type { CarCardData } from '../../utils/carCard';
 import type { PersonCardData } from '../../components/carpool/PersonCard';
 import { getFamilies } from '../master/familyService';
-import { getPlayersByFamilyId } from '../master/playerService';
-import { getCoachesByFamilyId } from '../master/coachService';
-import { getFamilyMembersByFamilyId } from '../master/familyMemberService';
+import { getAllPlayers } from '../master/playerService';
+import { getAllCoaches } from '../master/coachService';
+import { getAllFamilyMembers } from '../master/familyMemberService';
 import { getPickupLocations } from '../master/pickupLocationService';
 import { getResponses } from '../event/responseService';
 import {
@@ -366,22 +366,20 @@ function memberKey(member: CarpoolMember): string {
  * @param eventId 対象のイベントID
  */
 export async function loadBoardMasterData(eventId: string): Promise<BoardMasterData> {
-  const [families, responses, pickupLocations] = await Promise.all([
+  const [families, responses, pickupLocations, players, coaches, familyMembers] = await Promise.all([
     getFamilies(),
     getResponses(eventId),
     getPickupLocations(),
-  ]);
-  const [playersLists, coachesLists, familyMembersLists] = await Promise.all([
-    Promise.all(families.map((family) => getPlayersByFamilyId(family.id))),
-    Promise.all(families.map((family) => getCoachesByFamilyId(family.id))),
-    Promise.all(families.map((family) => getFamilyMembersByFamilyId(family.id))),
+    getAllPlayers(),
+    getAllCoaches(),
+    getAllFamilyMembers(),
   ]);
 
   const familyById = new Map(families.map((family) => [family.id, family]));
-  const playerById = new Map(playersLists.flat().map((player) => [player.id, player]));
-  const coachById = new Map(coachesLists.flat().map((coach) => [coach.id, coach]));
+  const playerById = new Map(players.map((player) => [player.id, player]));
+  const coachById = new Map(coaches.map((coach) => [coach.id, coach]));
   const familyMemberById = new Map(
-    familyMembersLists.flat().map((familyMember) => [familyMember.id, familyMember])
+    familyMembers.map((familyMember) => [familyMember.id, familyMember])
   );
   const responseByFamilyId = new Map(
     responses.map((response) => [response.familyId, response])
