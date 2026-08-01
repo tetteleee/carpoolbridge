@@ -27,7 +27,7 @@ import {
   isTemporaryParticipantNoRideNeededForDirection,
   type EligibilityMasterData,
 } from './eligibility';
-import { getSchoolGrade } from '../../utils/schoolGrade';
+import { getSchoolGrade, getFamilyHighestGrade } from '../../utils/schoolGrade';
 import type { Carpool, CarpoolMember, Direction } from '../../types/event';
 import type { PickupLocation } from '../../types/master';
 
@@ -260,6 +260,39 @@ function buildEligibleMembers(masterData: BoardMasterData, direction: Direction)
 }
 
 /**
+ * 運転者家庭の最高学年（在籍中の選手のみが対象）を算出する。車カードの並び順比較に使用する。
+ * ref: docs/04_画面設計.md#8 車カード
+ */
+function getDriverFamilyHighestGrade(driverFamilyId: string, masterData: BoardMasterData): number | null {
+  const players = [...masterData.playerById.values()].filter(
+    (player) => player.isActive && player.familyId === driverFamilyId
+  );
+  return getFamilyHighestGrade(players);
+}
+
+/**
+ * 車カードの並び順で配車結果（Carpool）を比較する。
+ * 運転者家庭の最高学年降順→同学年は家庭名順（7章の家庭カード並び順と同じ規則）。
+ * ref: docs/04_画面設計.md#8 車カード
+ */
+function compareCarpoolsByDriverFamilyOrder(
+  a: Carpool,
+  b: Carpool,
+  masterData: BoardMasterData
+): number {
+  const gradeA = getDriverFamilyHighestGrade(a.driverFamilyId, masterData);
+  const gradeB = getDriverFamilyHighestGrade(b.driverFamilyId, masterData);
+  if (gradeA !== gradeB) {
+    if (gradeA === null) return 1;
+    if (gradeB === null) return -1;
+    return gradeB - gradeA;
+  }
+  const nameA = masterData.familyById.get(a.driverFamilyId)?.familyName ?? '';
+  const nameB = masterData.familyById.get(b.driverFamilyId)?.familyName ?? '';
+  return nameA.localeCompare(nameB, 'ja');
+}
+
+/**
  * 対象方向において「参加かつ送迎不要」（配車不要エリアの対象）となる選手・コーチ・家族・一時参加者一覧を算出する。
  * ref: docs/04_画面設計.md#8 配車不要エリア
  */
@@ -435,7 +468,11 @@ export function buildCarpoolBoardData(
     .map((member) => toPersonCardData(member, masterData))
     .filter((person): person is PersonCardData => person !== null);
 
-  const carCards = carpools.map((carpool) => {
+  const sortedCarpools = [...carpools].sort((a, b) =>
+    compareCarpoolsByDriverFamilyOrder(a, b, masterData)
+  );
+
+  const carCards = sortedCarpools.map((carpool) => {
     const family = masterData.familyById.get(carpool.driverFamilyId);
     return {
       id: carpool.id,
