@@ -148,13 +148,26 @@ export function DestinationSection({ ref }: DestinationSectionProps) {
         );
       }),
     save: async () => {
+      let failedLabel: string | null = null;
       try {
         for (const destination of destinations) {
           if (newIds.has(destination.id)) {
-            await createDestination({
+            failedLabel = destination.name || '（名称未設定）';
+            const oldId = destination.id;
+            const newId = await createDestination({
               name: destination.name,
               latitude: destination.latitude,
               longitude: destination.longitude,
+            });
+            // 作成成功分は即座に下書きへ反映する（失敗時に再保存しても重複作成されないようにするため）
+            setDestinations((prev) =>
+              prev.map((d) => (d.id === oldId ? { ...d, id: newId } : d))
+            );
+            setSavedDestinations((prev) => [...prev, { ...destination, id: newId }]);
+            setNewIds((prev) => {
+              const next = new Set(prev);
+              next.delete(oldId);
+              return next;
             });
             continue;
           }
@@ -167,11 +180,15 @@ export function DestinationSection({ ref }: DestinationSectionProps) {
               original.latitude !== destination.latitude ||
               original.longitude !== destination.longitude)
           ) {
+            failedLabel = destination.name || '（名称未設定）';
             await updateDestination(destination.id, {
               name: destination.name,
               latitude: destination.latitude,
               longitude: destination.longitude,
             });
+            setSavedDestinations((prev) =>
+              prev.map((d) => (d.id === destination.id ? { ...destination } : d))
+            );
           }
         }
         const refreshed = await getDestinations();
@@ -180,7 +197,11 @@ export function DestinationSection({ ref }: DestinationSectionProps) {
         setNewIds(new Set());
         setError(null);
       } catch {
-        setError('目的地の保存に失敗しました');
+        setError(
+          failedLabel
+            ? `「${failedLabel}」の保存に失敗しました。それより前の変更は保存済みです。もう一度保存してください。`
+            : '目的地の保存に失敗しました'
+        );
         throw new Error('destination save failed');
       }
     },
