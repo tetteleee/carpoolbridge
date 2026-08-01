@@ -2,8 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Header } from '../components/Header';
 import { EventHeaderTitle } from '../components/EventHeaderTitle';
-import { Button } from '../components/common/Button';
-import { LoadingIndicator, SummaryIcon } from '../components/icons';
+import { LoadingIndicator } from '../components/icons';
 import { CarCard } from '../components/carpool/CarCard';
 import { CarpoolCopyDialog } from '../components/carpool/CarpoolCopyDialog';
 import { CarpoolEmptyState } from '../components/carpool/CarpoolEmptyState';
@@ -207,33 +206,13 @@ export function CarpoolPage() {
               )
             }
             trailing={
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  aria-label={isSummaryVisible ? 'サマリーを非表示' : 'サマリーを表示'}
-                  aria-pressed={isSummaryVisible}
-                  onClick={() => setIsSummaryVisible((visible) => !visible)}
-                  style={{
-                    width: '34px',
-                    height: '34px',
-                    padding: 0,
-                    minHeight: 0,
-                    borderColor: isSummaryVisible ? 'var(--accent-border)' : '#D1D5DB',
-                    background: isSummaryVisible ? 'var(--accent-bg)' : '#FFFFFF',
-                    color: isSummaryVisible ? 'var(--accent)' : '#6B7280',
-                  }}
-                >
-                  <SummaryIcon size={16} />
-                </Button>
-                <OperationArea
-                  onEditAnswers={handleEditAnswersClick}
-                  onShare={handleShareClick}
-                  onRequestCopy={handleRequestCopy}
-                  canCopyOutwardToReturn={carpoolsByDirection.OUTWARD.length > 0}
-                  canCopyReturnToOutward={carpoolsByDirection.RETURN.length > 0}
-                />
-              </div>
+              <OperationArea
+                onEditAnswers={handleEditAnswersClick}
+                onShare={handleShareClick}
+                onRequestCopy={handleRequestCopy}
+                canCopyOutwardToReturn={carpoolsByDirection.OUTWARD.length > 0}
+                canCopyReturnToOutward={carpoolsByDirection.RETURN.length > 0}
+              />
             }
           />
         </div>
@@ -243,21 +222,13 @@ export function CarpoolPage() {
         </div>
 
         {!loading && !error && !hasNoResponses && (
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateRows: isSummaryVisible ? '1fr' : '0fr',
-              transition: 'grid-template-rows 0.2s ease',
-            }}
-          >
-            <div style={{ overflow: 'hidden' }}>
-              <CarpoolSummaryBar
-                carCards={carCards}
-                unassignedCount={unassignedPeople.length}
-                noRideNeededCount={noRideNeededPeople.length}
-              />
-            </div>
-          </div>
+          <CarpoolSummaryBar
+            carCards={carCards}
+            unassignedCount={unassignedPeople.length}
+            noRideNeededCount={noRideNeededPeople.length}
+            expanded={isSummaryVisible}
+            onToggleExpanded={() => setIsSummaryVisible((visible) => !visible)}
+          />
         )}
       </div>
 
