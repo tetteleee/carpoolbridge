@@ -1,4 +1,4 @@
-familyName,coachName,vehicleCapacity,pickupLocationName,isActive
-佐藤家,佐藤太郎,4,中央公園,TRUE
-鈴木家,,5,けやき駅前,TRUE
-田中家,,0,さくら団地前,TRUE
+familyName,vehicleCapacity,pickupLocationName,isActive
+佐藤家,4,中央公園,TRUE
+鈴木家,5,けやき駅前,TRUE
+田中家,0,さくら団地前,TRUE

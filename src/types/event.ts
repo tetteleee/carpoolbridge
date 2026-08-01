@@ -38,6 +38,21 @@ export interface ResponsePlayer {
 }
 
 /**
+ * イベント回答におけるコーチ個別の情報を表す型
+ * ResponsePlayerと全く同じ構造・意味を持つ（05_データ設計.md#9 コーチ情報）
+ */
+export interface ResponseCoach {
+  /** コーチID */
+  coachId: string;
+  /** イベントに参加するかどうか。未選択=null、参加=true、欠席=false */
+  isParticipating: boolean | null;
+  /** 行きの配車が不要かどうか（現地集合、午後から参加など） */
+  noOutwardRide: boolean;
+  /** 帰りの配車が不要かどうか（保護者迎え、現地解散など） */
+  noReturnRide: boolean;
+}
+
+/**
  * イベント回答における家族個別の情報を表す型
  * ResponsePlayerと全く同じ構造・意味を持つ（05_データ設計.md#9 家族情報）
  */
@@ -85,16 +100,12 @@ export interface Response {
   driverReturn: boolean | null;
   /** 当日乗車可能人数（運転者本人を含む総定員）の上書き。通常通りならnull */
   capacityToday: number | null;
-  /** コーチが参加するかどうか。コーチが紐づかない家庭ではnull */
-  coachParticipating: boolean | null;
-  /** 行きのコーチの配車が不要かどうか（現地集合など） */
-  coachNoOutwardRide: boolean;
-  /** 帰りのコーチの配車が不要かどうか（保護者迎えなど） */
-  coachNoReturnRide: boolean;
   /** 特記事項（選手個別の特殊ケースもここに集約する） */
   remarks: string;
   /** 選手情報の配列 */
   players: ResponsePlayer[];
+  /** コーチ情報の配列。コーチが1人も登録されていない家庭では空配列 */
+  coaches: ResponseCoach[];
   /** 家族情報の配列。家族が1人も登録されていない家庭では空配列 */
   familyMembers: ResponseFamilyMember[];
   /** 一時参加者（今回だけ参加する人）情報の配列。1人もいない家庭では空配列 */
@@ -114,7 +125,7 @@ export interface CarpoolMemberPlayer {
  */
 export interface CarpoolMemberCoach {
   type: 'coach';
-  familyId: string;
+  coachId: string;
 }
 
 /**

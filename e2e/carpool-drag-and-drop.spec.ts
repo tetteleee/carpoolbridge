@@ -15,12 +15,12 @@ test('未配車エリアの人カードを長押しドラッグして車カー�
   // 定員0（コーチなし）の車を出す家庭。乗車メンバーがいない間は自動配車の対象にならず、
   // 山田太郎は未配車のまま残る（未配車エリアからのドラッグ操作を検証するための前提）
   const familyDriver = await db.collection('families').add({
-    familyName: '鈴木家', coachName: null, vehicleCapacity: 0, pickupLocationId: locA.id,
+    familyName: '鈴木家', vehicleCapacity: 0, pickupLocationId: locA.id,
     isActive: true, createdAt: now, updatedAt: now,
   });
 
   const familyRider = await db.collection('families').add({
-    familyName: '山田家', coachName: null, vehicleCapacity: 0, pickupLocationId: locA.id,
+    familyName: '山田家', vehicleCapacity: 0, pickupLocationId: locA.id,
     isActive: true, createdAt: now, updatedAt: now,
   });
   const playerRider = await db.collection('players').add({
@@ -32,11 +32,11 @@ test('未配車エリアの人カードを長押しドラッグして車カー�
   });
 
   await eventRef.collection('responses').doc(familyDriver.id).set({
-    driverOutward: true, driverReturn: true, capacityToday: null, coachParticipating: null, remarks: '',
+    driverOutward: true, driverReturn: true, capacityToday: null, remarks: '',
     players: [],
   });
   await eventRef.collection('responses').doc(familyRider.id).set({
-    driverOutward: false, driverReturn: false, capacityToday: null, coachParticipating: null, remarks: '',
+    driverOutward: false, driverReturn: false, capacityToday: null, remarks: '',
     players: [{ playerId: playerRider.id, isParticipating: true, noOutwardRide: false, noReturnRide: false }],
   });
 
@@ -89,7 +89,7 @@ test('人カードの短いタップはドラッグとして扱われない', as
   const destinationRef = await db.collection('destinations').add({ name: '目的地A', latitude: 35.1, longitude: 139.1 });
 
   const familyRider = await db.collection('families').add({
-    familyName: '山田家', coachName: null, vehicleCapacity: 0, pickupLocationId: locA.id,
+    familyName: '山田家', vehicleCapacity: 0, pickupLocationId: locA.id,
     isActive: true, createdAt: now, updatedAt: now,
   });
   const playerRider = await db.collection('players').add({
@@ -100,7 +100,7 @@ test('人カードの短いタップはドラッグとして扱われない', as
     name: '練習試合', date: '2026-08-01', destinationId: destinationRef.id, createdAt: now, updatedAt: now,
   });
   await eventRef.collection('responses').doc(familyRider.id).set({
-    driverOutward: false, driverReturn: false, capacityToday: null, coachParticipating: null, remarks: '',
+    driverOutward: false, driverReturn: false, capacityToday: null, remarks: '',
     players: [{ playerId: playerRider.id, isParticipating: true, noOutwardRide: false, noReturnRide: false }],
   });
 
@@ -141,12 +141,12 @@ test('人カードを別の集合場所の車へ移動すると、経由地一�
   const destinationRef = await db.collection('destinations').add({ name: '目的地A', latitude: 35.1, longitude: 139.1 });
 
   const familyDriver = await db.collection('families').add({
-    familyName: '鈴木家', coachName: null, vehicleCapacity: 2, pickupLocationId: locA.id,
+    familyName: '鈴木家', vehicleCapacity: 2, pickupLocationId: locA.id,
     isActive: true, createdAt: now, updatedAt: now,
   });
 
   const familyRider = await db.collection('families').add({
-    familyName: '山田家', coachName: null, vehicleCapacity: 0, pickupLocationId: locB.id,
+    familyName: '山田家', vehicleCapacity: 0, pickupLocationId: locB.id,
     isActive: true, createdAt: now, updatedAt: now,
   });
   const playerRider = await db.collection('players').add({
@@ -158,11 +158,11 @@ test('人カードを別の集合場所の車へ移動すると、経由地一�
   });
 
   await eventRef.collection('responses').doc(familyDriver.id).set({
-    driverOutward: true, driverReturn: true, capacityToday: null, coachParticipating: null, remarks: '',
+    driverOutward: true, driverReturn: true, capacityToday: null, remarks: '',
     players: [],
   });
   await eventRef.collection('responses').doc(familyRider.id).set({
-    driverOutward: false, driverReturn: false, capacityToday: null, coachParticipating: null, remarks: '',
+    driverOutward: false, driverReturn: false, capacityToday: null, remarks: '',
     players: [{ playerId: playerRider.id, isParticipating: true, noOutwardRide: false, noReturnRide: false }],
   });
 
@@ -225,7 +225,7 @@ test('画面外（下方）の車カードへは、画面端までドラッグ�
   const driverFamilies = [];
   for (const name of driverNames) {
     const familyRef = await db.collection('families').add({
-      familyName: `${name}家`, coachName: null, vehicleCapacity: 0, pickupLocationId: locA.id,
+      familyName: `${name}家`, vehicleCapacity: 0, pickupLocationId: locA.id,
       isActive: true, createdAt: now, updatedAt: now,
     });
     driverFamilies.push(familyRef);
@@ -233,7 +233,7 @@ test('画面外（下方）の車カードへは、画面端までドラッグ�
   const firstDriverFamily = driverFamilies[0];
 
   const familyRider = await db.collection('families').add({
-    familyName: '山田家', coachName: null, vehicleCapacity: 0, pickupLocationId: locA.id,
+    familyName: '山田家', vehicleCapacity: 0, pickupLocationId: locA.id,
     isActive: true, createdAt: now, updatedAt: now,
   });
   const playerRider = await db.collection('players').add({
@@ -246,12 +246,12 @@ test('画面外（下方）の車カードへは、画面端までドラッグ�
 
   for (const familyRef of driverFamilies) {
     await eventRef.collection('responses').doc(familyRef.id).set({
-      driverOutward: true, driverReturn: true, capacityToday: null, coachParticipating: null, remarks: '',
+      driverOutward: true, driverReturn: true, capacityToday: null, remarks: '',
       players: [],
     });
   }
   await eventRef.collection('responses').doc(familyRider.id).set({
-    driverOutward: false, driverReturn: false, capacityToday: null, coachParticipating: null, remarks: '',
+    driverOutward: false, driverReturn: false, capacityToday: null, remarks: '',
     players: [{ playerId: playerRider.id, isParticipating: true, noOutwardRide: false, noReturnRide: false }],
   });
 
@@ -319,7 +319,7 @@ test('同じ車の中で人カードをドラッグしても、並び順は変�
   const destinationRef = await db.collection('destinations').add({ name: '目的地A', latitude: 35.1, longitude: 139.1 });
 
   const familyDriver = await db.collection('families').add({
-    familyName: '鈴木家', coachName: null, vehicleCapacity: 4, pickupLocationId: locA.id,
+    familyName: '鈴木家', vehicleCapacity: 4, pickupLocationId: locA.id,
     isActive: true, createdAt: now, updatedAt: now,
   });
 
@@ -328,7 +328,7 @@ test('同じ車の中で人カードをドラッグしても、並び順は変�
   const riderPlayerIds: string[] = [];
   for (const name of riderNames) {
     const familyRef = await db.collection('families').add({
-      familyName: `${name}家`, coachName: null, vehicleCapacity: 0, pickupLocationId: locA.id,
+      familyName: `${name}家`, vehicleCapacity: 0, pickupLocationId: locA.id,
       isActive: true, createdAt: now, updatedAt: now,
     });
     const playerRef = await db.collection('players').add({
@@ -344,12 +344,12 @@ test('同じ車の中で人カードをドラッグしても、並び順は変�
   });
 
   await eventRef.collection('responses').doc(familyDriver.id).set({
-    driverOutward: true, driverReturn: true, capacityToday: null, coachParticipating: null, remarks: '',
+    driverOutward: true, driverReturn: true, capacityToday: null, remarks: '',
     players: [],
   });
   for (let i = 0; i < riderPlayerIds.length; i += 1) {
     await eventRef.collection('responses').doc(riderFamilyIds[i]).set({
-      driverOutward: false, driverReturn: false, capacityToday: null, coachParticipating: null, remarks: '',
+      driverOutward: false, driverReturn: false, capacityToday: null, remarks: '',
       players: [{ playerId: riderPlayerIds[i], isParticipating: true, noOutwardRide: false, noReturnRide: false }],
     });
   }

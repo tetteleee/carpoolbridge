@@ -3,16 +3,16 @@ import { CheckIcon, CloseIcon } from '../icons';
 import { RideSwitch } from './RideSwitch';
 
 interface CoachResponseRowProps {
-  /** 対象家庭ID（DOM要素のid付与に使用） */
-  familyId: string;
-  /** コーチが参加するかどうか。未選択=null */
-  coachParticipating: boolean | null;
+  /** 対象コーチID（DOM要素のid付与に使用） */
+  coachId: string;
+  /** イベントに参加するかどうか。未選択=null */
+  isParticipating: boolean | null;
   /** 行きの配車が不要かどうか */
-  coachNoOutwardRide: boolean;
+  noOutwardRide: boolean;
   /** 帰りの配車が不要かどうか */
-  coachNoReturnRide: boolean;
+  noReturnRide: boolean;
   /** 参加有無の変更 */
-  onChange: (value: boolean) => void;
+  onChangeIsParticipating: (value: boolean) => void;
   /** 行きの配車不要チェックの変更 */
   onChangeNoOutwardRide: (value: boolean) => void;
   /** 帰りの配車不要チェックの変更 */
@@ -62,26 +62,26 @@ const segmentSelectedStyle: CSSProperties = {
 
 /**
  * イベント編集（回答入力）画面・家庭カード内の
- * コーチの参加（3状態）ボタン、および行き／帰りの送迎要否（ミニスイッチ）。
- * 呼び出し側（FamilyResponseCard）でFamily.coachNameが設定されている家庭のみ表示する。
- * 値は呼び出し側が保持し、変更の都度Firestoreへ自動保存される（T29）。
+ * コーチごとの参加（3状態）・行き／帰りの送迎要否（ミニスイッチ）。
+ * 選手（PlayerResponseRow）・家族（FamilyMemberResponseRow）と全く同じ構造・操作方法とする。
+ * 値は呼び出し側（FamilyResponseCard）が保持し、変更の都度Firestoreへ自動保存される。
  */
 export function CoachResponseRow({
-  familyId,
-  coachParticipating,
-  coachNoOutwardRide,
-  coachNoReturnRide,
-  onChange,
+  coachId,
+  isParticipating,
+  noOutwardRide,
+  noReturnRide,
+  onChangeIsParticipating,
   onChangeNoOutwardRide,
   onChangeNoReturnRide,
 }: CoachResponseRowProps) {
   // 送迎要否スイッチは「参加」が○（true）の場合のみ意味を持つため、
   // ○以外（✕・未回答）では操作不可にする。値自体は保持し、○に戻せば復元される。
-  const rideSwitchDisabled = coachParticipating !== true;
+  const rideSwitchDisabled = isParticipating !== true;
 
   return (
     <div
-      id={`coach-response-frame-${familyId}`}
+      id={`coach-response-frame-${coachId}`}
       style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}
     >
       <div style={rowStyle}>
@@ -89,51 +89,51 @@ export function CoachResponseRow({
           {/* 並び順は「不参加」→「参加」。行き・帰りミニスイッチ（ON＝右側）と同じ「肯定＝右」の向きに揃える（04_画面設計.md#7） */}
           <div style={segmentTrackStyle}>
             <button
-              id={`coach-participating-no-${familyId}`}
+              id={`coach-participating-no-${coachId}`}
               type="button"
-              aria-pressed={coachParticipating === false}
-              onClick={() => onChange(false)}
+              aria-pressed={isParticipating === false}
+              onClick={() => onChangeIsParticipating(false)}
               style={{
                 ...segmentButtonBaseStyle,
-                ...(coachParticipating === false
+                ...(isParticipating === false
                   ? { ...segmentSelectedStyle, color: 'var(--negative)' }
                   : {}),
               }}
             >
-              {coachParticipating === false && <CloseIcon size={14} />}
+              {isParticipating === false && <CloseIcon size={14} />}
               不参加
             </button>
             <button
-              id={`coach-participating-yes-${familyId}`}
+              id={`coach-participating-yes-${coachId}`}
               type="button"
-              aria-pressed={coachParticipating === true}
-              onClick={() => onChange(true)}
+              aria-pressed={isParticipating === true}
+              onClick={() => onChangeIsParticipating(true)}
               style={{
                 ...segmentButtonBaseStyle,
-                ...(coachParticipating === true
+                ...(isParticipating === true
                   ? { ...segmentSelectedStyle, color: 'var(--positive)' }
                   : {}),
               }}
             >
-              {coachParticipating === true && <CheckIcon size={14} />}
+              {isParticipating === true && <CheckIcon size={14} />}
               参加
             </button>
           </div>
 
           <div style={{ display: 'flex', gap: '6px' }}>
             <RideSwitch
-              id={`coach-no-outward-ride-${familyId}`}
+              id={`coach-no-outward-ride-${coachId}`}
               label="行"
               ariaLabel="行きの送迎"
-              noRide={coachNoOutwardRide}
+              noRide={noOutwardRide}
               disabled={rideSwitchDisabled}
               onChange={onChangeNoOutwardRide}
             />
             <RideSwitch
-              id={`coach-no-return-ride-${familyId}`}
+              id={`coach-no-return-ride-${coachId}`}
               label="帰"
               ariaLabel="帰りの送迎"
-              noRide={coachNoReturnRide}
+              noRide={noReturnRide}
               disabled={rideSwitchDisabled}
               onChange={onChangeNoReturnRide}
             />

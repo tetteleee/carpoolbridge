@@ -14,7 +14,7 @@ export function memberKey(member: CarpoolMember): string {
   if (member.type === 'player') return `player:${member.playerId}`;
   if (member.type === 'family') return `family:${member.familyMemberId}`;
   if (member.type === 'temporary') return `temporary:${member.temporaryParticipantId}`;
-  return `coach:${member.familyId}`;
+  return `coach:${member.coachId}`;
 }
 
 /**

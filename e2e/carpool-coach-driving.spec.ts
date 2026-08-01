@@ -21,8 +21,11 @@ test('コーチが運転する家庭は、コーチ自身も通常の乗車メ�
 
   // コーチ+選手1人でちょうど定員2。旧仕様（運転者分を無条件で-1）ではHard Failしていたケース
   const familyRef = await db.collection('families').add({
-    familyName: '佐藤家', coachName: '佐藤父', vehicleCapacity: 2, pickupLocationId: pickupLocationRef.id,
+    familyName: '佐藤家', vehicleCapacity: 2, pickupLocationId: pickupLocationRef.id,
     isActive: true, createdAt: now, updatedAt: now,
+  });
+  const coachRef = await db.collection('coaches').add({
+    familyId: familyRef.id, name: '佐藤父', isActive: true, createdAt: now, updatedAt: now,
   });
   const playerRef = await db.collection('players').add({
     familyId: familyRef.id, name: '佐藤太郎', schoolEntryYear: 2020, isActive: true, createdAt: now, updatedAt: now,
@@ -31,8 +34,9 @@ test('コーチが運転する家庭は、コーチ自身も通常の乗車メ�
     name: '練習試合', date: '2026-08-01', destinationId: destinationRef.id, createdAt: now, updatedAt: now,
   });
   await eventRef.collection('responses').doc(familyRef.id).set({
-    driverOutward: true, driverReturn: true, capacityToday: null, coachParticipating: true, remarks: '',
+    driverOutward: true, driverReturn: true, capacityToday: null, remarks: '',
     players: [{ playerId: playerRef.id, isParticipating: true, noOutwardRide: false, noReturnRide: false }],
+    coaches: [{ coachId: coachRef.id, isParticipating: true, noOutwardRide: false, noReturnRide: false }],
   });
 
   await page.goto(`/events/${eventRef.id}/edit`);
@@ -56,7 +60,7 @@ test('コーチが運転する家庭は、コーチ自身も通常の乗車メ�
     .get();
   expect(outwardSnapshot.docs).toHaveLength(1);
   const outwardData = outwardSnapshot.docs[0].data();
-  expect(outwardData.members).toContainEqual({ type: 'coach', familyId: familyRef.id });
+  expect(outwardData.members).toContainEqual({ type: 'coach', coachId: coachRef.id });
   expect(outwardData.members).toContainEqual({ type: 'player', playerId: playerRef.id });
   expect(outwardData).not.toHaveProperty('driverIsCoach');
 
@@ -79,8 +83,11 @@ test('コーチのみで満席の場合、選手が乗れずHard Failし、エ�
 
   // 定員1（コーチのみでぴったり）なのに選手が1人いるため、優先割り当てグループが定員超過する
   const familyRef = await db.collection('families').add({
-    familyName: '佐藤家', coachName: '佐藤父', vehicleCapacity: 1, pickupLocationId: pickupLocationRef.id,
+    familyName: '佐藤家', vehicleCapacity: 1, pickupLocationId: pickupLocationRef.id,
     isActive: true, createdAt: now, updatedAt: now,
+  });
+  const coachRef = await db.collection('coaches').add({
+    familyId: familyRef.id, name: '佐藤父', isActive: true, createdAt: now, updatedAt: now,
   });
   const playerRef = await db.collection('players').add({
     familyId: familyRef.id, name: '佐藤太郎', schoolEntryYear: 2020, isActive: true, createdAt: now, updatedAt: now,
@@ -89,8 +96,9 @@ test('コーチのみで満席の場合、選手が乗れずHard Failし、エ�
     name: '練習試合', date: '2026-08-01', destinationId: destinationRef.id, createdAt: now, updatedAt: now,
   });
   await eventRef.collection('responses').doc(familyRef.id).set({
-    driverOutward: true, driverReturn: true, capacityToday: null, coachParticipating: true, remarks: '',
+    driverOutward: true, driverReturn: true, capacityToday: null, remarks: '',
     players: [{ playerId: playerRef.id, isParticipating: true, noOutwardRide: false, noReturnRide: false }],
+    coaches: [{ coachId: coachRef.id, isParticipating: true, noOutwardRide: false, noReturnRide: false }],
   });
 
   await page.goto(`/events/${eventRef.id}/edit`);

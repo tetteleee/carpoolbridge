@@ -17,13 +17,13 @@ test('車出し可否の変更に応じて車が自動的に削除・追加さ�
 
   // 可→不可に変更済みの家庭（既存の車が削除され、乗員は未配車になることを確認する対象）
   const familyRemoved = await db.collection('families').add({
-    familyName: '鈴木家', coachName: null, vehicleCapacity: 4, pickupLocationId: locA.id,
+    familyName: '鈴木家', vehicleCapacity: 4, pickupLocationId: locA.id,
     isActive: true, createdAt: now, updatedAt: now,
   });
 
   // familyRemovedの車に乗っていた乗客（車が削除された後、未配車になることを確認する対象）
   const familyRider = await db.collection('families').add({
-    familyName: '中村家', coachName: null, vehicleCapacity: 0, pickupLocationId: locA.id,
+    familyName: '中村家', vehicleCapacity: 0, pickupLocationId: locA.id,
     isActive: true, createdAt: now, updatedAt: now,
   });
   const playerRider = await db.collection('players').add({
@@ -32,13 +32,13 @@ test('車出し可否の変更に応じて車が自動的に削除・追加さ�
 
   // 不可→可（行きのみ）に変更済みの家庭（新規に空の車が作成されることを確認する対象。capacityToday未設定のためvehicleCapacityを使用）
   const familyAdded = await db.collection('families').add({
-    familyName: '山田家', coachName: null, vehicleCapacity: 3, pickupLocationId: locA.id,
+    familyName: '山田家', vehicleCapacity: 3, pickupLocationId: locA.id,
     isActive: true, createdAt: now, updatedAt: now,
   });
 
   // 既に可・既に車が存在する家庭（重複作成されないことを確認する対象）
   const familyExisting = await db.collection('families').add({
-    familyName: '田中家', coachName: null, vehicleCapacity: 5, pickupLocationId: locA.id,
+    familyName: '田中家', vehicleCapacity: 5, pickupLocationId: locA.id,
     isActive: true, createdAt: now, updatedAt: now,
   });
 
@@ -48,20 +48,20 @@ test('車出し可否の変更に応じて車が自動的に削除・追加さ�
 
   // 可→不可に変更済み
   await eventRef.collection('responses').doc(familyRemoved.id).set({
-    driverOutward: false, driverReturn: false, capacityToday: null, coachParticipating: null, remarks: '',
+    driverOutward: false, driverReturn: false, capacityToday: null, remarks: '',
     players: [],
   });
   await eventRef.collection('responses').doc(familyRider.id).set({
-    driverOutward: false, driverReturn: false, capacityToday: null, coachParticipating: null, remarks: '',
+    driverOutward: false, driverReturn: false, capacityToday: null, remarks: '',
     players: [{ playerId: playerRider.id, isParticipating: true, noOutwardRide: false, noReturnRide: false }],
   });
   // 不可→可（行きのみ）に変更済み。帰りは不可のまま
   await eventRef.collection('responses').doc(familyAdded.id).set({
-    driverOutward: true, driverReturn: false, capacityToday: null, coachParticipating: null, remarks: '',
+    driverOutward: true, driverReturn: false, capacityToday: null, remarks: '',
     players: [],
   });
   await eventRef.collection('responses').doc(familyExisting.id).set({
-    driverOutward: true, driverReturn: true, capacityToday: null, coachParticipating: null, remarks: '',
+    driverOutward: true, driverReturn: true, capacityToday: null, remarks: '',
     players: [],
   });
 

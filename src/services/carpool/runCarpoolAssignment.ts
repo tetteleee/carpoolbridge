@@ -11,6 +11,7 @@ import type { Carpool, Direction, Response } from '../../types/event';
 import type { PickupLocation } from '../../types/master';
 import { getFamilies } from '../master/familyService';
 import { getPlayersByFamilyId } from '../master/playerService';
+import { getCoachesByFamilyId } from '../master/coachService';
 import { getFamilyMembersByFamilyId } from '../master/familyMemberService';
 import { getPickupLocations } from '../master/pickupLocationService';
 import { getResponses } from '../event/responseService';
@@ -78,16 +79,22 @@ export async function runCarpoolAssignment(
   );
   const unansweredCount = activeFamilies.length - answeredFamilies.length;
 
-  const [playersLists, familyMembersLists] = await Promise.all([
+  const [playersLists, coachesLists, familyMembersLists] = await Promise.all([
     Promise.all(answeredFamilies.map((family) => getPlayersByFamilyId(family.id))),
+    Promise.all(answeredFamilies.map((family) => getCoachesByFamilyId(family.id))),
     Promise.all(answeredFamilies.map((family) => getFamilyMembersByFamilyId(family.id))),
   ]);
   const activePlayerIdsByFamilyId = new Map<string, Set<string>>();
+  const activeCoachIdsByFamilyId = new Map<string, Set<string>>();
   const activeFamilyMemberIdsByFamilyId = new Map<string, Set<string>>();
   answeredFamilies.forEach((family, index) => {
     activePlayerIdsByFamilyId.set(
       family.id,
       new Set(playersLists[index].filter((player) => player.isActive).map((player) => player.id))
+    );
+    activeCoachIdsByFamilyId.set(
+      family.id,
+      new Set(coachesLists[index].filter((coach) => coach.isActive).map((coach) => coach.id))
     );
     activeFamilyMemberIdsByFamilyId.set(
       family.id,
@@ -108,6 +115,7 @@ export async function runCarpoolAssignment(
   for (const family of answeredFamilies) {
     const response = responseByFamilyId.get(family.id) as Response;
     const activePlayerIds = activePlayerIdsByFamilyId.get(family.id) as Set<string>;
+    const activeCoachIds = activeCoachIdsByFamilyId.get(family.id) as Set<string>;
     const activeFamilyMemberIds = activeFamilyMemberIdsByFamilyId.get(family.id) as Set<string>;
     const driving = isDriverForDirection(response, direction);
     const hasRidingPlayer = response.players.some(
@@ -118,7 +126,9 @@ export async function runCarpoolAssignment(
         activeFamilyMemberIds.has(familyMember.familyMemberId) &&
         isFamilyMemberRidingForDirection(familyMember, direction)
     );
-    const hasRidingCoach = isCoachRidingForDirection(family, response, direction);
+    const hasRidingCoach = (response.coaches ?? []).some(
+      (coach) => activeCoachIds.has(coach.coachId) && isCoachRidingForDirection(coach, direction)
+    );
 
     if (
       (driving || hasRidingPlayer || hasRidingFamilyMember || hasRidingCoach) &&
@@ -171,8 +181,8 @@ export async function runCarpoolAssignment(
   for (const family of answeredFamilies) {
     const response = responseByFamilyId.get(family.id) as Response;
     const activePlayerIds = activePlayerIdsByFamilyId.get(family.id) as Set<string>;
+    const activeCoachIds = activeCoachIdsByFamilyId.get(family.id) as Set<string>;
     const activeFamilyMemberIds = activeFamilyMemberIdsByFamilyId.get(family.id) as Set<string>;
-    const hasParticipatingCoach = isCoachRidingForDirection(family, response, direction);
     const vehicleCapacity = response.capacityToday ?? family.vehicleCapacity;
 
     vehicleCapacityByFamilyId.set(family.id, vehicleCapacity);
@@ -212,6 +222,17 @@ export async function runCarpoolAssignment(
       }
     }
 
+    for (const coach of response.coaches ?? []) {
+      if (activeCoachIds.has(coach.coachId) && isCoachRidingForDirection(coach, direction)) {
+        passengers.push({
+          familyId: family.id,
+          pickupLocationId: family.pickupLocationId,
+          pickupLocation: toLocation(family.pickupLocationId),
+          member: { type: 'coach', coachId: coach.coachId },
+        });
+      }
+    }
+
     // 一時参加者のみ、所属家庭のpickupLocationIdではなく本人に指定した集合場所を使用する
     for (const temporaryParticipant of response.temporaryParticipants ?? []) {
       if (isTemporaryParticipantRidingForDirection(temporaryParticipant, direction)) {
@@ -226,15 +247,6 @@ export async function runCarpoolAssignment(
           },
         });
       }
-    }
-
-    if (hasParticipatingCoach) {
-      passengers.push({
-        familyId: family.id,
-        pickupLocationId: family.pickupLocationId,
-        pickupLocation: toLocation(family.pickupLocationId),
-        member: { type: 'coach', familyId: family.id },
-      });
     }
   }
 

@@ -36,7 +36,6 @@ export interface SeedDestination {
 export interface SeedFamily {
   id: string;
   familyName: string;
-  coachName: string | null;
   vehicleCapacity: number;
   pickupLocationId: string;
   isActive: boolean;
@@ -48,6 +47,13 @@ export interface SeedPlayer {
   name: string;
   /** 小学1〜6年生（0〜5）で指定する。実際のschoolEntryYearへの変換はこのファイル内で行う */
   grade: number;
+  isActive: boolean;
+}
+
+export interface SeedCoach {
+  id: string;
+  familyId: string;
+  name: string;
   isActive: boolean;
 }
 
@@ -97,7 +103,6 @@ export const FAMILIES: SeedFamily[] = [
   {
     id: 'family-sato',
     familyName: '佐藤家',
-    coachName: '佐藤太郎',
     vehicleCapacity: 4,
     pickupLocationId: 'location-chuo-koen',
     isActive: true,
@@ -105,7 +110,6 @@ export const FAMILIES: SeedFamily[] = [
   {
     id: 'family-suzuki',
     familyName: '鈴木家',
-    coachName: null,
     vehicleCapacity: 5,
     pickupLocationId: 'location-keyaki-ekimae',
     isActive: true,
@@ -113,7 +117,6 @@ export const FAMILIES: SeedFamily[] = [
   {
     id: 'family-tanaka',
     familyName: '田中家',
-    coachName: null,
     // 車を持たない家庭のサンプル
     vehicleCapacity: 0,
     pickupLocationId: 'location-himawari-youchien',
@@ -122,7 +125,6 @@ export const FAMILIES: SeedFamily[] = [
   {
     id: 'family-takahashi',
     familyName: '高橋家',
-    coachName: '高橋次郎',
     vehicleCapacity: 6,
     pickupLocationId: 'location-chuo-koen',
     isActive: true,
@@ -130,7 +132,6 @@ export const FAMILIES: SeedFamily[] = [
   {
     id: 'family-ito',
     familyName: '伊藤家',
-    coachName: null,
     vehicleCapacity: 4,
     pickupLocationId: 'location-keyaki-ekimae',
     isActive: true,
@@ -138,7 +139,6 @@ export const FAMILIES: SeedFamily[] = [
   {
     id: 'family-watanabe',
     familyName: '渡辺家',
-    coachName: null,
     vehicleCapacity: 5,
     pickupLocationId: 'location-himawari-youchien',
     isActive: true,
@@ -146,7 +146,6 @@ export const FAMILIES: SeedFamily[] = [
   {
     id: 'family-yamamoto',
     familyName: '山本家',
-    coachName: null,
     vehicleCapacity: 4,
     pickupLocationId: 'location-chuo-koen',
     isActive: true,
@@ -154,11 +153,25 @@ export const FAMILIES: SeedFamily[] = [
   {
     id: 'family-nakamura',
     familyName: '中村家',
-    coachName: null,
     vehicleCapacity: 4,
     pickupLocationId: 'location-keyaki-ekimae',
     // 卒団済み（論理削除）のサンプル。一覧画面等でisActive=falseが除外されることの確認用
     isActive: false,
+  },
+];
+
+export const COACHES: SeedCoach[] = [
+  {
+    id: 'coach-sato-taro',
+    familyId: 'family-sato',
+    name: '佐藤太郎',
+    isActive: true,
+  },
+  {
+    id: 'coach-takahashi-jiro',
+    familyId: 'family-takahashi',
+    name: '高橋次郎',
+    isActive: true,
   },
 ];
 

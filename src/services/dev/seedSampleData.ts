@@ -3,6 +3,7 @@ import { db } from '../../firebase';
 import { firestorePaths } from '../../constants';
 import {
   PLAYERS,
+  COACHES,
   FAMILY_MEMBERS,
   DESTINATIONS,
   EVENTS,
@@ -47,7 +48,7 @@ async function deleteAllEventsWithSubcollections(): Promise<void> {
 /**
  * 開発環境限定の「サンプルデータ投入」機能。
  *
- * 既存の集合場所・目的地・家庭・選手・家族・イベント（配下のresponses・carpoolsを含む）を
+ * 既存の集合場所・目的地・家庭・選手・コーチ・家族・イベント（配下のresponses・carpoolsを含む）を
  * 全削除したうえで、評価・動作確認用のテストデータ
  * （src/services/dev/seedData.ts。`npm run seed` と共通）を投入する。
  * ドキュメントIDは固定値のため、`npm run seed` で投入した場合と同一のドキュメントになる。
@@ -58,6 +59,7 @@ async function deleteAllEventsWithSubcollections(): Promise<void> {
  */
 export async function seedSampleData(): Promise<void> {
   await deleteAllDocsInCollection(firestorePaths.playersCollection());
+  await deleteAllDocsInCollection(firestorePaths.coachesCollection());
   await deleteAllDocsInCollection(firestorePaths.familyMembersCollection());
   await deleteAllDocsInCollection(firestorePaths.familiesCollection());
   await deleteAllDocsInCollection(firestorePaths.pickupLocationsCollection());
@@ -86,6 +88,14 @@ export async function seedSampleData(): Promise<void> {
     batch.set(doc(db, firestorePaths.playerDocument(id)), {
       ...rest,
       schoolEntryYear: schoolEntryYearOf(grade),
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    });
+  });
+
+  COACHES.forEach(({ id, ...rest }) => {
+    batch.set(doc(db, firestorePaths.coachDocument(id)), {
+      ...rest,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     });

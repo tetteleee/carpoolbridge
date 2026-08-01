@@ -3,9 +3,10 @@ import { db } from '../../firebase';
 import { firestorePaths } from '../../constants';
 import { getFamilies } from '../master/familyService';
 import { getPlayersByFamilyId } from '../master/playerService';
+import { getCoachesByFamilyId } from '../master/coachService';
 import { getFamilyMembersByFamilyId } from '../master/familyMemberService';
 import { deleteAllResponses } from '../event/responseService';
-import type { Response, ResponseFamilyMember, ResponsePlayer } from '../../types/event';
+import type { Response, ResponseCoach, ResponseFamilyMember, ResponsePlayer } from '../../types/event';
 
 /** 備考のサンプル文言（一定確率で空文字も選ばれるようにし、未入力のケースも再現する） */
 const SAMPLE_REMARKS = ['', '', '', '本日は妹も同乗します', '集合場所を変更希望', '早退の可能性あり'];
@@ -73,6 +74,20 @@ function randomResponsePlayer(playerId: string): ResponsePlayer {
   };
 }
 
+/** コーチ個別のランダム回答を生成する。選手（randomResponsePlayer）と全く同じロジック */
+function randomResponseCoach(coachId: string): ResponseCoach {
+  const isParticipating = randomTriState();
+  if (isParticipating !== true) {
+    return { coachId, isParticipating, noOutwardRide: false, noReturnRide: false };
+  }
+  return {
+    coachId,
+    isParticipating,
+    noOutwardRide: Math.random() < NO_RIDE_PROBABILITY,
+    noReturnRide: Math.random() < NO_RIDE_PROBABILITY,
+  };
+}
+
 /** 家族個別のランダム回答を生成する。選手（randomResponsePlayer）と全く同じロジック */
 function randomResponseFamilyMember(familyMemberId: string): ResponseFamilyMember {
   const isParticipating = randomTriState();
@@ -91,33 +106,27 @@ function randomResponseFamilyMember(familyMemberId: string): ResponseFamilyMembe
  * 家庭・選手のマスタデータを基に、1家庭分のランダムな回答を生成する。
  *
  * @param vehicleCapacity 対象家庭の通常定員（Family.vehicleCapacity）
- * @param hasCoach 対象家庭にコーチが紐づくか（coachNameが設定されているか）
  * @param playerIds 対象家庭に属する有効な選手IDの一覧
+ * @param coachIds 対象家庭に属する有効なコーチIDの一覧
  * @param familyMemberIds 対象家庭に属する有効な家族IDの一覧
  */
 function buildRandomResponse(
   vehicleCapacity: number,
-  hasCoach: boolean,
   playerIds: string[],
+  coachIds: string[],
   familyMemberIds: string[]
 ): Response {
   const capacityToday = randomCapacityToday(vehicleCapacity);
   const effectiveCapacity = capacityToday ?? vehicleCapacity;
   const { driverOutward, driverReturn } = randomDriverOffer(effectiveCapacity);
-  const coachParticipating = hasCoach ? randomTriState() : null;
-  // 送迎要否スイッチは「参加」が○の場合のみ意味を持つため、それ以外は既定値（送迎あり＝false）のままにする
-  const coachNoOutwardRide = coachParticipating === true && Math.random() < NO_RIDE_PROBABILITY;
-  const coachNoReturnRide = coachParticipating === true && Math.random() < NO_RIDE_PROBABILITY;
 
   return {
     driverOutward,
     driverReturn,
     capacityToday,
-    coachParticipating,
-    coachNoOutwardRide,
-    coachNoReturnRide,
     remarks: randomRemarks(),
     players: playerIds.map((playerId) => randomResponsePlayer(playerId)),
+    coaches: coachIds.map((coachId) => randomResponseCoach(coachId)),
     familyMembers: familyMemberIds.map((familyMemberId) =>
       randomResponseFamilyMember(familyMemberId)
     ),
@@ -142,8 +151,9 @@ export async function generateSampleResponses(eventId: string): Promise<void> {
   const families = await getFamilies();
   const activeFamilies = families.filter((family) => family.isActive);
 
-  const [playersByFamily, familyMembersByFamily] = await Promise.all([
+  const [playersByFamily, coachesByFamily, familyMembersByFamily] = await Promise.all([
     Promise.all(activeFamilies.map((family) => getPlayersByFamilyId(family.id))),
+    Promise.all(activeFamilies.map((family) => getCoachesByFamilyId(family.id))),
     Promise.all(activeFamilies.map((family) => getFamilyMembersByFamilyId(family.id))),
   ]);
 
@@ -155,14 +165,17 @@ export async function generateSampleResponses(eventId: string): Promise<void> {
     const activePlayerIds = playersByFamily[index]
       .filter((player) => player.isActive)
       .map((player) => player.id);
+    const activeCoachIds = coachesByFamily[index]
+      .filter((coach) => coach.isActive)
+      .map((coach) => coach.id);
     const activeFamilyMemberIds = familyMembersByFamily[index]
       .filter((familyMember) => familyMember.isActive)
       .map((familyMember) => familyMember.id);
 
     const response = buildRandomResponse(
       family.vehicleCapacity,
-      family.coachName !== null,
       activePlayerIds,
+      activeCoachIds,
       activeFamilyMemberIds
     );
 

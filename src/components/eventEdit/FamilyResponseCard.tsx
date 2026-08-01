@@ -2,11 +2,12 @@ import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { Timestamp } from 'firebase/firestore';
 import type {
   Response,
+  ResponseCoach,
   ResponseFamilyMember,
   ResponsePlayer,
   ResponseTemporaryParticipant,
 } from '../../types/event';
-import type { Player, Family, FamilyMember, PickupLocation } from '../../types/master';
+import type { Player, Coach, Family, FamilyMember, PickupLocation } from '../../types/master';
 import { getSchoolGrade } from '../../utils/schoolGrade';
 import { computeResponseStatus, type ResponseStatus } from '../../utils/responseStatus';
 import { createResponse, updateResponse } from '../../services/event/responseService';
@@ -29,6 +30,8 @@ interface FamilyResponseCardProps {
   family: Family;
   /** この家庭に属する有効な選手一覧 */
   playerList: Player[];
+  /** この家庭に属する有効なコーチ一覧 */
+  coachList: Coach[];
   /** この家庭に属する有効な家族一覧 */
   familyMemberList: FamilyMember[];
   /** 集合場所の選択肢一覧（一時参加者の追加フォームで使用） */
@@ -146,6 +149,16 @@ function buildInitialResponsePlayer(playerId: string): ResponsePlayer {
   };
 }
 
+/** コーチ個別回答の初期値（未回答）。選手（buildInitialResponsePlayer）と全く同じ構造 */
+function buildInitialResponseCoach(coachId: string): ResponseCoach {
+  return {
+    coachId,
+    isParticipating: null,
+    noOutwardRide: false,
+    noReturnRide: false,
+  };
+}
+
 /** 家族個別回答の初期値（未回答）。選手（buildInitialResponsePlayer）と全く同じ構造 */
 function buildInitialResponseFamilyMember(familyMemberId: string): ResponseFamilyMember {
   return {
@@ -159,26 +172,27 @@ function buildInitialResponseFamilyMember(familyMemberId: string): ResponseFamil
 /** 家庭の回答の初期値（既存回答が存在する場合はそれを使用し、なければ未回答の初期値を組み立てる） */
 function buildInitialResponse(
   playerList: Player[],
+  coachList: Coach[],
   familyMemberList: FamilyMember[],
   response: Response | undefined
 ): Response {
   if (response) {
-    // 家族・一時参加者の機能追加前に作成された回答ドキュメントには、それぞれのフィールドが
+    // コーチ・家族・一時参加者の機能追加前に作成された回答ドキュメントには、それぞれのフィールドが
     // 存在しない場合があるため、欠けている場合のみ空配列で補う
-    const withFamilyMembers = response.familyMembers ? response : { ...response, familyMembers: [] };
-    return withFamilyMembers.temporaryParticipants
-      ? withFamilyMembers
-      : { ...withFamilyMembers, temporaryParticipants: [] };
+    return {
+      ...response,
+      coaches: response.coaches ?? [],
+      familyMembers: response.familyMembers ?? [],
+      temporaryParticipants: response.temporaryParticipants ?? [],
+    };
   }
   return {
     driverOutward: null,
     driverReturn: null,
     capacityToday: null,
-    coachParticipating: null,
-    coachNoOutwardRide: false,
-    coachNoReturnRide: false,
     remarks: '',
     players: playerList.map((player) => buildInitialResponsePlayer(player.id)),
+    coaches: coachList.map((coach) => buildInitialResponseCoach(coach.id)),
     familyMembers: familyMemberList.map((familyMember) =>
       buildInitialResponseFamilyMember(familyMember.id)
     ),
@@ -189,8 +203,8 @@ function buildInitialResponse(
 /**
  * イベント編集（回答入力）画面の家庭カード。
  * 家庭名・所属する選手の一覧（名前・学年）、車出し・乗車可能人数（T25）、
- * 選手ごとの回答（T26）・コーチ参加回答（T27）・備考（T28）の入力欄を表示する。
- * コーチ参加回答の枠は、家庭にコーチが紐づく場合（coachNameが設定されている場合）のみ表示する。
+ * 選手ごとの回答（T26）・コーチごとの参加回答（T27）・備考（T28）の入力欄を表示する。
+ * コーチの回答欄は、家庭にコーチが1人以上登録されている場合のみ表示する。
  * 回答内容は家庭単位でこのコンポーネントが状態を保持し、変更の都度Firestoreへ自動保存する（T29）。
  * 「保存」ボタンは設けない（対象設計書#7）。
  */
@@ -198,6 +212,7 @@ export function FamilyResponseCard({
   eventId,
   family,
   playerList,
+  coachList,
   familyMemberList,
   pickupLocationList,
   response,
@@ -206,9 +221,8 @@ export function FamilyResponseCard({
   onStatusChange,
   onFamilyMemberRegistered,
 }: FamilyResponseCardProps) {
-  const hasCoach = family.coachName !== null;
   const [current, setCurrent] = useState<Response>(() =>
-    buildInitialResponse(playerList, familyMemberList, response)
+    buildInitialResponse(playerList, coachList, familyMemberList, response)
   );
   // 対象家庭のResponseドキュメントが既にFirestore上に存在するか（新規作成か更新かの判定に使用）
   const hasDocRef = useRef<boolean>(response !== undefined);
@@ -217,8 +231,8 @@ export function FamilyResponseCard({
 
   // 回答状況（回答済み／一部回答／未回答）。変更の都度、呼び出し側（ヘッダー集計表示用）へ通知する
   const status = useMemo(
-    () => computeResponseStatus(current, playerList, hasCoach, familyMemberList),
-    [current, playerList, hasCoach, familyMemberList]
+    () => computeResponseStatus(current, playerList, coachList, familyMemberList),
+    [current, playerList, coachList, familyMemberList]
   );
   useEffect(() => {
     onStatusChange(status);
@@ -259,6 +273,19 @@ export function FamilyResponseCard({
     const next = { ...current, players: nextPlayers };
     setCurrent(next);
     persist(next, { players: nextPlayers });
+  };
+
+  /** コーチ個別の回答（参加・行き／帰りの配車不要）の変更を反映し、自動保存する */
+  const applyCoachPatch = (coachId: string, patch: Partial<ResponseCoach>) => {
+    const exists = current.coaches.some((responseCoach) => responseCoach.coachId === coachId);
+    const nextCoaches = exists
+      ? current.coaches.map((responseCoach) =>
+          responseCoach.coachId === coachId ? { ...responseCoach, ...patch } : responseCoach
+        )
+      : [...current.coaches, { ...buildInitialResponseCoach(coachId), ...patch }];
+    const next = { ...current, coaches: nextCoaches };
+    setCurrent(next);
+    persist(next, { coaches: nextCoaches });
   };
 
   /** 家族個別の回答（参加・行き／帰りの配車不要）の変更を反映し、自動保存する */
@@ -359,8 +386,8 @@ export function FamilyResponseCard({
           driverReturn={current.driverReturn}
           playerList={playerList}
           responsePlayers={current.players}
-          hasCoach={hasCoach}
-          coachParticipating={current.coachParticipating}
+          coachList={coachList}
+          responseCoaches={current.coaches}
           familyMemberList={familyMemberList}
           responseFamilyMembers={current.familyMembers}
         />
@@ -429,32 +456,43 @@ export function FamilyResponseCard({
               );
             })}
 
-            {hasCoach && (
-              <Card variant="compact" style={coachMemberBoxStyle}>
-                <span style={memberNameStyle}>
-                  <UserIcon size={14} />
-                  {family.coachName}
-                  <span style={{ fontSize: '12px', fontWeight: 400 }}>コーチ</span>
-                </span>
-                <CoachResponseRow
-                  familyId={family.id}
-                  coachParticipating={current.coachParticipating}
-                  coachNoOutwardRide={current.coachNoOutwardRide}
-                  coachNoReturnRide={current.coachNoReturnRide}
-                  onChange={(value) =>
-                    applyPatch(
-                      // 参加（○）にした瞬間、行き・帰りの送迎は両方ON（送迎あり）を既定にする
-                      // （04_画面設計.md#7）。不参加（✕）にする場合は既存の送迎要否をそのまま保持する
-                      value === true
-                        ? { coachParticipating: true, coachNoOutwardRide: false, coachNoReturnRide: false }
-                        : { coachParticipating: value }
-                    )
-                  }
-                  onChangeNoOutwardRide={(value) => applyPatch({ coachNoOutwardRide: value })}
-                  onChangeNoReturnRide={(value) => applyPatch({ coachNoReturnRide: value })}
-                />
-              </Card>
-            )}
+            {coachList.map((coach) => {
+              const responseCoach =
+                current.coaches.find((c) => c.coachId === coach.id) ??
+                buildInitialResponseCoach(coach.id);
+
+              return (
+                <Card key={coach.id} variant="compact" style={coachMemberBoxStyle}>
+                  <span style={memberNameStyle}>
+                    <UserIcon size={14} />
+                    {coach.name}
+                    <span style={{ fontSize: '12px', fontWeight: 400 }}>コーチ</span>
+                  </span>
+                  <CoachResponseRow
+                    coachId={coach.id}
+                    isParticipating={responseCoach.isParticipating}
+                    noOutwardRide={responseCoach.noOutwardRide}
+                    noReturnRide={responseCoach.noReturnRide}
+                    onChangeIsParticipating={(value) =>
+                      applyCoachPatch(
+                        coach.id,
+                        // 参加（○）にした瞬間、行き・帰りの送迎は両方ON（送迎あり）を既定にする
+                        // （04_画面設計.md#7）。不参加（✕）にする場合は既存の送迎要否をそのまま保持する
+                        value === true
+                          ? { isParticipating: true, noOutwardRide: false, noReturnRide: false }
+                          : { isParticipating: value }
+                      )
+                    }
+                    onChangeNoOutwardRide={(value) =>
+                      applyCoachPatch(coach.id, { noOutwardRide: value })
+                    }
+                    onChangeNoReturnRide={(value) =>
+                      applyCoachPatch(coach.id, { noReturnRide: value })
+                    }
+                  />
+                </Card>
+              );
+            })}
 
             {familyMemberList.map((familyMember) => {
               const responseFamilyMember =

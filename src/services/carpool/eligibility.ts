@@ -10,16 +10,18 @@ import type {
   CarpoolMember,
   Direction,
   Response,
+  ResponseCoach,
   ResponseFamilyMember,
   ResponsePlayer,
   ResponseTemporaryParticipant,
 } from '../../types/event';
-import type { Player, Family, FamilyMember } from '../../types/master';
+import type { Coach, Player, Family, FamilyMember } from '../../types/master';
 
 /** メンバーの参加可否判定に必要なマスタ・回答データ */
 export interface EligibilityMasterData {
   familyById: Map<string, Family>;
   playerById: Map<string, Player>;
+  coachById: Map<string, Coach>;
   familyMemberById: Map<string, FamilyMember>;
   responseByFamilyId: Map<string, Response>;
 }
@@ -113,31 +115,23 @@ export function isTemporaryParticipantNoRideNeededForDirection(
     : temporaryParticipant.noReturnRide;
 }
 
-/** 対象方向におけるコーチの配車要否（coachParticipating・coachNoOutwardRide/coachNoReturnRide）を判定する */
-export function isCoachRidingForDirection(
-  family: Family | undefined,
-  response: Response | undefined,
-  direction: Direction
-): boolean {
-  if (!family || family.coachName === null || response?.coachParticipating !== true) {
+/** 対象方向におけるコーチの配車要否（isParticipating・noOutwardRide/noReturnRide）を判定する。選手（isPlayerRidingForDirection）と全く同じロジック */
+export function isCoachRidingForDirection(coach: ResponseCoach, direction: Direction): boolean {
+  if (coach.isParticipating !== true) {
     return false;
   }
-  return direction === 'OUTWARD' ? !response.coachNoOutwardRide : !response.coachNoReturnRide;
+  return direction === 'OUTWARD' ? !coach.noOutwardRide : !coach.noReturnRide;
 }
 
 /**
  * 対象方向において、コーチが「参加かつ送迎不要」（配車不要エリアの対象）かどうかを判定する。
  * ref: docs/04_画面設計.md#8 配車不要エリア
  */
-export function isCoachNoRideNeededForDirection(
-  family: Family | undefined,
-  response: Response | undefined,
-  direction: Direction
-): boolean {
-  if (!family || family.coachName === null || response?.coachParticipating !== true) {
+export function isCoachNoRideNeededForDirection(coach: ResponseCoach, direction: Direction): boolean {
+  if (coach.isParticipating !== true) {
     return false;
   }
-  return direction === 'OUTWARD' ? !!response.coachNoOutwardRide : !!response.coachNoReturnRide;
+  return direction === 'OUTWARD' ? coach.noOutwardRide : coach.noReturnRide;
 }
 
 /**
@@ -200,13 +194,19 @@ export function isMemberEligibleForDirection(
     return isTemporaryParticipantRidingForDirection(temporaryParticipant, direction);
   }
 
-  const family = masterData.familyById.get(member.familyId);
+  const coach = masterData.coachById.get(member.coachId);
+  if (!coach || !coach.isActive) {
+    return false;
+  }
+  const family = masterData.familyById.get(coach.familyId);
   if (!family || !family.isActive) {
     return false;
   }
-  return isCoachRidingForDirection(
-    family,
-    masterData.responseByFamilyId.get(member.familyId),
-    direction
-  );
+  const responseCoach = masterData.responseByFamilyId
+    .get(coach.familyId)
+    ?.coaches?.find((c) => c.coachId === member.coachId);
+  if (!responseCoach) {
+    return false;
+  }
+  return isCoachRidingForDirection(responseCoach, direction);
 }

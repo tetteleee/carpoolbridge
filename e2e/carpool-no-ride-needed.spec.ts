@@ -31,12 +31,12 @@ test('参加かつ送迎不要の選手が配車不要エリアに表示され�
   const destinationRef = await db.collection('destinations').add({ name: '目的地A', latitude: 35.1, longitude: 139.1 });
 
   const familyDriver = await db.collection('families').add({
-    familyName: '鈴木家', coachName: null, vehicleCapacity: 4, pickupLocationId: locA.id,
+    familyName: '鈴木家', vehicleCapacity: 4, pickupLocationId: locA.id,
     isActive: true, createdAt: now, updatedAt: now,
   });
 
   const familyUnassigned = await db.collection('families').add({
-    familyName: '山田家', coachName: null, vehicleCapacity: 0, pickupLocationId: locA.id,
+    familyName: '山田家', vehicleCapacity: 0, pickupLocationId: locA.id,
     isActive: true, createdAt: now, updatedAt: now,
   });
   const playerUnassigned = await db.collection('players').add({
@@ -44,7 +44,7 @@ test('参加かつ送迎不要の選手が配車不要エリアに表示され�
   });
 
   const familyNoRide = await db.collection('families').add({
-    familyName: '木村家', coachName: null, vehicleCapacity: 0, pickupLocationId: locA.id,
+    familyName: '木村家', vehicleCapacity: 0, pickupLocationId: locA.id,
     isActive: true, createdAt: now, updatedAt: now,
   });
   const playerNoRide = await db.collection('players').add({
@@ -53,7 +53,7 @@ test('参加かつ送迎不要の選手が配車不要エリアに表示され�
 
   // 未回答（Responseドキュメント自体を作成しない）
   const familyUnanswered = await db.collection('families').add({
-    familyName: '未回答家', coachName: null, vehicleCapacity: 0, pickupLocationId: locA.id,
+    familyName: '未回答家', vehicleCapacity: 0, pickupLocationId: locA.id,
     isActive: true, createdAt: now, updatedAt: now,
   });
   await db.collection('players').add({
@@ -62,7 +62,7 @@ test('参加かつ送迎不要の選手が配車不要エリアに表示され�
 
   // 不参加（isParticipating: false）
   const familyDeclined = await db.collection('families').add({
-    familyName: '不参加家', coachName: null, vehicleCapacity: 0, pickupLocationId: locA.id,
+    familyName: '不参加家', vehicleCapacity: 0, pickupLocationId: locA.id,
     isActive: true, createdAt: now, updatedAt: now,
   });
   const playerDeclined = await db.collection('players').add({
@@ -71,8 +71,11 @@ test('参加かつ送迎不要の選手が配車不要エリアに表示され�
 
   // 参加コーチ（送迎要否スイッチは未設定＝送迎ありのため配車不要エリアには含まれない）
   const familyCoach = await db.collection('families').add({
-    familyName: '佐藤家', coachName: '佐藤父', vehicleCapacity: 0, pickupLocationId: locA.id,
+    familyName: '佐藤家', vehicleCapacity: 0, pickupLocationId: locA.id,
     isActive: true, createdAt: now, updatedAt: now,
+  });
+  const coachRef = await db.collection('coaches').add({
+    familyId: familyCoach.id, name: '佐藤父', isActive: true, createdAt: now, updatedAt: now,
   });
 
   const eventRef = await db.collection('events').add({
@@ -80,24 +83,25 @@ test('参加かつ送迎不要の選手が配車不要エリアに表示され�
   });
 
   await eventRef.collection('responses').doc(familyDriver.id).set({
-    driverOutward: true, driverReturn: true, capacityToday: null, coachParticipating: null, remarks: '',
+    driverOutward: true, driverReturn: true, capacityToday: null, remarks: '',
     players: [],
   });
   await eventRef.collection('responses').doc(familyUnassigned.id).set({
-    driverOutward: false, driverReturn: false, capacityToday: null, coachParticipating: null, remarks: '',
+    driverOutward: false, driverReturn: false, capacityToday: null, remarks: '',
     players: [{ playerId: playerUnassigned.id, isParticipating: true, noOutwardRide: false, noReturnRide: false }],
   });
   await eventRef.collection('responses').doc(familyNoRide.id).set({
-    driverOutward: false, driverReturn: false, capacityToday: null, coachParticipating: null, remarks: '',
+    driverOutward: false, driverReturn: false, capacityToday: null, remarks: '',
     players: [{ playerId: playerNoRide.id, isParticipating: true, noOutwardRide: true, noReturnRide: false }],
   });
   await eventRef.collection('responses').doc(familyDeclined.id).set({
-    driverOutward: false, driverReturn: false, capacityToday: null, coachParticipating: null, remarks: '',
+    driverOutward: false, driverReturn: false, capacityToday: null, remarks: '',
     players: [{ playerId: playerDeclined.id, isParticipating: false, noOutwardRide: false, noReturnRide: false }],
   });
   await eventRef.collection('responses').doc(familyCoach.id).set({
-    driverOutward: false, driverReturn: false, capacityToday: null, coachParticipating: true, remarks: '',
+    driverOutward: false, driverReturn: false, capacityToday: null, remarks: '',
     players: [],
+    coaches: [{ coachId: coachRef.id, isParticipating: true, noOutwardRide: false, noReturnRide: false }],
   });
 
   // 鈴木号（定員4・乗車メンバーなし）を作成し、配車不要の選手が車カードに含まれないことも確認できるようにする
@@ -141,16 +145,19 @@ test('参加かつ送迎不要のコーチが配車不要エリアに表示さ�
   const destinationRef = await db.collection('destinations').add({ name: '目的地A', latitude: 35.1, longitude: 139.1 });
 
   const familyCoach = await db.collection('families').add({
-    familyName: '佐藤家', coachName: '佐藤父', vehicleCapacity: 0, pickupLocationId: locA.id,
+    familyName: '佐藤家', vehicleCapacity: 0, pickupLocationId: locA.id,
     isActive: true, createdAt: now, updatedAt: now,
+  });
+  const coachRef = await db.collection('coaches').add({
+    familyId: familyCoach.id, name: '佐藤父', isActive: true, createdAt: now, updatedAt: now,
   });
 
   const eventRef = await db.collection('events').add({
     name: '練習試合', date: '2026-08-01', destinationId: destinationRef.id, createdAt: now, updatedAt: now,
   });
   await eventRef.collection('responses').doc(familyCoach.id).set({
-    driverOutward: false, driverReturn: false, capacityToday: null, coachParticipating: true,
-    coachNoOutwardRide: true, coachNoReturnRide: false, remarks: '', players: [],
+    driverOutward: false, driverReturn: false, capacityToday: null, remarks: '', players: [],
+    coaches: [{ coachId: coachRef.id, isParticipating: true, noOutwardRide: true, noReturnRide: false }],
   });
 
   await signInAndOpenCarpoolPage(page, db, eventRef.id);
@@ -175,7 +182,7 @@ test('配車不要が0人の場合、配車不要エリア・サマリー帯の�
   const destinationRef = await db.collection('destinations').add({ name: '目的地A', latitude: 35.1, longitude: 139.1 });
 
   const familyRider = await db.collection('families').add({
-    familyName: '山田家', coachName: null, vehicleCapacity: 0, pickupLocationId: locA.id,
+    familyName: '山田家', vehicleCapacity: 0, pickupLocationId: locA.id,
     isActive: true, createdAt: now, updatedAt: now,
   });
   const playerRider = await db.collection('players').add({
@@ -186,7 +193,7 @@ test('配車不要が0人の場合、配車不要エリア・サマリー帯の�
     name: '練習試合', date: '2026-08-01', destinationId: destinationRef.id, createdAt: now, updatedAt: now,
   });
   await eventRef.collection('responses').doc(familyRider.id).set({
-    driverOutward: false, driverReturn: false, capacityToday: null, coachParticipating: null, remarks: '',
+    driverOutward: false, driverReturn: false, capacityToday: null, remarks: '',
     players: [{ playerId: playerRider.id, isParticipating: true, noOutwardRide: false, noReturnRide: false }],
   });
 
@@ -207,11 +214,11 @@ test('サマリー帯の配車不要人数チップが、各車チップの後�
   const destinationRef = await db.collection('destinations').add({ name: '目的地A', latitude: 35.1, longitude: 139.1 });
 
   const familyDriver = await db.collection('families').add({
-    familyName: '鈴木家', coachName: null, vehicleCapacity: 4, pickupLocationId: locA.id,
+    familyName: '鈴木家', vehicleCapacity: 4, pickupLocationId: locA.id,
     isActive: true, createdAt: now, updatedAt: now,
   });
   const familyNoRide = await db.collection('families').add({
-    familyName: '木村家', coachName: null, vehicleCapacity: 0, pickupLocationId: locA.id,
+    familyName: '木村家', vehicleCapacity: 0, pickupLocationId: locA.id,
     isActive: true, createdAt: now, updatedAt: now,
   });
   const playerNoRide = await db.collection('players').add({
@@ -222,11 +229,11 @@ test('サマリー帯の配車不要人数チップが、各車チップの後�
     name: '練習試合', date: '2026-08-01', destinationId: destinationRef.id, createdAt: now, updatedAt: now,
   });
   await eventRef.collection('responses').doc(familyDriver.id).set({
-    driverOutward: true, driverReturn: true, capacityToday: null, coachParticipating: null, remarks: '',
+    driverOutward: true, driverReturn: true, capacityToday: null, remarks: '',
     players: [],
   });
   await eventRef.collection('responses').doc(familyNoRide.id).set({
-    driverOutward: false, driverReturn: false, capacityToday: null, coachParticipating: null, remarks: '',
+    driverOutward: false, driverReturn: false, capacityToday: null, remarks: '',
     players: [{ playerId: playerNoRide.id, isParticipating: true, noOutwardRide: true, noReturnRide: false }],
   });
 
@@ -263,7 +270,7 @@ test('行き／帰りタブを切り替えると、配車不要エリア・チ�
   const destinationRef = await db.collection('destinations').add({ name: '目的地A', latitude: 35.1, longitude: 139.1 });
 
   const familyNoRideOutward = await db.collection('families').add({
-    familyName: '木村家', coachName: null, vehicleCapacity: 0, pickupLocationId: locA.id,
+    familyName: '木村家', vehicleCapacity: 0, pickupLocationId: locA.id,
     isActive: true, createdAt: now, updatedAt: now,
   });
   const playerNoRideOutward = await db.collection('players').add({
@@ -275,7 +282,7 @@ test('行き／帰りタブを切り替えると、配車不要エリア・チ�
   });
   // 行きは送迎不要・帰りは送迎必要
   await eventRef.collection('responses').doc(familyNoRideOutward.id).set({
-    driverOutward: false, driverReturn: false, capacityToday: null, coachParticipating: null, remarks: '',
+    driverOutward: false, driverReturn: false, capacityToday: null, remarks: '',
     players: [{ playerId: playerNoRideOutward.id, isParticipating: true, noOutwardRide: true, noReturnRide: false }],
   });
 
@@ -300,11 +307,11 @@ test('配車不要エリア内の人カードにドラッグハンドルが表�
   const destinationRef = await db.collection('destinations').add({ name: '目的地A', latitude: 35.1, longitude: 139.1 });
 
   const familyDriver = await db.collection('families').add({
-    familyName: '鈴木家', coachName: null, vehicleCapacity: 4, pickupLocationId: locA.id,
+    familyName: '鈴木家', vehicleCapacity: 4, pickupLocationId: locA.id,
     isActive: true, createdAt: now, updatedAt: now,
   });
   const familyNoRide = await db.collection('families').add({
-    familyName: '木村家', coachName: null, vehicleCapacity: 0, pickupLocationId: locA.id,
+    familyName: '木村家', vehicleCapacity: 0, pickupLocationId: locA.id,
     isActive: true, createdAt: now, updatedAt: now,
   });
   const playerNoRide = await db.collection('players').add({
@@ -315,11 +322,11 @@ test('配車不要エリア内の人カードにドラッグハンドルが表�
     name: '練習試合', date: '2026-08-01', destinationId: destinationRef.id, createdAt: now, updatedAt: now,
   });
   await eventRef.collection('responses').doc(familyDriver.id).set({
-    driverOutward: true, driverReturn: true, capacityToday: null, coachParticipating: null, remarks: '',
+    driverOutward: true, driverReturn: true, capacityToday: null, remarks: '',
     players: [],
   });
   await eventRef.collection('responses').doc(familyNoRide.id).set({
-    driverOutward: false, driverReturn: false, capacityToday: null, coachParticipating: null, remarks: '',
+    driverOutward: false, driverReturn: false, capacityToday: null, remarks: '',
     players: [{ playerId: playerNoRide.id, isParticipating: true, noOutwardRide: true, noReturnRide: false }],
   });
 

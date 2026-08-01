@@ -1,6 +1,6 @@
 import { Button } from '../common/Button';
 
-type MasterDeleteTargetType = 'player' | 'familyMember' | 'family';
+type MasterDeleteTargetType = 'player' | 'coach' | 'familyMember' | 'family';
 
 interface MasterDeleteDialogProps {
   /** ダイアログの表示・非表示 */
@@ -19,14 +19,15 @@ interface MasterDeleteDialogProps {
 
 const targetLabel: Record<MasterDeleteTargetType, string> = {
   player: '選手',
+  coach: 'コーチ',
   familyMember: '家族',
   family: '家庭',
 };
 
 /**
- * 家庭・選手・家族の削除確認ダイアログ（共通）。
+ * 家庭・選手・コーチ・家族の削除確認ダイアログ（共通）。
  * 各編集画面の「削除」ボタン押下時にのみ表示する。物理削除であることの重大さを伝えるため、
- * 対象名・取り消し不可の注記を含める（家庭を削除する場合のみ選手・家族の道連れ削除も明記する）。
+ * 対象名・取り消し不可の注記を含める（家庭を削除する場合のみ選手・コーチ・家族の道連れ削除も明記する）。
  * ref: docs/04_画面設計.md#10.4 家庭編集画面（削除確認ダイアログ）
  */
 export function MasterDeleteDialog({
@@ -93,7 +94,7 @@ export function MasterDeleteDialog({
           {targetType === 'family' && (
             <>
               <br />
-              所属する選手・家族もすべて削除されます。
+              所属する選手・コーチ・家族もすべて削除されます。
             </>
           )}
           <br />

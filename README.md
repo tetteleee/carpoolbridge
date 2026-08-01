@@ -73,7 +73,8 @@ SEED_SOURCE=local npm run seed
 
 - 投入元は`src/services/dev/seedData.local.json`です。`.gitignore`済みのため
   コミットされません。中身は`seedData.ts`と同じ形（`pickupLocations` /
-  `destinations` / `families` / `players` / `events`）で自分で作成・編集してください。
+  `destinations` / `families` / `players` / `coaches` / `familyMembers` / `events`）で
+  自分で作成・編集してください。
 - 実際の使用感を手元で確認したいときなど、個人情報に近いデータを使いたい場合に利用します。
   内容は各自の環境でのみ保持し、他人と共有しないでください。
 - `SEED_SOURCE`を指定しない場合（`npm run seed`のみ）は、従来どおりコミット済みの
@@ -101,8 +102,9 @@ npm run seed:from-csv
 - CSVの列構成はサンプルファイルを参照してください。
 - `id`は名前をもとにスクリプトが自動採番するため入力不要です。同じ名前が重複している、
   存在しない名前を参照している等の入力ミスはエラーで停止し、該当行を教えてくれます。
-- `events.csv`は省略可能です（未作成の場合はイベント0件で出力します。日付は都度変わるため
-  画面から作成してもかまいません）。
+- `coaches.csv`・`family_members.csv`・`events.csv`は省略可能です（未作成の場合はそれぞれ
+  0件で出力します。`coaches.csv`は1家庭に複数コーチを登録できるため、同じ`familyName`の行を
+  複数書けます）。
 - CSV本体（`*.sample.csv`を除く）は個人情報に近いデータになりうるため`.gitignore`済みです。
 
 **注意：開発段階限定の機能です。現時点ではDev/Prod用のFirebaseプロジェクトが分離されて

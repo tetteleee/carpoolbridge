@@ -28,7 +28,6 @@ test('画面遷移図に定義された遷移を一通りたどれる', async ({
   });
   const familyRef = await db.collection('families').add({
     familyName: '山田家',
-    coachName: null,
     vehicleCapacity: 5,
     pickupLocationId: pickupLocationRef.id,
     isActive: true,
@@ -54,7 +53,6 @@ test('画面遷移図に定義された遷移を一通りたどれる', async ({
     driverOutward: true,
     driverReturn: true,
     capacityToday: null,
-    coachParticipating: null,
     remarks: '',
     players: [
       { playerId: playerRef.id, isParticipating: true, noOutwardRide: false, noReturnRide: false },

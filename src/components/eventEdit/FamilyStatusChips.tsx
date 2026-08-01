@@ -1,6 +1,6 @@
 import type { CSSProperties, ReactNode } from 'react';
-import type { ResponseFamilyMember, ResponsePlayer } from '../../types/event';
-import type { FamilyMember, Player } from '../../types/master';
+import type { ResponseCoach, ResponseFamilyMember, ResponsePlayer } from '../../types/event';
+import type { Coach, FamilyMember, Player } from '../../types/master';
 import type { ResponseStatus } from '../../utils/responseStatus';
 import { CarIcon, UserIcon } from '../icons';
 
@@ -11,8 +11,8 @@ interface FamilyStatusChipsProps {
   driverReturn: boolean | null;
   playerList: Player[];
   responsePlayers: ResponsePlayer[];
-  hasCoach: boolean;
-  coachParticipating: boolean | null;
+  coachList: Coach[];
+  responseCoaches: ResponseCoach[];
   familyMemberList: FamilyMember[];
   responseFamilyMembers: ResponseFamilyMember[];
 }
@@ -137,18 +137,25 @@ function resolveFamilyMembersChip(
 }
 
 /**
- * コーチの参加状況をチップ定義へ変換する。
- * 不参加の場合のみ灰色（neutral）にし、それ以外（参加・未回答）はコーチカードの役割色にする。
+ * コーチ全員の参加状況をチップ定義へ変換する。選手（resolvePlayersChip）と全く同じロジック。
  */
-function resolveCoachChip(coachParticipating: boolean | null): ChipDef {
+function resolveCoachesChip(coachList: Coach[], responseCoaches: ResponseCoach[]): ChipDef {
   const icon = <UserIcon size={11} />;
-  if (coachParticipating === true) {
-    return { icon, label: '○', variant: 'coach' };
+  const participations = coachList.map(
+    (coach) => responseCoaches.find((c) => c.coachId === coach.id)?.isParticipating
+  );
+
+  if (participations.some((isParticipating) => isParticipating === undefined || isParticipating === null)) {
+    return { icon, label: '未回答', variant: 'coach' };
   }
-  if (coachParticipating === false) {
-    return { icon, label: '✕', variant: 'neutral' };
+
+  const total = coachList.length;
+  const participatingCount = participations.filter((isParticipating) => isParticipating === true).length;
+
+  if (participatingCount === 0) {
+    return { icon, label: `${participatingCount}/${total}`, variant: 'neutral' };
   }
-  return { icon, label: '未回答', variant: 'coach' };
+  return { icon, label: `${participatingCount}/${total}`, variant: 'coach' };
 }
 
 function Chip({ icon, label, variant }: ChipDef) {
@@ -172,8 +179,8 @@ export function FamilyStatusChips({
   driverReturn,
   playerList,
   responsePlayers,
-  hasCoach,
-  coachParticipating,
+  coachList,
+  responseCoaches,
   familyMemberList,
   responseFamilyMembers,
 }: FamilyStatusChipsProps) {
@@ -187,7 +194,8 @@ export function FamilyStatusChips({
 
   const driverChip = resolveDriverChip(driverOutward, driverReturn);
   const playersChip = resolvePlayersChip(playerList, responsePlayers);
-  const coachChip = hasCoach ? resolveCoachChip(coachParticipating) : null;
+  const coachesChip =
+    coachList.length > 0 ? resolveCoachesChip(coachList, responseCoaches) : null;
   const familyMembersChip =
     familyMemberList.length > 0
       ? resolveFamilyMembersChip(familyMemberList, responseFamilyMembers)
@@ -197,7 +205,7 @@ export function FamilyStatusChips({
     <span style={{ display: 'flex', flex: 1, minWidth: '40px', flexWrap: 'wrap', alignItems: 'center', gap: '6px' }}>
       <Chip {...driverChip} />
       <Chip {...playersChip} />
-      {coachChip && <Chip {...coachChip} />}
+      {coachesChip && <Chip {...coachesChip} />}
       {familyMembersChip && <Chip {...familyMembersChip} />}
     </span>
   );
