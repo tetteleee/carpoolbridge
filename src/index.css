@@ -13,9 +13,11 @@
   --coach-bg: #f5ead8;
   --coach-border: #e6ddc8;
   --coach-accent: #b8823c;
-  --parent-bg: #eee3f7;
-  --parent-border: #ddd2ea;
-  --parent-accent: #8a5aa8;
+  --parent-bg: #f7e2e7;
+  --parent-border: #ecd2d9;
+  --parent-accent: #ab5d7d;
+  /* 家族の「今回限り」チップ背景（parent-accentの半透明版） */
+  --parent-accent-soft: rgba(171, 93, 125, 0.16);
 
   --accent: #2563eb;
   --accent-bg: rgba(37, 99, 235, 0.08);
