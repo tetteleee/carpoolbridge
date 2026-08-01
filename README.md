@@ -2,153 +2,80 @@
 
 ![GitHub Actions](https://github.com/tetteleee/carpoolbridge/actions/workflows/firebase-deploy.yml/badge.svg) ![GitHub Actions](https://github.com/tetteleee/carpoolbridge/actions/workflows/e2e.yml/badge.svg)
 
-## 開発
+学童野球チームの配車業務を、LINEとホワイトボードから解放するアプリ。
 
-開発サーバー起動
+## これは何か
 
-```bash
-npm install
-npm run dev
-```
+学童野球チームでは、練習・練習試合・公式戦のたびに保護者の車で選手を送迎する
+「配車」が必要になる。CarpoolBridgeは、この配車を組む担当者（配車担当）の
+負担を減らすための配車支援アプリ。
 
-## ビルド
+対象ユーザーは配車担当者・管理者であり、保護者は従来どおりLINEで出欠・車出しを
+回答する運用を前提とする。
 
-```bash
-npm run build
-```
+## 解決したい課題
 
-## E2Eテスト
+現状、多くのチームでは次のような手作業で配車を組んでいる。
 
-Firebase Emulator Suite（Auth・Firestore）とVite開発サーバーを自動起動してテストを実行します。
+- 保護者からの出欠回答をLINEの自由記述で受け取り、手作業で集計する
+- ホワイトボードとマグネットを使い、誰をどの車に乗せるか試行錯誤する
+- Googleマップを見ながら経路や定員を何度も確認・修正する
+- 完成した配車をLINEへ転記して共有する
 
-```bash
-npm run test:e2e
-```
+配車1回あたり30〜60分ほどかかり、仕上がりは担当者の経験に左右される（属人化）。
 
-初回実行時はPlaywrightのブラウザバイナリのダウンロードが必要です。
+## CarpoolBridgeが目指すこと
 
-```bash
-npx playwright install chromium
-```
+- 配車作成にかかる時間を大幅に短縮する（目標：5分以内）
+- 乗せ忘れを防ぐ
+- 定員超過を防ぐ
+- ベテラン担当者の判断をアルゴリズム化し、誰が担当しても一定品質の配車案
+  （80〜90%完成）を自動生成する
+- 最終調整は人が行う。完全自動化ではなく「たたき台を作る」道具として設計する
 
-## Seed（テストデータ投入）
+## 主な機能
 
-開発中のFirestoreデータを、アプリの主要機能を一通り確認できる程度のテストデータ
-（家族・選手・集合場所・目的地・イベント）で初期化するための開発用スクリプトです。
+- イベント作成（練習・練習試合・公式戦・遠征）
+- 出欠・車出し回答の入力
+- 行き・帰りを独立して管理する自動配車
+  （同じ集合場所はまとめる、定員超過を避ける、遠回りを避ける 等のルールを反映）
+- 配車結果の確認・手動修正
+  （修正時はリアルタイムで定員超過・未配車を検知して警告）
+- 家庭・選手・集合場所・目的地などのマスタ管理
 
-```bash
-npm run seed
-```
+## 対象ユーザー
 
-- **実行すると、`staffUsers`を除く既存データ（家族・選手・集合場所・目的地・イベント。
-  イベント配下の`responses`・`carpools`を含む）をすべて物理削除したうえで、
-  固定IDのテストデータを投入し直します。** 画面操作で追加したデータも含めて消えます。
-  何度実行しても同じ内容になります（冪等）。
-- 投入先は常に`.firebaserc`の`projects.default`（実Firebaseプロジェクト）です。
-- Firebase Admin SDKで実行するため、Firestore Security Rules（`isStaff()`）を経由しません。
-  実行にはサービスアカウントキーが必要です（初回のみ）。
+- **配車担当**：イベント作成・出欠確認・配車作成・配車修正を行う（スマホのみで操作）
+- **管理者**：家庭・選手・集合場所・目的地などのマスタ情報を管理する
 
-  1. Firebase Console → プロジェクトの設定 → サービスアカウント → 「新しい秘密鍵の生成」
-  2. ダウンロードしたJSONファイルをローカルの適当な場所に保存する（**リポジトリには含めない**）
-  3. 実行時に環境変数で指定する
-     ```bash
-     GOOGLE_APPLICATION_CREDENTIALS=/path/to/serviceAccountKey.json npm run seed
-     ```
+配車担当と管理者が同一人物であることも多いが、別々でもよい。
 
-  GitHub Actionsのデプロイ（`firebase-deploy.yml`）で使っている`FIREBASE_SERVICE_ACCOUNT`と
-  同じ種類の鍵です。`gcloud`のインストールやログインは不要です。
-- テストデータの定義は[src/services/dev/seedData.ts](src/services/dev/seedData.ts)にまとまっています。
-  マスタ管理画面の開発用機能「サンプルデータ投入」ボタンとも共通のデータ定義です。
-  Firestoreのデータ構造を変更した場合は、このファイルを更新してください。
+## 技術スタック
 
-### ローカル専用データでの投入（個人情報に近いデータを使いたい場合）
+- React / TypeScript
+- Vite
+- Firebase Hosting
+- Firestore
+- Firebase Authentication（匿名認証）
 
-`npm run seed`は投入元を環境変数`SEED_SOURCE`で切り替えられます。
+## ドキュメント
 
-```bash
-npm run seed:local
-# もしくは
-SEED_SOURCE=local npm run seed
-```
+設計の背景・詳細は`docs/`にまとまっている。
 
-- 投入元は`src/services/dev/seedData.local.json`です。`.gitignore`済みのため
-  コミットされません。中身は`seedData.ts`と同じ形（`pickupLocations` /
-  `destinations` / `families` / `players` / `coaches` / `familyMembers` / `events`）で
-  自分で作成・編集してください。
-- 実際の使用感を手元で確認したいときなど、個人情報に近いデータを使いたい場合に利用します。
-  内容は各自の環境でのみ保持し、他人と共有しないでください。
-- `SEED_SOURCE`を指定しない場合（`npm run seed`のみ）は、従来どおりコミット済みの
-  サンプルデータ（`seedData.ts`）が使われます。
-- マスタ管理画面の「サンプルデータ投入」ボタンはこの切り替えの対象外です
-  （常にコミット済みサンプルデータを投入します）。
+| ドキュメント | 内容 |
+| --- | --- |
+| [01_現状業務分析](docs/01_現状業務分析.md) | 現在LINE・ホワイトボードで行っている配車業務の分析 |
+| [02_要件定義](docs/02_要件定義.md) | 目的・利用者・機能一覧・配車ルール |
+| [03_ユースケース](docs/03_ユースケース.md) | 利用シーンごとの操作フロー |
+| [04_画面設計](docs/04_画面設計.md) | 画面構成・UI設計 |
+| [05_データ設計](docs/05_データ設計.md) | Firestoreのデータ構造 |
+| [06_認証・権限管理設計](docs/06_認証・権限管理設計.md) | 認証方式・利用権限の設計 |
+| [07_配車アルゴリズム](docs/07_配車アルゴリズム.md) | 自動配車ロジック |
+| [09_今後のアイデア](docs/09_今後のアイデア.md) | 将来検討している拡張機能 |
 
-#### CSVからseedData.local.jsonを生成する
+開発環境の構築・ビルド・テスト・デプロイ手順は[CONTRIBUTING.md](CONTRIBUTING.md)を参照。
 
-`seedData.local.json`を手書きすると、`familyId`・`pickupLocationId`等のID紐づけが
-手間になるため、名前ベースで書けるCSVから生成するスクリプトを用意しています。
+## ステータス
 
-```bash
-npm run seed:from-csv
-```
-
-- 使い方
-  1. `scripts/seed/csv/*.sample.csv`をコピーして、`.sample`を外したファイルを作る
-     （例: `families.sample.csv` → `families.csv`）
-  2. Excel・Googleスプレッドシート等でCSVとして中身を編集する。家庭・選手・イベントの
-     紐づけはIDではなく「名前」（`pickupLocationName`・`familyName`・`destinationName`）で
-     入力する
-  3. `npm run seed:from-csv`を実行する → `src/services/dev/seedData.local.json`を生成・上書きする
-  4. `npm run seed:local`でFirestoreへ投入する
-- CSVの列構成はサンプルファイルを参照してください。
-- `id`は名前をもとにスクリプトが自動採番するため入力不要です。同じ名前が重複している、
-  存在しない名前を参照している等の入力ミスはエラーで停止し、該当行を教えてくれます。
-- `coaches.csv`・`family_members.csv`・`events.csv`は省略可能です（未作成の場合はそれぞれ
-  0件で出力します。`coaches.csv`は1家庭に複数コーチを登録できるため、同じ`familyName`の行を
-  複数書けます）。
-- CSV本体（`*.sample.csv`を除く）は個人情報に近いデータになりうるため`.gitignore`済みです。
-
-**注意：開発段階限定の機能です。現時点ではDev/Prod用のFirebaseプロジェクトが分離されて
-いないため、実行すると実際のFirebaseプロジェクトに対して全削除・再投入が行われます。
-運用開始後にこのスクリプトをそのまま使うと、実際に入力された家族・選手・イベント等の
-データが消えてしまいます。運用開始後は別の手段（Dev/Prodプロジェクトの分離、削除範囲の限定等）
-を検討し、このスクリプトを本番運用中のプロジェクトに対して実行しないでください。**
-
-## デプロイ
-
-```bash
-firebase deploy
-```
-
-または Hostingのみ
-
-```bash
-firebase deploy --only hosting
-```
-
-## Firestore Security Rules変更時
-
-Rulesを変更した場合はデプロイが必要です。
-
-```bash
-firebase deploy --only firestore:rules
-```
-
-## 初回セットアップ
-
-Firebaseへログイン
-
-```bash
-firebase login
-```
-
-プロジェクト確認
-
-```bash
-firebase use
-```
-
-必要に応じてプロジェクト切り替え
-
-```bash
-firebase use <project-id>
-```
+開発中（MVPフェーズ）。対象ユーザーは配車担当・管理者のみとし、
+段階的に機能を拡張している。
