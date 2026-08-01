@@ -255,6 +255,17 @@ export function WarningIcon({ size = 18 }: IconProps) {
   );
 }
 
+/** 情報（丸に！）アイコン。自動整合結果トースト等、エラーではない通知に使う */
+export function InfoIcon({ size = 18 }: IconProps) {
+  return (
+    <svg {...baseProps(size)}>
+      <circle cx="12" cy="12" r="9.25" />
+      <line x1="12" y1="11" x2="12" y2="16.5" />
+      <circle cx="12" cy="7.7" r="1" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
 /** サマリー（棒グラフ）アイコン */
 export function SummaryIcon({ size = 18 }: IconProps) {
   return (

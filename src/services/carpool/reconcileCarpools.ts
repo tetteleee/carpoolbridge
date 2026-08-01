@@ -17,6 +17,9 @@
  *    対象方向に車がまだ存在しない場合は、空の車を新規作成する。
  *    対象方向にCarpoolが1件も存在しない（自動配車が未実行の）イベントでは、
  *    この整合処理自体を実行しない（呼び出し側のガードによる）。
+ *
+ * 整合結果は件数のみのReconcileSummaryとして返し、呼び出し側が
+ * 「整合結果の通知（トースト）」（04_画面設計.md#8）の表示に使う。
  */
 
 import type { Carpool, Direction } from '../../types/event';
@@ -27,6 +30,57 @@ import {
 } from './eligibility';
 import { createCarpool, deleteCarpool, updateCarpool } from '../event/carpoolService';
 
+/** reconcileCarpoolsが実際に行った変更の件数サマリー（トースト表示用） */
+export interface ReconcileSummary {
+  /** 新規作成した車の台数 */
+  addedCarCount: number;
+  /** 削除した車の台数 */
+  removedCarCount: number;
+  /** 車の削除・対象外化による除去で未配車になった人数の合計 */
+  unassignedMemberCount: number;
+}
+
+const EMPTY_SUMMARY: ReconcileSummary = {
+  addedCarCount: 0,
+  removedCarCount: 0,
+  unassignedMemberCount: 0,
+};
+
+/** サマリーの内容から、1件以上の変更が実際にあったかどうかを判定する */
+export function hasReconcileChanges(summary: ReconcileSummary): boolean {
+  return (
+    summary.addedCarCount > 0 ||
+    summary.removedCarCount > 0 ||
+    summary.unassignedMemberCount > 0
+  );
+}
+
+/**
+ * ReconcileSummaryから、トースト通知用の件数のみのメッセージ文を組み立てる。
+ * ref: docs/04_画面設計.md#8 整合結果の通知（トースト）
+ */
+export function buildReconcileSummaryMessage(summary: ReconcileSummary): string {
+  const { addedCarCount, removedCarCount, unassignedMemberCount } = summary;
+
+  const carParts: string[] = [];
+  if (addedCarCount > 0) {
+    carParts.push(`${addedCarCount}台追加`);
+  }
+  if (removedCarCount > 0) {
+    carParts.push(`${removedCarCount}台削除`);
+  }
+
+  const memberNote =
+    unassignedMemberCount > 0 ? `${unassignedMemberCount}名が未配車になりました` : '';
+
+  const detail =
+    carParts.length > 0
+      ? `車を${carParts.join('、')}しました${memberNote ? `（${memberNote}）` : ''}`
+      : memberNote;
+
+  return `回答変更により配車を自動整合しました\n${detail}`;
+}
+
 /**
  * 対象方向の配車結果一覧について、現在の回答内容に基づき以下を反映する。
  * - 対象外になったメンバーの除去
@@ -36,17 +90,21 @@ import { createCarpool, deleteCarpool, updateCarpool } from '../event/carpoolSer
  * @param direction 対象方向（行き／帰り）
  * @param carpools 整合対象の配車結果一覧（対象方向のみ。呼び出し側で1件以上存在することを確認済みとする）
  * @param masterData 現在のマスタ・回答データ
- * @returns 1件以上のCarpoolを作成・更新・削除した場合はtrue
+ * @returns 実際に行った変更の件数サマリー（何も変更しなかった場合は全項目0）
  */
 export async function reconcileCarpools(
   eventId: string,
   direction: Direction,
   carpools: Carpool[],
   masterData: EligibilityMasterData
-): Promise<boolean> {
+): Promise<ReconcileSummary> {
   const carpoolByDriverFamilyId = new Map(carpools.map((carpool) => [carpool.driverFamilyId, carpool]));
   const deletedDriverFamilyIds = new Set<string>();
   const operations: Promise<unknown>[] = [];
+
+  let addedCarCount = 0;
+  let removedCarCount = 0;
+  let unassignedMemberCount = 0;
 
   for (const [familyId, response] of masterData.responseByFamilyId) {
     const family = masterData.familyById.get(familyId);
@@ -58,6 +116,7 @@ export async function reconcileCarpools(
     const existingCarpool = carpoolByDriverFamilyId.get(familyId);
 
     if (isDriver && !existingCarpool) {
+      addedCarCount += 1;
       operations.push(
         createCarpool(eventId, {
           direction,
@@ -68,6 +127,8 @@ export async function reconcileCarpools(
       );
     } else if (!isDriver && existingCarpool) {
       deletedDriverFamilyIds.add(familyId);
+      removedCarCount += 1;
+      unassignedMemberCount += existingCarpool.members.length;
       operations.push(deleteCarpool(eventId, existingCarpool.id));
     }
   }
@@ -80,14 +141,15 @@ export async function reconcileCarpools(
       isMemberEligibleForDirection(member, direction, masterData)
     );
     if (eligibleMembers.length !== carpool.members.length) {
+      unassignedMemberCount += carpool.members.length - eligibleMembers.length;
       operations.push(updateCarpool(eventId, carpool.id, { members: eligibleMembers }));
     }
   }
 
   if (operations.length === 0) {
-    return false;
+    return EMPTY_SUMMARY;
   }
 
   await Promise.all(operations);
-  return true;
+  return { addedCarCount, removedCarCount, unassignedMemberCount };
 }

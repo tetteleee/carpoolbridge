@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { CarCardData } from '../utils/carCard';
 import type { UnassignedPerson } from '../components/carpool/UnassignedArea';
 import type { PersonCardData } from '../components/carpool/PersonCard';
@@ -8,8 +8,18 @@ import {
   countUnansweredPeople,
   type BoardMasterData,
 } from '../services/carpool/carpoolBoardData';
-import { reconcileCarpools } from '../services/carpool/reconcileCarpools';
+import {
+  reconcileCarpools,
+  hasReconcileChanges,
+  buildReconcileSummaryMessage,
+} from '../services/carpool/reconcileCarpools';
 import type { Carpool, Direction } from '../types/event';
+
+/** 整合結果の通知（トースト）1件分。同じ文言が連続しても再表示できるよう、毎回異なるidを持つ */
+export interface ReconcileNotice {
+  id: number;
+  message: string;
+}
 
 interface UseCarpoolBoardDataResult {
   /** 選択中タブ（行き／帰り）の未配車の人カード一覧 */
@@ -26,6 +36,8 @@ interface UseCarpoolBoardDataResult {
   loading: boolean;
   /** マスタ・回答データの取得に失敗した場合のエラーメッセージ */
   error: string | null;
+  /** 直近の自動整合で変更が発生した場合の通知内容（変更がなければnull。04_画面設計.md#8） */
+  reconcileNotice: ReconcileNotice | null;
 }
 
 /**
@@ -53,6 +65,8 @@ export function useCarpoolBoardData(
   const [masterData, setMasterData] = useState<BoardMasterData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [reconcileNotice, setReconcileNotice] = useState<ReconcileNotice | null>(null);
+  const reconcileNoticeIdRef = useRef(0);
 
   useEffect(() => {
     if (!eventId) {
@@ -100,10 +114,16 @@ export function useCarpoolBoardData(
 
     let ignore = false;
 
-    reconcileCarpools(eventId, direction, carpools, masterData).then((changed) => {
-      if (!ignore && changed) {
-        onCarpoolsReconciled();
+    reconcileCarpools(eventId, direction, carpools, masterData).then((summary) => {
+      if (ignore || !hasReconcileChanges(summary)) {
+        return;
       }
+      reconcileNoticeIdRef.current += 1;
+      setReconcileNotice({
+        id: reconcileNoticeIdRef.current,
+        message: buildReconcileSummaryMessage(summary),
+      });
+      onCarpoolsReconciled();
     });
 
     return () => {
@@ -125,5 +145,5 @@ export function useCarpoolBoardData(
 
   const hasNoResponses = masterData !== null && masterData.responseByFamilyId.size === 0;
 
-  return { ...boardData, unansweredCount, hasNoResponses, loading, error };
+  return { ...boardData, unansweredCount, hasNoResponses, loading, error, reconcileNotice };
 }
