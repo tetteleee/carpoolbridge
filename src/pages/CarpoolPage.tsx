@@ -116,7 +116,11 @@ export function CarpoolPage() {
     setMoveError(null);
     moveCarpoolMember(eventId, member, sourceZoneId, targetZoneId, carpools)
       .then(refreshCarpools)
-      .catch(() => setMoveError('人の移動に失敗しました'));
+      .catch(() => {
+        setMoveError('人の移動に失敗しました');
+        // 失敗時も画面表示を実データに同期し、乖離に気づけない状態を防ぐ
+        refreshCarpools();
+      });
   };
 
   const { dragState, hoveredZoneId, createPointerDownHandler } = useDragAndDrop({

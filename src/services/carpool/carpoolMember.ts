@@ -3,8 +3,10 @@
  * ref: docs/04_画面設計.md#8 ドラッグ＆ドロップ, docs/05_データ設計.md#10 Carpool（配車結果）
  */
 
+import { doc, writeBatch } from 'firebase/firestore';
+import { db } from '../../firebase';
+import { firestorePaths } from '../../constants/firestorePaths';
 import type { Carpool, CarpoolMember } from '../../types/event';
-import { updateCarpool } from '../event/carpoolService';
 
 /** 未配車エリアを表すドロップゾーンID（車カードはCarpool.idをそのままドロップゾーンIDとして使う） */
 export const UNASSIGNED_ZONE_ID = 'unassigned';
@@ -19,10 +21,12 @@ export function memberKey(member: CarpoolMember): string {
 
 /**
  * 未配車エリア⇔車カード間、または車カード⇔車カード間で乗車メンバー1人を移動し、
- * T20のCarpool読み書き処理を通じて配車結果データへ反映する。
+ * 配車結果データへ反映する。
  * 車内の表示順は集合場所グルーピング＋学年・名前順で一意に決まるため（ref: docs/04_画面設計.md#集合場所グルーピング）、
  * 移動先ゾーン内での挿入位置は指定せず、常に末尾へ追加する。
  * 移動元と移動先が同一ゾーンの場合は何もしない（ref: docs/04_画面設計.md#挿入位置）。
+ * 移動元・移動先の更新は1つのFirestoreバッチにまとめ、片方だけ成功して
+ * 乗客がどの車にも属さない状態になることを防ぐ。
  *
  * @param eventId 対象のイベントID
  * @param member 移動対象の乗車メンバー
@@ -42,24 +46,34 @@ export async function moveCarpoolMember(
   }
 
   const key = memberKey(member);
+  const batch = writeBatch(db);
+  let hasWrite = false;
 
   if (sourceZoneId !== UNASSIGNED_ZONE_ID) {
     const sourceCarpool = carpools.find((carpool) => carpool.id === sourceZoneId);
     if (sourceCarpool) {
-      await updateCarpool(eventId, sourceCarpool.id, {
+      const sourceDocRef = doc(db, firestorePaths.carpoolDocument(eventId, sourceCarpool.id));
+      batch.update(sourceDocRef, {
         members: sourceCarpool.members.filter((m) => memberKey(m) !== key),
       });
+      hasWrite = true;
     }
   }
 
   if (targetZoneId !== UNASSIGNED_ZONE_ID) {
     const targetCarpool = carpools.find((carpool) => carpool.id === targetZoneId);
     if (targetCarpool) {
+      const targetDocRef = doc(db, firestorePaths.carpoolDocument(eventId, targetCarpool.id));
       const membersWithoutDuplicate = targetCarpool.members.filter((m) => memberKey(m) !== key);
-      await updateCarpool(eventId, targetCarpool.id, {
+      batch.update(targetDocRef, {
         members: [...membersWithoutDuplicate, member],
       });
+      hasWrite = true;
     }
+  }
+
+  if (hasWrite) {
+    await batch.commit();
   }
 }
 
