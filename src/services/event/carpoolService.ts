@@ -97,6 +97,22 @@ export async function deleteAllCarpools(eventId: string): Promise<void> {
 }
 
 /**
+ * 指定イベント配下、指定方向の配車結果をすべて物理削除します。
+ * 05_データ設計.md#12の例外（行き⇔帰りコピー）としてのみ利用する処理であり、
+ * コピー先方向の配車結果を全置換する場合にのみ呼び出す。
+ *
+ * @param eventId 対象のイベントID
+ * @param direction 削除対象の方向
+ */
+export async function deleteCarpoolsByDirection(
+  eventId: string,
+  direction: Direction
+): Promise<void> {
+  const carpools = await getCarpools(eventId, direction);
+  await Promise.all(carpools.map((carpool) => deleteCarpool(eventId, carpool.id)));
+}
+
+/**
  * 配車結果を1件物理削除します。
  * 05_データ設計.md#12の例外（車出し可否変更に伴う自動整合）としてのみ利用する処理であり、
  * 車出し可否が可→不可に変わった家庭のCarpoolを削除する場合にのみ呼び出す。

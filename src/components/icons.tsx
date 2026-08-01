@@ -201,6 +201,27 @@ export function LoadingIndicator({ size = 6 }: IconProps) {
   );
 }
 
+/** コピーアイコン */
+export function CopyIcon({ size = 18 }: IconProps) {
+  return (
+    <svg {...baseProps(size)}>
+      <rect x="4" y="4" width="12" height="12" rx="2" />
+      <path d="M8 8V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2" />
+    </svg>
+  );
+}
+
+/** その他（縦三点）アイコン */
+export function MoreIcon({ size = 18 }: IconProps) {
+  return (
+    <svg {...baseProps(size)}>
+      <circle cx="12" cy="5" r="1.4" fill="currentColor" stroke="none" />
+      <circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none" />
+      <circle cx="12" cy="19" r="1.4" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
 /** 閉じる（×）アイコン */
 export function CloseIcon({ size = 18 }: IconProps) {
   return (

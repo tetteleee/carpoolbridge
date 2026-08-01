@@ -5,6 +5,7 @@ import { EventHeaderTitle } from '../components/EventHeaderTitle';
 import { Button } from '../components/common/Button';
 import { LoadingIndicator, SummaryIcon } from '../components/icons';
 import { CarCard } from '../components/carpool/CarCard';
+import { CarpoolCopyDialog } from '../components/carpool/CarpoolCopyDialog';
 import { CarpoolEmptyState } from '../components/carpool/CarpoolEmptyState';
 import { CarpoolSummaryBar } from '../components/carpool/CarpoolSummaryBar';
 import { CarpoolWarningPopup } from '../components/carpool/CarpoolWarningPopup';
@@ -20,8 +21,10 @@ import { useDragAndDrop, type DropResult } from '../hooks/useDragAndDrop';
 import { getEvent } from '../services/event/eventService';
 import { getDestination } from '../services/master/destinationService';
 import { moveCarpoolMember, UNASSIGNED_ZONE_ID } from '../services/carpool/carpoolMember';
+import { copyDirectionCarpools } from '../services/carpool/copyDirectionCarpools';
+import { loadBoardMasterData } from '../services/carpool/carpoolBoardData';
 import { formatDateWithWeekday } from '../utils/date';
-import type { Event } from '../types/event';
+import type { Direction, Event } from '../types/event';
 
 /**
  * オートスクロール開始位置（画面上端からの距離）を、sticky header（ヘッダー＋トグル＋サマリー）の
@@ -43,6 +46,7 @@ export function CarpoolPage() {
     direction,
     setDirection,
     carpools,
+    carpoolsByDirection,
     loading: carpoolsLoading,
     error: carpoolsError,
     refresh: refreshCarpools,
@@ -58,6 +62,9 @@ export function CarpoolPage() {
   const [moveError, setMoveError] = useState<string | null>(null);
   const [isSummaryVisible, setIsSummaryVisible] = useState(true);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [copySourceDirection, setCopySourceDirection] = useState<Direction | null>(null);
+  const [copyProcessing, setCopyProcessing] = useState(false);
+  const [copyError, setCopyError] = useState<string | null>(null);
   const { hasWarning, message: validationMessage } = useCarpoolValidation(
     carCards,
     unassignedPeople
@@ -83,7 +90,7 @@ export function CarpoolPage() {
   }, []);
 
   const loading = carpoolsLoading || boardDataLoading;
-  const error = carpoolsError ?? boardDataError ?? moveError;
+  const error = carpoolsError ?? boardDataError ?? moveError ?? copyError;
 
   useEffect(() => {
     if (!eventId) {
@@ -127,6 +134,39 @@ export function CarpoolPage() {
   };
 
   const handleShareClick = () => setIsShareModalOpen(true);
+
+  const handleRequestCopy = (sourceDirection: Direction) => {
+    setCopyError(null);
+    setCopySourceDirection(sourceDirection);
+  };
+
+  const handleCancelCopy = () => {
+    setCopySourceDirection(null);
+  };
+
+  const handleConfirmCopy = async () => {
+    if (!eventId || !copySourceDirection) {
+      return;
+    }
+    const sourceDirection = copySourceDirection;
+    const targetDirection: Direction = sourceDirection === 'OUTWARD' ? 'RETURN' : 'OUTWARD';
+    setCopyProcessing(true);
+    setCopyError(null);
+    try {
+      const masterData = await loadBoardMasterData(eventId);
+      await copyDirectionCarpools(eventId, sourceDirection, targetDirection, masterData);
+      setCopySourceDirection(null);
+      if (direction === targetDirection) {
+        await refreshCarpools();
+      } else {
+        setDirection(targetDirection);
+      }
+    } catch {
+      setCopyError('コピーに失敗しました');
+    } finally {
+      setCopyProcessing(false);
+    }
+  };
 
   return (
     <div
@@ -187,6 +227,9 @@ export function CarpoolPage() {
                 <OperationArea
                   onEditAnswers={handleEditAnswersClick}
                   onShare={handleShareClick}
+                  onRequestCopy={handleRequestCopy}
+                  canCopyOutwardToReturn={carpoolsByDirection.OUTWARD.length > 0}
+                  canCopyReturnToOutward={carpoolsByDirection.RETURN.length > 0}
                 />
               </div>
             }
@@ -305,6 +348,13 @@ export function CarpoolPage() {
         eventId={eventId}
         event={event}
         destinationName={destinationName}
+      />
+
+      <CarpoolCopyDialog
+        sourceDirection={copySourceDirection}
+        processing={copyProcessing}
+        onCancel={handleCancelCopy}
+        onConfirm={handleConfirmCopy}
       />
     </div>
   );
