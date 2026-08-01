@@ -22,6 +22,8 @@ interface NoRideNeededAreaProps {
  * 未配車エリアとは異なり画面最下部に配置し、枠線・見出しの色を控えめにすることで
  * 「対応が必要な状態」ではないことを示す。ドラッグ＆ドロップの対象外とする。
  * 配車不要人数が0人の場合はエリア自体を非表示にする。
+ * 人カードは車カード・未配車エリアと同じチップ形式（折り返し表示）で並べる。
+ * 送迎が不要なため集合場所は表示しない（PersonCardのcompact表示を使用）。
  * ref: docs/04_画面設計.md#8 配車不要エリア
  */
 export function NoRideNeededArea({ people, dense = false }: NoRideNeededAreaProps) {
@@ -62,21 +64,13 @@ export function NoRideNeededArea({ people, dense = false }: NoRideNeededAreaProp
           現地集合・保護者お迎えなど、送迎が不要な参加者です。
         </p>
 
-        <ul
-          style={{
-            listStyle: 'none',
-            margin: 0,
-            padding: 0,
-            display: 'flex',
-            flexDirection: 'column',
-          }}
-        >
-          {people.map((person) => (
-            <li key={person.id} style={{ borderTop: '1px solid var(--border)' }}>
-              <PersonCard person={person} draggable={false} />
-            </li>
-          ))}
-        </ul>
+        <div style={{ padding: dense ? '6px 8px' : '8px 10px' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: dense ? '6px' : '10px' }}>
+            {people.map((person) => (
+              <PersonCard key={person.id} person={person} draggable={false} compact />
+            ))}
+          </div>
+        </div>
       </Card>
     </div>
   );
