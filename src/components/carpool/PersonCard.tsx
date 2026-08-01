@@ -70,7 +70,8 @@ export function PersonCard({
 }: PersonCardProps) {
   // 学年（person.grade）は対象学年外の選手もnullになりうるため、コーチ・家族の判定には使わない（04_画面設計.md#色分けルール）
   const isCoach = person.member.type === 'coach';
-  const isFamily = person.member.type === 'family';
+  // 一時参加者（temporary）は家族カードと完全に同じ色・構成で表示する（04_画面設計.md#8 家族カードについて）
+  const isFamily = person.member.type === 'family' || person.member.type === 'temporary';
 
   const handleCardPointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
     if (!onPointerDown || event.pointerType !== 'mouse') {

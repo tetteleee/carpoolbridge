@@ -36,6 +36,7 @@ import {
   isPlayerRidingForDirection,
   isCoachRidingForDirection,
   isFamilyMemberRidingForDirection,
+  isTemporaryParticipantRidingForDirection,
 } from './eligibility';
 
 /**
@@ -139,6 +140,21 @@ export async function runCarpoolAssignment(
         usedPickupLocations.push(location);
       }
     }
+
+    // 一時参加者は所属家庭ではなく自分専用の集合場所を持ちうる（複数人いれば場所も複数になりうる）ため、
+    // 家庭のpickupLocationIdとは別に、それぞれの集合場所を個別にバリデーション対象へ追加する
+    for (const temporaryParticipant of response.temporaryParticipants ?? []) {
+      if (
+        isTemporaryParticipantRidingForDirection(temporaryParticipant, direction) &&
+        !usedLocationIds.has(temporaryParticipant.pickupLocationId)
+      ) {
+        usedLocationIds.add(temporaryParticipant.pickupLocationId);
+        const location = pickupLocationById.get(temporaryParticipant.pickupLocationId);
+        if (location) {
+          usedPickupLocations.push(location);
+        }
+      }
+    }
   }
 
   try {
@@ -213,6 +229,22 @@ export async function runCarpoolAssignment(
           pickupLocationId: family.pickupLocationId,
           pickupLocation: toLocation(family.pickupLocationId),
           member: { type: 'coach', coachId: coach.coachId },
+        });
+      }
+    }
+
+    // 一時参加者のみ、所属家庭のpickupLocationIdではなく本人に指定した集合場所を使用する
+    for (const temporaryParticipant of response.temporaryParticipants ?? []) {
+      if (isTemporaryParticipantRidingForDirection(temporaryParticipant, direction)) {
+        passengers.push({
+          familyId: family.id,
+          pickupLocationId: temporaryParticipant.pickupLocationId,
+          pickupLocation: toLocation(temporaryParticipant.pickupLocationId),
+          member: {
+            type: 'temporary',
+            familyId: family.id,
+            temporaryParticipantId: temporaryParticipant.id,
+          },
         });
       }
     }

@@ -130,6 +130,8 @@ function buildRandomResponse(
     familyMembers: familyMemberIds.map((familyMemberId) =>
       randomResponseFamilyMember(familyMemberId)
     ),
+    // 一時参加者（今回だけ参加する人）はマスタに存在しないため、サンプル生成の対象外とする
+    temporaryParticipants: [],
   };
 }
 

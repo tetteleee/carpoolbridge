@@ -23,6 +23,8 @@ import {
   isCoachNoRideNeededForDirection,
   isFamilyMemberRidingForDirection,
   isFamilyMemberNoRideNeededForDirection,
+  isTemporaryParticipantRidingForDirection,
+  isTemporaryParticipantNoRideNeededForDirection,
   type EligibilityMasterData,
 } from './eligibility';
 import { getSchoolGrade } from '../../utils/schoolGrade';
@@ -50,11 +52,22 @@ function toGradeLabel(schoolEntryYear: number): string | null {
   return grade === null ? null : `小${grade}`;
 }
 
-/** 乗車メンバー（CarpoolMember）の集合場所IDを取得する。対応するマスタが見つからない場合はnull */
+/**
+ * 乗車メンバー（CarpoolMember）の集合場所IDを取得する。対応するマスタが見つからない場合はnull。
+ * type: "temporary"のみ、所属家庭のFamily.pickupLocationIdではなく、追加時に指定した
+ * Response.temporaryParticipants[].pickupLocationIdを直接参照する（05_データ設計.md#10参照）。
+ */
 function getMemberPickupLocationId(
   member: CarpoolMember,
   masterData: BoardMasterData
 ): string | null {
+  if (member.type === 'temporary') {
+    const temporaryParticipant = masterData.responseByFamilyId
+      .get(member.familyId)
+      ?.temporaryParticipants?.find((t) => t.id === member.temporaryParticipantId);
+    return temporaryParticipant?.pickupLocationId ?? null;
+  }
+
   let familyId: string | undefined;
   if (member.type === 'player') {
     familyId = masterData.playerById.get(member.playerId)?.familyId;
@@ -83,8 +96,8 @@ function toDeletedPersonCardData(id: string, member: CarpoolMember): PersonCardD
 
 /**
  * 乗車メンバー（CarpoolMember）を人カード表示用データへ変換する。
- * 対応するマスタ（選手・家族・家庭）が物理削除済みで見つからない場合は、
- * nullを返して非表示にするのではなく「（削除済み）」の人カードを返す
+ * 対応するマスタ（選手・家族・家庭）が物理削除済み、または一時参加者が取り消し（×ボタン）
+ * 済みで見つからない場合は、nullを返して非表示にするのではなく「（削除済み）」の人カードを返す
  * （過去の配車結果で乗車していた事実自体が分からなくなることを防ぐため。05_データ設計.md#12 削除方針）。
  */
 function toPersonCardData(
@@ -119,6 +132,26 @@ function toPersonCardData(
     return {
       id: familyMember.id,
       name: familyMember.name,
+      grade: null,
+      pickupLocationId: pickupLocationId ?? '',
+      pickupLocationName,
+      member,
+    };
+  }
+
+  if (member.type === 'temporary') {
+    const temporaryParticipant = masterData.responseByFamilyId
+      .get(member.familyId)
+      ?.temporaryParticipants?.find((t) => t.id === member.temporaryParticipantId);
+    if (!temporaryParticipant) {
+      // 一時参加者はマスタを持たず、Response.temporaryParticipants[]の項目自体が実体である。
+      // 削除（×ボタン）はマスタの物理削除と同じ「情報が失われる」操作のため、
+      // 他の種別と同様に「（削除済み）」の人カードを返す（nullで無言消去しない）
+      return toDeletedPersonCardData(member.temporaryParticipantId, member);
+    }
+    return {
+      id: temporaryParticipant.id,
+      name: temporaryParticipant.name,
       grade: null,
       pickupLocationId: pickupLocationId ?? '',
       pickupLocationName,
@@ -211,13 +244,23 @@ function buildEligibleMembers(masterData: BoardMasterData, direction: Direction)
         members.push({ type: 'coach', coachId: coachResponse.coachId });
       }
     }
+
+    for (const temporaryParticipant of response.temporaryParticipants ?? []) {
+      if (isTemporaryParticipantRidingForDirection(temporaryParticipant, direction)) {
+        members.push({
+          type: 'temporary',
+          familyId,
+          temporaryParticipantId: temporaryParticipant.id,
+        });
+      }
+    }
   }
 
   return members;
 }
 
 /**
- * 対象方向において「参加かつ送迎不要」（配車不要エリアの対象）となる選手・コーチ・家族一覧を算出する。
+ * 対象方向において「参加かつ送迎不要」（配車不要エリアの対象）となる選手・コーチ・家族・一時参加者一覧を算出する。
  * ref: docs/04_画面設計.md#8 配車不要エリア
  */
 function buildNoRideNeededMembers(masterData: BoardMasterData, direction: Direction): CarpoolMember[] {
@@ -261,15 +304,26 @@ function buildNoRideNeededMembers(masterData: BoardMasterData, direction: Direct
         members.push({ type: 'coach', coachId: coachResponse.coachId });
       }
     }
+
+    for (const temporaryParticipant of response.temporaryParticipants ?? []) {
+      if (isTemporaryParticipantNoRideNeededForDirection(temporaryParticipant, direction)) {
+        members.push({
+          type: 'temporary',
+          familyId,
+          temporaryParticipantId: temporaryParticipant.id,
+        });
+      }
+    }
   }
 
   return members;
 }
 
-/** 乗車メンバー（player/coach/family）を一意に識別するキーを生成する（services/carpool/carpoolMember.tsのmemberKeyと同一基準） */
+/** 乗車メンバー（player/coach/family/temporary）を一意に識別するキーを生成する（services/carpool/carpoolMember.tsのmemberKeyと同一基準） */
 function memberKey(member: CarpoolMember): string {
   if (member.type === 'player') return `player:${member.playerId}`;
   if (member.type === 'family') return `family:${member.familyMemberId}`;
+  if (member.type === 'temporary') return `temporary:${member.temporaryParticipantId}`;
   return `coach:${member.coachId}`;
 }
 

@@ -1,14 +1,24 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
-import type { Response, ResponseCoach, ResponseFamilyMember, ResponsePlayer } from '../../types/event';
-import type { Player, Coach, Family, FamilyMember } from '../../types/master';
+import { Timestamp } from 'firebase/firestore';
+import type {
+  Response,
+  ResponseCoach,
+  ResponseFamilyMember,
+  ResponsePlayer,
+  ResponseTemporaryParticipant,
+} from '../../types/event';
+import type { Player, Coach, Family, FamilyMember, PickupLocation } from '../../types/master';
 import { getSchoolGrade } from '../../utils/schoolGrade';
 import { computeResponseStatus, type ResponseStatus } from '../../utils/responseStatus';
 import { createResponse, updateResponse } from '../../services/event/responseService';
-import { HomeIcon, UserIcon, ChevronDownIcon } from '../icons';
+import { createFamilyMember } from '../../services/master/familyMemberService';
+import { HomeIcon, UserIcon, ChevronDownIcon, CloseIcon } from '../icons';
 import { Card } from '../common/Card';
+import { AddRow } from '../common/AddRow';
 import { PlayerResponseRow } from './PlayerResponseRow';
 import { CoachResponseRow } from './CoachResponseRow';
 import { FamilyMemberResponseRow } from './FamilyMemberResponseRow';
+import { AddTemporaryParticipantForm } from './AddTemporaryParticipantForm';
 import { DriverAndCapacitySection } from './DriverAndCapacitySection';
 import { RemarksSection } from './RemarksSection';
 import { FamilyStatusChips } from './FamilyStatusChips';
@@ -24,6 +34,8 @@ interface FamilyResponseCardProps {
   coachList: Coach[];
   /** この家庭に属する有効な家族一覧 */
   familyMemberList: FamilyMember[];
+  /** 集合場所の選択肢一覧（一時参加者の追加フォームで使用） */
+  pickupLocationList: PickupLocation[];
   /** 対象家庭の既存回答（未回答の場合はundefined） */
   response: Response | undefined;
   /** カードが展開表示かどうか（折りたたみ状態は呼び出し側で一括管理する） */
@@ -32,6 +44,12 @@ interface FamilyResponseCardProps {
   onToggleOpen: () => void;
   /** 回答状況（回答済み／一部回答／未回答）が変化した際に呼び出す（ヘッダー集計表示用） */
   onStatusChange: (status: ResponseStatus) => void;
+  /**
+   * 一時参加者を「マスタに登録」した際、新規作成したFamilyMemberを呼び出し側へ通知する。
+   * 呼び出し側（EventEditPage）でfamilyMemberListへ反映し、家族欄に即座に表示させるために使用する
+   * （04_画面設計.md#7 一時参加者の追加）。
+   */
+  onFamilyMemberRegistered: (familyMember: FamilyMember) => void;
 }
 
 const dividerStyle: CSSProperties = {
@@ -159,12 +177,13 @@ function buildInitialResponse(
   response: Response | undefined
 ): Response {
   if (response) {
-    // コーチ・家族追加前に作成された回答ドキュメントにはcoaches・familyMembersが
-    // 存在しない場合があるため、欠けている場合のみ未回答の初期値で補う
+    // コーチ・家族・一時参加者の機能追加前に作成された回答ドキュメントには、それぞれのフィールドが
+    // 存在しない場合があるため、欠けている場合のみ空配列で補う
     return {
       ...response,
       coaches: response.coaches ?? [],
       familyMembers: response.familyMembers ?? [],
+      temporaryParticipants: response.temporaryParticipants ?? [],
     };
   }
   return {
@@ -177,6 +196,7 @@ function buildInitialResponse(
     familyMembers: familyMemberList.map((familyMember) =>
       buildInitialResponseFamilyMember(familyMember.id)
     ),
+    temporaryParticipants: [],
   };
 }
 
@@ -194,16 +214,20 @@ export function FamilyResponseCard({
   playerList,
   coachList,
   familyMemberList,
+  pickupLocationList,
   response,
   isOpen,
   onToggleOpen,
   onStatusChange,
+  onFamilyMemberRegistered,
 }: FamilyResponseCardProps) {
   const [current, setCurrent] = useState<Response>(() =>
     buildInitialResponse(playerList, coachList, familyMemberList, response)
   );
   // 対象家庭のResponseドキュメントが既にFirestore上に存在するか（新規作成か更新かの判定に使用）
   const hasDocRef = useRef<boolean>(response !== undefined);
+  // 一時参加者の追加フォームを展開中かどうか（04_画面設計.md#7 一時参加者の追加）
+  const [isAddingTemporaryParticipant, setIsAddingTemporaryParticipant] = useState(false);
 
   // 回答状況（回答済み／一部回答／未回答）。変更の都度、呼び出し側（ヘッダー集計表示用）へ通知する
   const status = useMemo(
@@ -275,6 +299,71 @@ export function FamilyResponseCard({
     const next = { ...current, familyMembers: nextFamilyMembers };
     setCurrent(next);
     persist(next, { familyMembers: nextFamilyMembers });
+  };
+
+  /** 一時参加者個別の回答（参加・行き／帰りの配車不要）の変更を反映し、自動保存する */
+  const applyTemporaryParticipantPatch = (
+    temporaryParticipantId: string,
+    patch: Partial<ResponseTemporaryParticipant>
+  ) => {
+    const nextTemporaryParticipants = current.temporaryParticipants.map((t) =>
+      t.id === temporaryParticipantId ? { ...t, ...patch } : t
+    );
+    const next = { ...current, temporaryParticipants: nextTemporaryParticipants };
+    setCurrent(next);
+    persist(next, { temporaryParticipants: nextTemporaryParticipants });
+  };
+
+  /** 一時参加者を取り消す。マスタに存在しないため、確認ダイアログなしでその場から削除する（04_画面設計.md#7） */
+  const handleRemoveTemporaryParticipant = (temporaryParticipantId: string) => {
+    const nextTemporaryParticipants = current.temporaryParticipants.filter(
+      (t) => t.id !== temporaryParticipantId
+    );
+    const next = { ...current, temporaryParticipants: nextTemporaryParticipants };
+    setCurrent(next);
+    persist(next, { temporaryParticipants: nextTemporaryParticipants });
+  };
+
+  /**
+   * 今回だけ参加する人を追加する（04_画面設計.md#7 一時参加者の追加）。
+   * 「今回限り」はこのResponseドキュメント内（temporaryParticipants）にのみ保持し、
+   * 「マスタに登録」は通常のFamilyMemberとして新規作成したうえで、この家庭の家族回答へ追加する。
+   * 紐づけ先の家庭は選択させず、常にこのカードの家庭（family.id）に登録する。
+   * いずれの場合も、追加した時点で参加○・行き帰りとも送迎ありの状態で確定させる
+   * （未回答の状態を経由しない）。
+   */
+  const handleAddTemporaryParticipant = async (input: {
+    name: string;
+    pickupLocationId: string;
+    registerToMaster: boolean;
+  }) => {
+    if (input.registerToMaster) {
+      const familyMemberId = await createFamilyMember({ familyId: family.id, name: input.name });
+      onFamilyMemberRegistered({
+        id: familyMemberId,
+        familyId: family.id,
+        name: input.name,
+        isActive: true,
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now(),
+      });
+      applyFamilyMemberPatch(familyMemberId, {
+        isParticipating: true,
+        noOutwardRide: false,
+        noReturnRide: false,
+      });
+    } else {
+      const newParticipant: ResponseTemporaryParticipant = {
+        id: crypto.randomUUID(),
+        name: input.name,
+        pickupLocationId: input.pickupLocationId,
+        isParticipating: true,
+        noOutwardRide: false,
+        noReturnRide: false,
+      };
+      applyPatch({ temporaryParticipants: [...current.temporaryParticipants, newParticipant] });
+    }
+    setIsAddingTemporaryParticipant(false);
   };
 
   return (
@@ -442,6 +531,81 @@ export function FamilyResponseCard({
                 </Card>
               );
             })}
+
+            {current.temporaryParticipants.map((temporaryParticipant) => (
+              <Card key={temporaryParticipant.id} variant="compact" style={familyMemberBoxStyle}>
+                <span style={memberNameStyle}>
+                  <UserIcon size={14} />
+                  {temporaryParticipant.name}
+                  <span style={{ fontSize: '12px', fontWeight: 400 }}>家族</span>
+                  <span style={{ flex: 1 }} />
+                  <span
+                    style={{
+                      flexShrink: 0,
+                      fontSize: '10px',
+                      fontWeight: 700,
+                      padding: '2px 7px',
+                      borderRadius: '999px',
+                      background: 'rgba(138, 90, 168, 0.16)',
+                      color: 'var(--parent-accent)',
+                    }}
+                  >
+                    今回限り
+                  </span>
+                  <button
+                    type="button"
+                    aria-label={`${temporaryParticipant.name}を取り消す`}
+                    onClick={() => handleRemoveTemporaryParticipant(temporaryParticipant.id)}
+                    style={{
+                      flexShrink: 0,
+                      border: 'none',
+                      background: 'transparent',
+                      color: 'var(--text)',
+                      opacity: 0.55,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      padding: 0,
+                    }}
+                  >
+                    <CloseIcon size={15} />
+                  </button>
+                </span>
+                <FamilyMemberResponseRow
+                  familyMemberId={temporaryParticipant.id}
+                  isParticipating={temporaryParticipant.isParticipating}
+                  noOutwardRide={temporaryParticipant.noOutwardRide}
+                  noReturnRide={temporaryParticipant.noReturnRide}
+                  onChangeIsParticipating={(value) =>
+                    applyTemporaryParticipantPatch(
+                      temporaryParticipant.id,
+                      value === true
+                        ? { isParticipating: true, noOutwardRide: false, noReturnRide: false }
+                        : { isParticipating: value }
+                    )
+                  }
+                  onChangeNoOutwardRide={(value) =>
+                    applyTemporaryParticipantPatch(temporaryParticipant.id, { noOutwardRide: value })
+                  }
+                  onChangeNoReturnRide={(value) =>
+                    applyTemporaryParticipantPatch(temporaryParticipant.id, { noReturnRide: value })
+                  }
+                />
+              </Card>
+            ))}
+
+            {isAddingTemporaryParticipant ? (
+              <AddTemporaryParticipantForm
+                familyId={family.id}
+                defaultPickupLocationId={family.pickupLocationId}
+                pickupLocationList={pickupLocationList}
+                onSubmit={handleAddTemporaryParticipant}
+                onCancel={() => setIsAddingTemporaryParticipant(false)}
+              />
+            ) : (
+              <AddRow tint="family" onClick={() => setIsAddingTemporaryParticipant(true)}>
+                + 今回だけ参加する人を追加
+              </AddRow>
+            )}
           </div>
 
           <hr style={dividerStyle} />

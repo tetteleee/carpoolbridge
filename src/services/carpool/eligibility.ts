@@ -13,6 +13,7 @@ import type {
   ResponseCoach,
   ResponseFamilyMember,
   ResponsePlayer,
+  ResponseTemporaryParticipant,
 } from '../../types/event';
 import type { Coach, Player, Family, FamilyMember } from '../../types/master';
 
@@ -82,6 +83,38 @@ export function isFamilyMemberNoRideNeededForDirection(
   return direction === 'OUTWARD' ? familyMember.noOutwardRide : familyMember.noReturnRide;
 }
 
+/**
+ * 対象方向における一時参加者の配車要否（isParticipating・noOutwardRide/noReturnRide）を判定する。
+ * 選手（isPlayerRidingForDirection）・家族（isFamilyMemberRidingForDirection）と全く同じロジック。
+ */
+export function isTemporaryParticipantRidingForDirection(
+  temporaryParticipant: ResponseTemporaryParticipant,
+  direction: Direction
+): boolean {
+  if (!temporaryParticipant.isParticipating) {
+    return false;
+  }
+  return direction === 'OUTWARD'
+    ? !temporaryParticipant.noOutwardRide
+    : !temporaryParticipant.noReturnRide;
+}
+
+/**
+ * 対象方向において、一時参加者が「参加かつ送迎不要」（配車不要エリアの対象）かどうかを判定する。
+ * ref: docs/04_画面設計.md#8 配車不要エリア
+ */
+export function isTemporaryParticipantNoRideNeededForDirection(
+  temporaryParticipant: ResponseTemporaryParticipant,
+  direction: Direction
+): boolean {
+  if (!temporaryParticipant.isParticipating) {
+    return false;
+  }
+  return direction === 'OUTWARD'
+    ? temporaryParticipant.noOutwardRide
+    : temporaryParticipant.noReturnRide;
+}
+
 /** 対象方向におけるコーチの配車要否（isParticipating・noOutwardRide/noReturnRide）を判定する。選手（isPlayerRidingForDirection）と全く同じロジック */
 export function isCoachRidingForDirection(coach: ResponseCoach, direction: Direction): boolean {
   if (coach.isParticipating !== true) {
@@ -145,6 +178,20 @@ export function isMemberEligibleForDirection(
       return false;
     }
     return isFamilyMemberRidingForDirection(responseFamilyMember, direction);
+  }
+
+  if (member.type === 'temporary') {
+    const family = masterData.familyById.get(member.familyId);
+    if (!family || !family.isActive) {
+      return false;
+    }
+    const temporaryParticipant = masterData.responseByFamilyId
+      .get(member.familyId)
+      ?.temporaryParticipants?.find((t) => t.id === member.temporaryParticipantId);
+    if (!temporaryParticipant) {
+      return false;
+    }
+    return isTemporaryParticipantRidingForDirection(temporaryParticipant, direction);
   }
 
   const coach = masterData.coachById.get(member.coachId);

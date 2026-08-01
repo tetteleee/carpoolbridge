@@ -13,6 +13,7 @@ import { getFamilies } from '../services/master/familyService';
 import { getPlayersByFamilyId } from '../services/master/playerService';
 import { getCoachesByFamilyId } from '../services/master/coachService';
 import { getFamilyMembersByFamilyId } from '../services/master/familyMemberService';
+import { getPickupLocations } from '../services/master/pickupLocationService';
 import { getResponses } from '../services/event/responseService';
 import { getCarpools, deleteAllCarpools } from '../services/event/carpoolService';
 import { runCarpoolAssignment } from '../services/carpool/runCarpoolAssignment';
@@ -20,7 +21,7 @@ import { formatDateWithWeekday } from '../utils/date';
 import { getFamilyHighestGrade } from '../utils/schoolGrade';
 import { computeResponseStatus, type ResponseStatus } from '../utils/responseStatus';
 import type { Event, Response } from '../types/event';
-import type { Player, Coach, Family, FamilyMember } from '../types/master';
+import type { Player, Coach, Family, FamilyMember, PickupLocation } from '../types/master';
 
 /**
  * 対象イベントの行き・帰り両方向の配車を作成する。
@@ -89,6 +90,7 @@ export function EventEditPage() {
   const [familyMembersByFamilyId, setFamilyMembersByFamilyId] = useState<
     Record<string, FamilyMember[]>
   >({});
+  const [pickupLocationList, setPickupLocationList] = useState<PickupLocation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [responsesByFamilyId, setResponsesByFamilyId] = useState<
@@ -112,9 +114,10 @@ export function EventEditPage() {
       return;
     }
 
-    Promise.all([getEvent(eventId), getFamilies(), getResponses(eventId)])
-      .then(async ([eventData, familiesData, responsesData]) => {
+    Promise.all([getEvent(eventId), getFamilies(), getResponses(eventId), getPickupLocations()])
+      .then(async ([eventData, familiesData, responsesData, pickupLocationsData]) => {
         setEvent(eventData);
+        setPickupLocationList(pickupLocationsData);
 
         const activeFamilies = familiesData.filter((family) => family.isActive);
 
@@ -172,6 +175,7 @@ export function EventEditPage() {
             players: [],
             coaches: [],
             familyMembers: [],
+            temporaryParticipants: [],
           };
           initialStatusMap[family.id] = computeResponseStatus(
             familyResponse,
@@ -268,6 +272,17 @@ export function EventEditPage() {
       )
     );
     setResponseVersion((v) => v + 1);
+  };
+
+  /**
+   * 一時参加者を「マスタに登録」した際、対象家庭の家族一覧へ即座に反映する
+   * （04_画面設計.md#7 一時参加者の追加）。
+   */
+  const handleFamilyMemberRegistered = (familyId: string, familyMember: FamilyMember) => {
+    setFamilyMembersByFamilyId((prev) => ({
+      ...prev,
+      [familyId]: [...(prev[familyId] ?? []), familyMember],
+    }));
   };
 
   /** 家庭カード1件のみ開閉する */
@@ -447,6 +462,7 @@ export function EventEditPage() {
                 playerList={playersByFamilyId[family.id] ?? []}
                 coachList={coachesByFamilyId[family.id] ?? []}
                 familyMemberList={familyMembersByFamilyId[family.id] ?? []}
+                pickupLocationList={pickupLocationList}
                 response={responsesByFamilyId[family.id]}
                 isOpen={!collapsedFamilyIds.has(family.id)}
                 onToggleOpen={() => handleToggleFamilyOpen(family.id)}
@@ -454,6 +470,9 @@ export function EventEditPage() {
                   setStatusByFamilyId((prev) =>
                     prev[family.id] === status ? prev : { ...prev, [family.id]: status }
                   )
+                }
+                onFamilyMemberRegistered={(familyMember) =>
+                  handleFamilyMemberRegistered(family.id, familyMember)
                 }
               />
             ))}
