@@ -60,6 +60,7 @@ export function CarpoolWarningPopup({ message }: CarpoolWarningPopupProps) {
             fontWeight: 700,
             lineHeight: 1.45,
             fontFamily: 'var(--sans)',
+            whiteSpace: 'pre-line',
           }}
         >
           {message}

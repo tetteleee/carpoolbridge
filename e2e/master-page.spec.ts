@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './utils/fixtures';
 import { getEmulatorFirestore } from './utils/firebaseAdmin';
 
 /**

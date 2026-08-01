@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './utils/fixtures';
 import { Timestamp } from 'firebase-admin/firestore';
 import { getEmulatorFirestore } from './utils/firebaseAdmin';
 
