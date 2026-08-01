@@ -5,6 +5,7 @@ import { RouteLocationList } from './RouteLocationList';
 import { toCarName } from '../../utils/carName';
 import { computeOccupantCount, type CarCardData } from '../../utils/carCard';
 import { Card } from '../common/Card';
+import { getCaptureShadowRingStyle } from '../../utils/captureShadowRing';
 import type { PersonCardData } from './PersonCard';
 
 interface CarCardProps {
@@ -47,21 +48,7 @@ export function CarCard({
   const isOverCapacity = occupantCount > car.capacity;
 
   return (
-    // LINE共有の共有用画像はhtml2canvasでキャプチャするが、html2canvasはCard側のbox-shadowを
-    // 描画できない（Canvas2Dのshadow*がclip()と併用されると反映されない制約による）。
-    // そのためdense（共有用画像）の場合のみ、影の代わりに背景色を塗ったリングをCardの外側に
-    // paddingとして敷き、実際の配車画面と同じ「影で境界を示す」見た目を疑似的に再現する。
-    <div
-      style={
-        dense
-          ? {
-              borderRadius: '18px',
-              background: 'rgba(0, 0, 0, 0.14)',
-              padding: '1px 1px 4px',
-            }
-          : undefined
-      }
-    >
+    <div style={getCaptureShadowRingStyle(dense)}>
       <Card
         as="section"
         data-drop-zone-id={car.id}
