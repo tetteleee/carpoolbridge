@@ -129,7 +129,7 @@ export function ShareImageLayout({
               <CarCard key={car.id} car={car} hideLeadingIcon dense />
             ))}
 
-            <NoRideNeededArea people={boardData.noRideNeededPeople} />
+            <NoRideNeededArea people={boardData.noRideNeededPeople} dense />
           </div>
         );
       })}

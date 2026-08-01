@@ -3,6 +3,7 @@ import type { PersonCardData } from './PersonCard';
 import { LocationGroupedList } from './LocationGroupedList';
 import { UNASSIGNED_ZONE_ID } from '../../services/carpool/carpoolMember';
 import { Card } from '../common/Card';
+import { getCaptureShadowRingStyle } from '../../utils/captureShadowRing';
 
 /** 未配車エリアに表示する人カード1件分のデータ */
 export type UnassignedPerson = PersonCardData;
@@ -47,39 +48,41 @@ export function UnassignedArea({
   }
 
   return (
-    <Card
-      as="section"
-      data-drop-zone-id={UNASSIGNED_ZONE_ID}
-      style={{
-        border: isDropTarget ? '2px dashed var(--drop-target-border)' : undefined,
-        overflow: 'hidden',
-        background: isDropTarget ? 'var(--drop-target-bg)' : undefined,
-        userSelect: 'none',
-        WebkitUserSelect: 'none',
-      }}
-    >
-      <h2
+    <div style={getCaptureShadowRingStyle(dense)}>
+      <Card
+        as="section"
+        data-drop-zone-id={UNASSIGNED_ZONE_ID}
         style={{
-          margin: 0,
-          padding: dense ? '7px 10px' : '10px 12px',
-          fontSize: '14px',
-          fontWeight: 700,
-          color: 'var(--text-h)',
-          borderBottom: '1px dashed var(--border)',
+          border: isDropTarget ? '2px dashed var(--drop-target-border)' : undefined,
+          overflow: 'hidden',
+          background: isDropTarget ? 'var(--drop-target-bg)' : undefined,
+          userSelect: 'none',
+          WebkitUserSelect: 'none',
         }}
       >
-        {'未配車　' + people.length + '名'}
-      </h2>
+        <h2
+          style={{
+            margin: 0,
+            padding: dense ? '7px 10px' : '10px 12px',
+            fontSize: '14px',
+            fontWeight: 700,
+            color: 'var(--text-h)',
+            borderBottom: '1px dashed var(--border)',
+          }}
+        >
+          {'未配車　' + people.length + '名'}
+        </h2>
 
-      <div style={{ padding: dense ? '7px 10px' : '10px 12px' }}>
-        <LocationGroupedList
-          members={people}
-          draggingPersonId={draggingPersonId}
-          onPersonPointerDown={onPersonPointerDown}
-          hideLeadingIcon={hideLeadingIcon}
-          dense={dense}
-        />
-      </div>
-    </Card>
+        <div style={{ padding: dense ? '7px 10px' : '10px 12px' }}>
+          <LocationGroupedList
+            members={people}
+            draggingPersonId={draggingPersonId}
+            onPersonPointerDown={onPersonPointerDown}
+            hideLeadingIcon={hideLeadingIcon}
+            dense={dense}
+          />
+        </div>
+      </Card>
+    </div>
   );
 }
