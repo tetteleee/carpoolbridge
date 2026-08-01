@@ -36,25 +36,22 @@ export function EventHeaderTitle({ date, title, location }: EventHeaderTitleProp
           <span style={{ fontSize: '12.5px', whiteSpace: 'nowrap' }}>{date}</span>
         </span>
         {location && (
-          <>
-            <span style={{ fontSize: '12.5px', flexShrink: 0 }}>・</span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: '4px', flex: 1, minWidth: 0 }}>
-              <MapPinIcon size={13} />
-              <span
-                style={{
-                  flex: 1,
-                  minWidth: 0,
-                  fontSize: '12.5px',
-                  textAlign: 'left',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                {location}
-              </span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: '4px', flex: 1, minWidth: 0 }}>
+            <MapPinIcon size={13} />
+            <span
+              style={{
+                flex: 1,
+                minWidth: 0,
+                fontSize: '12.5px',
+                textAlign: 'left',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {location}
             </span>
-          </>
+          </span>
         )}
       </div>
     </div>
