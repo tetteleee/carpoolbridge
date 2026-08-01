@@ -29,11 +29,19 @@ interface UnassignedAreaProps {
    * LINE共有の共有用画像で、縦に長くなりすぎないようにするために使用する。
    */
   dense?: boolean;
+  /**
+   * 未配車が0人のときにエリア自体を非表示にするかどうか。
+   * LINE共有の共有用画像（静的な表示専用）では、ドラッグで人を戻す受け皿が不要なため
+   * trueを指定し、従来どおり0人時は非表示にする。
+   * 配車画面（メイン）では既定のfalseのまま使い、見出し1行の帯を残す（下記コメント参照）。
+   */
+  hideWhenEmpty?: boolean;
 }
 
 /**
  * 配車画面（メイン）の未配車エリア。
- * 未配車人数が0人の場合はエリア自体を非表示にする。
+ * 未配車人数が0人になっても見出し1行の帯は残し、配車調整中に車カードから
+ * 人を未配車へ戻すドロップ先として機能させる（本文の人カード一覧は0人のときは表示しない）。
  */
 export function UnassignedArea({
   people,
@@ -42,8 +50,11 @@ export function UnassignedArea({
   onPersonPointerDown,
   hideLeadingIcon = false,
   dense = false,
+  hideWhenEmpty = false,
 }: UnassignedAreaProps) {
-  if (people.length === 0) {
+  const isEmpty = people.length === 0;
+
+  if (isEmpty && hideWhenEmpty) {
     return null;
   }
 
@@ -67,21 +78,32 @@ export function UnassignedArea({
             fontSize: '14px',
             fontWeight: 700,
             color: 'var(--text-h)',
-            borderBottom: '1px dashed var(--border)',
+            borderBottom: isEmpty ? undefined : '1px dashed var(--border)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '8px',
           }}
         >
-          {'未配車　' + people.length + '名'}
+          <span>{'未配車　' + people.length + '名'}</span>
+          {isEmpty && (
+            <span style={{ fontWeight: 400, fontSize: '12px', color: 'var(--text)', opacity: 0.65 }}>
+              ここにドラッグで人を戻せます
+            </span>
+          )}
         </h2>
 
-        <div style={{ padding: dense ? '7px 10px' : '10px 12px' }}>
-          <LocationGroupedList
-            members={people}
-            draggingPersonId={draggingPersonId}
-            onPersonPointerDown={onPersonPointerDown}
-            hideLeadingIcon={hideLeadingIcon}
-            dense={dense}
-          />
-        </div>
+        {!isEmpty && (
+          <div style={{ padding: dense ? '7px 10px' : '10px 12px' }}>
+            <LocationGroupedList
+              members={people}
+              draggingPersonId={draggingPersonId}
+              onPersonPointerDown={onPersonPointerDown}
+              hideLeadingIcon={hideLeadingIcon}
+              dense={dense}
+            />
+          </div>
+        )}
       </Card>
     </div>
   );

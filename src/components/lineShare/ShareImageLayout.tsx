@@ -123,7 +123,7 @@ export function ShareImageLayout({
               {label}
             </h2>
 
-            <UnassignedArea people={boardData.unassignedPeople} hideLeadingIcon dense />
+            <UnassignedArea people={boardData.unassignedPeople} hideLeadingIcon dense hideWhenEmpty />
 
             {boardData.carCards.map((car) => (
               <CarCard key={car.id} car={car} hideLeadingIcon dense />

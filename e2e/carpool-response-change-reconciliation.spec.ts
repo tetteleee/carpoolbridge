@@ -102,8 +102,9 @@ test('回答が不参加に変更された人だけが車カードとCarpoolデ�
   await expect(page.getByText('読み込み中...')).toHaveCount(0);
 
   // 不参加に変更された山田太郎は、未配車エリアにも車カードにも表示されない
+  // （未配車は元々0名のため、未配車エリアは見出し1行の帯のまま変化しない）
   await expect(page.getByText('山田太郎')).toHaveCount(0);
-  await expect(page.getByText('未配車')).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: '未配車　0名' })).toBeVisible();
 
   // 引き続き参加する田中次郎・無関係な高橋花子は表示されたまま
   await expect(page.getByText('田中次郎')).toBeVisible();

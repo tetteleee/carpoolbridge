@@ -74,7 +74,8 @@ test('未配車エリアの人カードを長押しドラッグして車カー�
   await page.mouse.move(endX, endY, { steps: 5 });
   await page.mouse.up();
 
-  await expect(page.getByText('未配車')).toHaveCount(0);
+  // 未配車エリアは0名になっても見出し1行の帯として残る
+  await expect(page.getByRole('heading', { name: '未配車　0名' })).toBeVisible();
 
   const carpoolsSnapshot = await eventRef.collection('carpools').where('direction', '==', 'OUTWARD').get();
   const carpool = carpoolsSnapshot.docs[0].data();
@@ -305,7 +306,8 @@ test('画面外（下方）の車カードへは、画面端までドラッグ�
   );
   await page.mouse.up();
 
-  await expect(page.getByText('未配車')).toHaveCount(0);
+  // 未配車エリアは0名になっても見出し1行の帯として残る
+  await expect(page.getByRole('heading', { name: '未配車　0名' })).toBeVisible();
 
   const targetCarpool = await eventRef.collection('carpools').doc(lastCarpoolId).get();
   expect(targetCarpool.data()?.members).toEqual([{ type: 'player', playerId: playerRider.id }]);
