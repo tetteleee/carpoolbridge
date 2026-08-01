@@ -6,6 +6,7 @@ import { LoadingIndicator } from '../components/icons';
 import { CarCard } from '../components/carpool/CarCard';
 import { CarpoolCopyDialog } from '../components/carpool/CarpoolCopyDialog';
 import { CarpoolEmptyState } from '../components/carpool/CarpoolEmptyState';
+import { CarpoolReconcileToast } from '../components/carpool/CarpoolReconcileToast';
 import { CarpoolSummaryBar } from '../components/carpool/CarpoolSummaryBar';
 import { CarpoolWarningPopup } from '../components/carpool/CarpoolWarningPopup';
 import { DirectionToggle } from '../components/carpool/DirectionToggle';
@@ -58,6 +59,7 @@ export function CarpoolPage() {
     hasNoResponses,
     loading: boardDataLoading,
     error: boardDataError,
+    reconcileNotice,
   } = useCarpoolBoardData(eventId, direction, carpools, refreshCarpools);
   const [moveError, setMoveError] = useState<string | null>(null);
   const [isSummaryVisible, setIsSummaryVisible] = useState(true);
@@ -285,10 +287,32 @@ export function CarpoolPage() {
         )}
       </div>
 
-      <CarpoolWarningPopup
-        key={warningPopupMessage ?? 'none'}
-        message={warningPopupMessage}
-      />
+      <div
+        style={{
+          position: 'fixed',
+          left: '50%',
+          bottom: '16px',
+          transform: 'translateX(-50%)',
+          width: '100%',
+          maxWidth: '480px',
+          padding: '0 16px',
+          boxSizing: 'border-box',
+          zIndex: 20,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '8px',
+          pointerEvents: 'none',
+        }}
+      >
+        <CarpoolReconcileToast
+          key={reconcileNotice ? `reconcile-${reconcileNotice.id}` : 'reconcile-none'}
+          message={reconcileNotice?.message ?? null}
+        />
+        <CarpoolWarningPopup
+          key={warningPopupMessage ? `warning-${warningPopupMessage}` : 'warning-none'}
+          message={warningPopupMessage}
+        />
+      </div>
 
       {dragState && (
         <div
