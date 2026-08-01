@@ -918,6 +918,7 @@ export function FamilySection({ ref }: FamilySectionProps) {
 
                 <PlayerSection
                   playerList={familyPlayers}
+                  familyActive={family.isActive}
                   onNameChange={handlePlayerNameChange}
                   onSchoolEntryYearChange={handlePlayerSchoolEntryYearChange}
                   onActiveToggle={handlePlayerActiveToggle}
@@ -929,6 +930,7 @@ export function FamilySection({ ref }: FamilySectionProps) {
 
                 <CoachSection
                   coachList={familyCoaches}
+                  familyActive={family.isActive}
                   onNameChange={handleCoachNameChange}
                   onActiveToggle={handleCoachActiveToggle}
                   onAdd={() => handleCoachAdd(family.id)}
@@ -939,6 +941,7 @@ export function FamilySection({ ref }: FamilySectionProps) {
 
                 <FamilyMemberSection
                   familyMemberList={familyMemberList}
+                  familyActive={family.isActive}
                   onNameChange={handleFamilyMemberNameChange}
                   onActiveToggle={handleFamilyMemberActiveToggle}
                   onAdd={() => handleFamilyMemberAdd(family.id)}

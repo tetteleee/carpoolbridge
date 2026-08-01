@@ -131,7 +131,7 @@ test('家族の在籍中トグルをOFFにして保存すると、isActiveがfal
     .toBe(false);
 });
 
-test('家庭を無効化して保存すると、その家庭の在籍中の家族も自動で論理削除される', async ({ page }) => {
+test('家庭を無効化して保存しても家族本人のisActiveは変更されず、家庭が無効な間は家族の在籍中トグルが操作不可になる', async ({ page }) => {
   await page.goto('/master/families');
   const db = await registerAsStaffAndReload(page);
   await expect(page.locator('#family-section')).toBeVisible();
@@ -172,9 +172,17 @@ test('家庭を無効化して保存すると、その家庭の在籍中の家�
   await saveButton.click();
   await expect(saveButton).toHaveText('保存');
 
-  // 家庭のisActiveがfalseになるのに連動して、その家庭の家族も自動でisActive:falseになる
-  // （05_データ設計.md#5「家庭を無効化したら、その家庭の家族も選手と同様に自動で無効化する」）
+  // 家庭のisActiveをfalseにしても、家族本人のisActiveは書き換わらない
+  // （除外判定は「家庭isActive AND 本人isActive」のAND条件で行うため。05_データ設計.md#3 Family参照）
   await expect
     .poll(async () => (await memberRef.get()).data()?.isActive)
-    .toBe(false);
+    .toBe(true);
+
+  // 保存すると最新データで再マウントされ、家庭カードは折りたたみ状態に戻るため再度展開する
+  await familyCard.getByRole('button').first().click();
+
+  // 家庭が無効な間は、家族の在籍中トグルを操作不可（disabled）にする（04_画面設計.md#10.4）
+  await expect(
+    familyCard.getByRole('switch', { name: `${memberName}の在籍状態` })
+  ).toBeDisabled();
 });

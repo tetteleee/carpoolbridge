@@ -8,6 +8,8 @@ interface SwitchProps {
   /** スクリーンリーダー向けラベル */
   ariaLabel?: string;
   id?: string;
+  /** trueの場合、操作不可にする（値は変更せず表示のみ）*/
+  disabled?: boolean;
 }
 
 const trackStyle: CSSProperties = {
@@ -38,7 +40,7 @@ const knobStyle: CSSProperties = {
  * iOS風のON/OFFトグルスイッチ。文言は表示せず、ノブの位置と色（ON＝positive／OFF＝border）
  * だけで状態を示す（04_画面設計.md#10.4）。
  */
-export function Switch({ checked, onChange, ariaLabel, id }: SwitchProps) {
+export function Switch({ checked, onChange, ariaLabel, id, disabled }: SwitchProps) {
   return (
     <button
       id={id}
@@ -46,10 +48,12 @@ export function Switch({ checked, onChange, ariaLabel, id }: SwitchProps) {
       role="switch"
       aria-checked={checked}
       aria-label={ariaLabel}
+      disabled={disabled}
       onClick={onChange}
       style={{
         ...trackStyle,
         background: checked ? 'var(--positive)' : 'var(--border)',
+        cursor: disabled ? 'default' : 'pointer',
       }}
     >
       <span
