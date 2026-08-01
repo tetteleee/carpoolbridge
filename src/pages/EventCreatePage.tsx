@@ -115,7 +115,7 @@ export function EventCreatePage() {
               fontSize: '16px',
               fontFamily: 'var(--sans)',
               color: 'var(--text-h)',
-              background: 'transparent',
+              background: 'var(--bg)',
               boxSizing: 'border-box',
             }}
           />
@@ -142,7 +142,7 @@ export function EventCreatePage() {
               fontSize: '16px',
               fontFamily: 'var(--sans)',
               color: 'var(--text-h)',
-              background: 'transparent',
+              background: 'var(--bg)',
               boxSizing: 'border-box',
             }}
           />
@@ -178,7 +178,7 @@ export function EventCreatePage() {
                 fontSize: '16px',
                 fontFamily: 'var(--sans)',
                 color: 'var(--text-h)',
-                background: 'transparent',
+                background: 'var(--bg)',
                 boxSizing: 'border-box',
               }}
             >
