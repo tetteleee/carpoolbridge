@@ -48,6 +48,19 @@ export async function getCoachesByFamilyId(familyId: string): Promise<Coach[]> {
 }
 
 /**
+ * 全家庭分のコーチを一括取得します。
+ * 家庭ごとにgetCoachesByFamilyIdを呼ぶN+1クエリを避けるため、
+ * 呼び出し側で家庭ID単位にグルーピングして使うことを想定する。
+ *
+ * @returns コーチの配列（全家庭分）
+ */
+export async function getAllCoaches(): Promise<Coach[]> {
+  const colRef = collection(db, firestorePaths.coachesCollection());
+  const snapshot = await getDocs(colRef);
+  return snapshot.docs.map((d) => ({ id: d.id, ...d.data() } as Coach));
+}
+
+/**
  * コーチの name・isActive を更新します。
  * 更新時に updatedAt をサーバー時刻で更新します。
  *

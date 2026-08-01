@@ -48,6 +48,19 @@ export async function getPlayersByFamilyId(familyId: string): Promise<Player[]> 
 }
 
 /**
+ * 全家庭分の選手を一括取得します。
+ * 家庭ごとにgetPlayersByFamilyIdを呼ぶN+1クエリを避けるため、
+ * 呼び出し側で家庭ID単位にグルーピングして使うことを想定する。
+ *
+ * @returns 選手の配列（全家庭分）
+ */
+export async function getAllPlayers(): Promise<Player[]> {
+  const colRef = collection(db, firestorePaths.playersCollection());
+  const snapshot = await getDocs(colRef);
+  return snapshot.docs.map((d) => ({ id: d.id, ...d.data() } as Player));
+}
+
+/**
  * 選手の name・schoolEntryYear・isActive を更新します。
  * 更新時に updatedAt をサーバー時刻で更新します。
  *

@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { FlagIcon } from '../icons';
 import { PersonCard, type PersonCardData } from './PersonCard';
 import { Card } from '../common/Card';
@@ -26,7 +27,7 @@ interface NoRideNeededAreaProps {
  * 送迎が不要なため集合場所は表示しない（PersonCardのcompact表示を使用）。
  * ref: docs/04_画面設計.md#8 配車不要エリア
  */
-export function NoRideNeededArea({ people, dense = false }: NoRideNeededAreaProps) {
+function NoRideNeededAreaComponent({ people, dense = false }: NoRideNeededAreaProps) {
   if (people.length === 0) {
     return null;
   }
@@ -75,3 +76,5 @@ export function NoRideNeededArea({ people, dense = false }: NoRideNeededAreaProp
     </div>
   );
 }
+
+export const NoRideNeededArea = memo(NoRideNeededAreaComponent);

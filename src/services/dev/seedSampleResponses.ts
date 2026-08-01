@@ -2,9 +2,9 @@ import { doc, writeBatch } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { firestorePaths } from '../../constants';
 import { getFamilies } from '../master/familyService';
-import { getPlayersByFamilyId } from '../master/playerService';
-import { getCoachesByFamilyId } from '../master/coachService';
-import { getFamilyMembersByFamilyId } from '../master/familyMemberService';
+import { getAllPlayers } from '../master/playerService';
+import { getAllCoaches } from '../master/coachService';
+import { getAllFamilyMembers } from '../master/familyMemberService';
 import { deleteAllResponses } from '../event/responseService';
 import type { Response, ResponseCoach, ResponseFamilyMember, ResponsePlayer } from '../../types/event';
 
@@ -151,26 +151,42 @@ export async function generateSampleResponses(eventId: string): Promise<void> {
   const families = await getFamilies();
   const activeFamilies = families.filter((family) => family.isActive);
 
-  const [playersByFamily, coachesByFamily, familyMembersByFamily] = await Promise.all([
-    Promise.all(activeFamilies.map((family) => getPlayersByFamilyId(family.id))),
-    Promise.all(activeFamilies.map((family) => getCoachesByFamilyId(family.id))),
-    Promise.all(activeFamilies.map((family) => getFamilyMembersByFamilyId(family.id))),
+  const [players, coaches, familyMembers] = await Promise.all([
+    getAllPlayers(),
+    getAllCoaches(),
+    getAllFamilyMembers(),
   ]);
+
+  const activePlayerIdsByFamilyId = new Map<string, string[]>();
+  const activeCoachIdsByFamilyId = new Map<string, string[]>();
+  const activeFamilyMemberIdsByFamilyId = new Map<string, string[]>();
+  for (const player of players) {
+    if (!player.isActive) continue;
+    const ids = activePlayerIdsByFamilyId.get(player.familyId) ?? [];
+    ids.push(player.id);
+    activePlayerIdsByFamilyId.set(player.familyId, ids);
+  }
+  for (const coach of coaches) {
+    if (!coach.isActive) continue;
+    const ids = activeCoachIdsByFamilyId.get(coach.familyId) ?? [];
+    ids.push(coach.id);
+    activeCoachIdsByFamilyId.set(coach.familyId, ids);
+  }
+  for (const familyMember of familyMembers) {
+    if (!familyMember.isActive) continue;
+    const ids = activeFamilyMemberIdsByFamilyId.get(familyMember.familyId) ?? [];
+    ids.push(familyMember.id);
+    activeFamilyMemberIdsByFamilyId.set(familyMember.familyId, ids);
+  }
 
   await deleteAllResponses(eventId);
 
   const batch = writeBatch(db);
 
-  activeFamilies.forEach((family, index) => {
-    const activePlayerIds = playersByFamily[index]
-      .filter((player) => player.isActive)
-      .map((player) => player.id);
-    const activeCoachIds = coachesByFamily[index]
-      .filter((coach) => coach.isActive)
-      .map((coach) => coach.id);
-    const activeFamilyMemberIds = familyMembersByFamily[index]
-      .filter((familyMember) => familyMember.isActive)
-      .map((familyMember) => familyMember.id);
+  activeFamilies.forEach((family) => {
+    const activePlayerIds = activePlayerIdsByFamilyId.get(family.id) ?? [];
+    const activeCoachIds = activeCoachIdsByFamilyId.get(family.id) ?? [];
+    const activeFamilyMemberIds = activeFamilyMemberIdsByFamilyId.get(family.id) ?? [];
 
     const response = buildRandomResponse(
       family.vehicleCapacity,

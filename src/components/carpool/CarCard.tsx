@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
 import { CarIcon } from '../icons';
 import { LocationGroupedList } from './LocationGroupedList';
@@ -14,10 +15,15 @@ interface CarCardProps {
   isDropTarget?: boolean;
   /** ドラッグ中の人カードのID（自身のカード内であれば薄く表示するために使用。T43） */
   draggingPersonId?: string | null;
-  /** 人カードのonPointerDownハンドラーを生成する（T43。長押しドラッグ開始の検知に使用） */
+  /**
+   * 人カードのonPointerDownハンドラー（T43。長押しドラッグ開始の検知に使用）。
+   * レンダリングを跨いで参照が変わらないため、そのままLocationGroupedListへ渡す。
+   */
   onPersonPointerDown?: (
-    person: PersonCardData
-  ) => (event: ReactPointerEvent<Element>) => void;
+    event: ReactPointerEvent<Element>,
+    person: PersonCardData,
+    sourceZoneId: string
+  ) => void;
   /**
    * 人カードの先頭アイコン（ドラッグハンドル）を表示しないかどうか。
    * LINE共有の共有用画像（静的な表示専用）で使用する（04_画面設計.md#9.2）。
@@ -36,7 +42,7 @@ interface CarCardProps {
  * 定員を超過している場合はカード枠を赤色で表示する。
  * ドラッグ＆ドロップ動作はT43で実施する。
  */
-export function CarCard({
+function CarCardComponent({
   car,
   isDropTarget = false,
   draggingPersonId = null,
@@ -110,6 +116,7 @@ export function CarCard({
             members={car.members}
             draggingPersonId={draggingPersonId}
             onPersonPointerDown={onPersonPointerDown}
+            sourceZoneId={car.id}
             hideHeaderIfSingleGroup
             hideLeadingIcon={hideLeadingIcon}
             dense={dense}
@@ -119,3 +126,5 @@ export function CarCard({
     </div>
   );
 }
+
+export const CarCard = memo(CarCardComponent);

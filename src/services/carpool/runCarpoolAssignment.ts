@@ -10,9 +10,9 @@
 import type { Carpool, Direction, Response } from '../../types/event';
 import type { PickupLocation } from '../../types/master';
 import { getFamilies } from '../master/familyService';
-import { getPlayersByFamilyId } from '../master/playerService';
-import { getCoachesByFamilyId } from '../master/coachService';
-import { getFamilyMembersByFamilyId } from '../master/familyMemberService';
+import { getAllPlayers } from '../master/playerService';
+import { getAllCoaches } from '../master/coachService';
+import { getAllFamilyMembers } from '../master/familyMemberService';
 import { getPickupLocations } from '../master/pickupLocationService';
 import { getResponses } from '../event/responseService';
 import { createCarpool } from '../event/carpoolService';
@@ -79,32 +79,35 @@ export async function runCarpoolAssignment(
   );
   const unansweredCount = activeFamilies.length - answeredFamilies.length;
 
-  const [playersLists, coachesLists, familyMembersLists] = await Promise.all([
-    Promise.all(answeredFamilies.map((family) => getPlayersByFamilyId(family.id))),
-    Promise.all(answeredFamilies.map((family) => getCoachesByFamilyId(family.id))),
-    Promise.all(answeredFamilies.map((family) => getFamilyMembersByFamilyId(family.id))),
+  const [players, coaches, familyMembers] = await Promise.all([
+    getAllPlayers(),
+    getAllCoaches(),
+    getAllFamilyMembers(),
   ]);
-  const activePlayerIdsByFamilyId = new Map<string, Set<string>>();
-  const activeCoachIdsByFamilyId = new Map<string, Set<string>>();
-  const activeFamilyMemberIdsByFamilyId = new Map<string, Set<string>>();
-  answeredFamilies.forEach((family, index) => {
-    activePlayerIdsByFamilyId.set(
-      family.id,
-      new Set(playersLists[index].filter((player) => player.isActive).map((player) => player.id))
-    );
-    activeCoachIdsByFamilyId.set(
-      family.id,
-      new Set(coachesLists[index].filter((coach) => coach.isActive).map((coach) => coach.id))
-    );
-    activeFamilyMemberIdsByFamilyId.set(
-      family.id,
-      new Set(
-        familyMembersLists[index]
-          .filter((familyMember) => familyMember.isActive)
-          .map((familyMember) => familyMember.id)
-      )
-    );
-  });
+  const activePlayerIdsByFamilyId = new Map<string, Set<string>>(
+    answeredFamilies.map((family) => [family.id, new Set<string>()])
+  );
+  const activeCoachIdsByFamilyId = new Map<string, Set<string>>(
+    answeredFamilies.map((family) => [family.id, new Set<string>()])
+  );
+  const activeFamilyMemberIdsByFamilyId = new Map<string, Set<string>>(
+    answeredFamilies.map((family) => [family.id, new Set<string>()])
+  );
+  for (const player of players) {
+    if (player.isActive) {
+      activePlayerIdsByFamilyId.get(player.familyId)?.add(player.id);
+    }
+  }
+  for (const coach of coaches) {
+    if (coach.isActive) {
+      activeCoachIdsByFamilyId.get(coach.familyId)?.add(coach.id);
+    }
+  }
+  for (const familyMember of familyMembers) {
+    if (familyMember.isActive) {
+      activeFamilyMemberIdsByFamilyId.get(familyMember.familyId)?.add(familyMember.id);
+    }
+  }
 
   const pickupLocationById = new Map(pickupLocations.map((location) => [location.id, location]));
 

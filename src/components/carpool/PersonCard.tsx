@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
 import { DragHandleIcon, FlagIcon, MapPinIcon } from '../icons';
 import type { CarpoolMember } from '../../types/event';
@@ -23,8 +24,19 @@ export interface PersonCardData {
 
 interface PersonCardProps {
   person: PersonCardData;
-  /** カードの長押しドラッグ開始を検知するためのポインター押下ハンドラー（T43） */
-  onPointerDown?: (event: ReactPointerEvent<Element>) => void;
+  /**
+   * カードの長押しドラッグ開始を検知するためのポインター押下ハンドラー（T43）。
+   * 呼び出し元（useDragAndDrop）がレンダリングを跨いで参照を固定して渡すため、
+   * このカード自身をReact.memo化してもドラッグ中の毎フレーム再レンダリングを避けられる。
+   * 人カードごとの識別・ドラッグ元ゾーンはperson・sourceZoneIdとして別途渡す。
+   */
+  onPointerDown?: (
+    event: ReactPointerEvent<Element>,
+    person: PersonCardData,
+    sourceZoneId: string
+  ) => void;
+  /** ドラッグ元のドロップゾーンID（未配車エリア、またはCarpool.id）。onPointerDown指定時は必須 */
+  sourceZoneId?: string;
   /** このカードがドラッグ中かどうか（T43。ドラッグ中は薄く表示する） */
   isDragging?: boolean;
   /**
@@ -60,9 +72,10 @@ interface PersonCardProps {
  * ハンドル部分のみtouch-action: noneとすることで、カード本体からは縦スクロールでき、
  * ハンドルからは確実に長押しドラッグを開始できるようにしている。
  */
-export function PersonCard({
+function PersonCardComponent({
   person,
   onPointerDown,
+  sourceZoneId,
   isDragging = false,
   draggable = true,
   compact = false,
@@ -74,17 +87,17 @@ export function PersonCard({
   const isFamily = person.member.type === 'family' || person.member.type === 'temporary';
 
   const handleCardPointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
-    if (!onPointerDown || event.pointerType !== 'mouse') {
+    if (!onPointerDown || sourceZoneId === undefined || event.pointerType !== 'mouse') {
       return;
     }
-    onPointerDown(event);
+    onPointerDown(event, person, sourceZoneId);
   };
 
   const handleHandlePointerDown = (event: ReactPointerEvent<Element>) => {
-    if (!onPointerDown || event.pointerType === 'mouse') {
+    if (!onPointerDown || sourceZoneId === undefined || event.pointerType === 'mouse') {
       return;
     }
-    onPointerDown(event);
+    onPointerDown(event, person, sourceZoneId);
   };
 
   return (
@@ -167,3 +180,5 @@ export function PersonCard({
     </div>
   );
 }
+
+export const PersonCard = memo(PersonCardComponent);

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
 import type { CarpoolMember } from '../types/event';
 import type { PersonCardData } from '../components/carpool/PersonCard';
@@ -52,11 +52,17 @@ interface UseDragAndDropResult {
   dragState: DragState | null;
   /** ドラッグ中の人カードが現在ホバーしているドロップゾーンID */
   hoveredZoneId: string | null;
-  /** 人カードのルート要素に設定するonPointerDownハンドラーを生成する */
-  createPointerDownHandler: (
+  /**
+   * 人カードのonPointerDownハンドラー（レンダリングを跨いで参照が変わらない）。
+   * 呼び出し元は不要な再レンダリングを避けるため、人カードごとにラップした
+   * クロージャーを生成せず、この関数をそのままonPointerDownへ渡すこと
+   * （人物・ドラッグ元ゾーンIDは第2・第3引数で都度渡す）。
+   */
+  handlePersonPointerDown: (
+    event: ReactPointerEvent<Element>,
     person: PersonCardData,
     sourceZoneId: string
-  ) => (event: ReactPointerEvent<Element>) => void;
+  ) => void;
 }
 
 interface ActiveDrag {
@@ -128,57 +134,75 @@ export function useDragAndDrop({ onDrop, topEdgePx }: UseDragAndDropOptions): Us
     topEdgePxRef.current = topEdgePx ?? DEFAULT_AUTO_SCROLL_EDGE_TOP_PX;
   }, [topEdgePx]);
 
-  const clearLongPressTimer = () => {
+  // onDropもrefに反映して参照する。人カード側へ渡すhandlePersonPointerDownの参照を
+  // レンダリングを跨いで固定するため（React.memo化した車カード・人カードが
+  // ドラッグ中の毎フレームの再レンダリングを避けられるようにするための対応）
+  const onDropRef = useRef(onDrop);
+  useEffect(() => {
+    onDropRef.current = onDrop;
+  }, [onDrop]);
+
+  const clearLongPressTimer = useCallback(() => {
     if (longPressTimerRef.current !== null) {
       window.clearTimeout(longPressTimerRef.current);
       longPressTimerRef.current = null;
     }
-  };
+  }, []);
 
-  const detachListeners = () => {
+  const detachListeners = useCallback(() => {
     if (listenersRef.current) {
       window.removeEventListener('pointermove', listenersRef.current.move);
       window.removeEventListener('pointerup', listenersRef.current.up);
       window.removeEventListener('pointercancel', listenersRef.current.cancel);
       listenersRef.current = null;
     }
-  };
+  }, []);
 
-  const stopAutoScroll = () => {
+  const stopAutoScroll = useCallback(() => {
     if (autoScrollFrameRef.current !== null) {
       window.cancelAnimationFrame(autoScrollFrameRef.current);
       autoScrollFrameRef.current = null;
     }
     autoScrollDirectionRef.current = null;
-  };
+  }, []);
 
-  const runAutoScrollFrame = () => {
+  // requestAnimationFrameで自身を呼び直す再帰関数のため、useCallbackで直接宣言すると
+  // 自己参照になってしまう（依存配列[]では更新されない値を参照する形になる）。
+  // refの初期値として持たせ、開始トリガー（startAutoScrollLoop）側だけを安定した参照にする。
+  const runAutoScrollFrameRef = useRef<() => void>(() => {
     if (autoScrollDirectionRef.current === 'up') {
       window.scrollBy(0, -AUTO_SCROLL_SPEED_PX);
     } else if (autoScrollDirectionRef.current === 'down') {
       window.scrollBy(0, AUTO_SCROLL_SPEED_PX);
     }
-    autoScrollFrameRef.current = window.requestAnimationFrame(runAutoScrollFrame);
-  };
+    autoScrollFrameRef.current = window.requestAnimationFrame(() => runAutoScrollFrameRef.current());
+  });
+
+  const startAutoScrollLoop = useCallback(() => {
+    autoScrollFrameRef.current = window.requestAnimationFrame(() => runAutoScrollFrameRef.current());
+  }, []);
 
   /** ポインターのY座標から、画面端に近ければオートスクロールを開始・継続し、離れれば停止する */
-  const updateAutoScroll = (clientY: number) => {
-    if (clientY < topEdgePxRef.current) {
-      autoScrollDirectionRef.current = 'up';
-    } else if (clientY > window.innerHeight - AUTO_SCROLL_EDGE_BOTTOM_PX) {
-      autoScrollDirectionRef.current = 'down';
-    } else {
-      autoScrollDirectionRef.current = null;
-    }
+  const updateAutoScroll = useCallback(
+    (clientY: number) => {
+      if (clientY < topEdgePxRef.current) {
+        autoScrollDirectionRef.current = 'up';
+      } else if (clientY > window.innerHeight - AUTO_SCROLL_EDGE_BOTTOM_PX) {
+        autoScrollDirectionRef.current = 'down';
+      } else {
+        autoScrollDirectionRef.current = null;
+      }
 
-    if (autoScrollDirectionRef.current === null) {
-      stopAutoScroll();
-    } else if (autoScrollFrameRef.current === null) {
-      autoScrollFrameRef.current = window.requestAnimationFrame(runAutoScrollFrame);
-    }
-  };
+      if (autoScrollDirectionRef.current === null) {
+        stopAutoScroll();
+      } else if (autoScrollFrameRef.current === null) {
+        startAutoScrollLoop();
+      }
+    },
+    [stopAutoScroll, startAutoScrollLoop]
+  );
 
-  const resetAll = () => {
+  const resetAll = useCallback(() => {
     clearLongPressTimer();
     detachListeners();
     stopAutoScroll();
@@ -186,66 +210,74 @@ export function useDragAndDrop({ onDrop, topEdgePx }: UseDragAndDropOptions): Us
     pendingRef.current = null;
     setDragState(null);
     setHoveredZoneId(null);
-  };
+  }, [clearLongPressTimer, detachListeners, stopAutoScroll]);
 
-  const handlePointerMove = (event: PointerEvent) => {
-    if (!pendingRef.current || event.pointerId !== pendingRef.current.pointerId) {
-      return;
-    }
-
-    if (!activeDragRef.current) {
-      const dx = event.clientX - pendingRef.current.x;
-      const dy = event.clientY - pendingRef.current.y;
-      if (Math.hypot(dx, dy) > MOVE_CANCEL_THRESHOLD_PX) {
-        resetAll();
+  const handlePointerMove = useCallback(
+    (event: PointerEvent) => {
+      if (!pendingRef.current || event.pointerId !== pendingRef.current.pointerId) {
+        return;
       }
-      return;
-    }
 
-    event.preventDefault();
-    updateAutoScroll(event.clientY);
-    const target = resolveDropTarget(event.clientX, event.clientY);
-    setHoveredZoneId(target?.zoneId ?? null);
-    setDragState({
-      personId: activeDragRef.current.personId,
-      personName: activeDragRef.current.personName,
-      member: activeDragRef.current.member,
-      sourceZoneId: activeDragRef.current.sourceZoneId,
-      x: event.clientX,
-      y: event.clientY,
-    });
-  };
+      if (!activeDragRef.current) {
+        const dx = event.clientX - pendingRef.current.x;
+        const dy = event.clientY - pendingRef.current.y;
+        if (Math.hypot(dx, dy) > MOVE_CANCEL_THRESHOLD_PX) {
+          resetAll();
+        }
+        return;
+      }
 
-  const handlePointerUp = (event: PointerEvent) => {
-    if (!pendingRef.current || event.pointerId !== pendingRef.current.pointerId) {
-      return;
-    }
-
-    const active = activeDragRef.current;
-    if (active) {
+      event.preventDefault();
+      updateAutoScroll(event.clientY);
       const target = resolveDropTarget(event.clientX, event.clientY);
-      if (target) {
-        onDrop({
-          member: active.member,
-          sourceZoneId: active.sourceZoneId,
-          targetZoneId: target.zoneId,
-        });
+      setHoveredZoneId(target?.zoneId ?? null);
+      setDragState({
+        personId: activeDragRef.current.personId,
+        personName: activeDragRef.current.personName,
+        member: activeDragRef.current.member,
+        sourceZoneId: activeDragRef.current.sourceZoneId,
+        x: event.clientX,
+        y: event.clientY,
+      });
+    },
+    [resetAll, updateAutoScroll]
+  );
+
+  const handlePointerUp = useCallback(
+    (event: PointerEvent) => {
+      if (!pendingRef.current || event.pointerId !== pendingRef.current.pointerId) {
+        return;
       }
-    }
 
-    resetAll();
-  };
+      const active = activeDragRef.current;
+      if (active) {
+        const target = resolveDropTarget(event.clientX, event.clientY);
+        if (target) {
+          onDropRef.current({
+            member: active.member,
+            sourceZoneId: active.sourceZoneId,
+            targetZoneId: target.zoneId,
+          });
+        }
+      }
 
-  const handlePointerCancel = (event: PointerEvent) => {
-    if (!pendingRef.current || event.pointerId !== pendingRef.current.pointerId) {
-      return;
-    }
-    resetAll();
-  };
+      resetAll();
+    },
+    [resetAll]
+  );
 
-  const createPointerDownHandler =
-    (person: PersonCardData, sourceZoneId: string) =>
-    (event: ReactPointerEvent<Element>) => {
+  const handlePointerCancel = useCallback(
+    (event: PointerEvent) => {
+      if (!pendingRef.current || event.pointerId !== pendingRef.current.pointerId) {
+        return;
+      }
+      resetAll();
+    },
+    [resetAll]
+  );
+
+  const handlePersonPointerDown = useCallback(
+    (event: ReactPointerEvent<Element>, person: PersonCardData, sourceZoneId: string) => {
       if (event.pointerType === 'mouse' && event.button !== 0) {
         return;
       }
@@ -290,7 +322,9 @@ export function useDragAndDrop({ onDrop, topEdgePx }: UseDragAndDropOptions): Us
           y: pendingRef.current.y,
         });
       }, LONG_PRESS_MS);
-    };
+    },
+    [resetAll, handlePointerMove, handlePointerUp, handlePointerCancel]
+  );
 
-  return { dragState, hoveredZoneId, createPointerDownHandler };
+  return { dragState, hoveredZoneId, handlePersonPointerDown };
 }

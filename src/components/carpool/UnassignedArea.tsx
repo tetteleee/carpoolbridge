@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
 import type { PersonCardData } from './PersonCard';
 import { LocationGroupedList } from './LocationGroupedList';
@@ -15,10 +16,15 @@ interface UnassignedAreaProps {
   isDropTarget?: boolean;
   /** ドラッグ中の人カードのID（自身のエリア内であれば薄く表示するために使用。T43） */
   draggingPersonId?: string | null;
-  /** 人カードのonPointerDownハンドラーを生成する（T43。長押しドラッグ開始の検知に使用） */
+  /**
+   * 人カードのonPointerDownハンドラー（T43。長押しドラッグ開始の検知に使用）。
+   * レンダリングを跨いで参照が変わらないため、そのままLocationGroupedListへ渡す。
+   */
   onPersonPointerDown?: (
-    person: PersonCardData
-  ) => (event: ReactPointerEvent<Element>) => void;
+    event: ReactPointerEvent<Element>,
+    person: PersonCardData,
+    sourceZoneId: string
+  ) => void;
   /**
    * 人カードの先頭アイコン（ドラッグハンドル）を表示しないかどうか。
    * LINE共有の共有用画像（静的な表示専用）で使用する（04_画面設計.md#9.2）。
@@ -43,7 +49,7 @@ interface UnassignedAreaProps {
  * 未配車人数が0人になっても見出し1行の帯は残し、配車調整中に車カードから
  * 人を未配車へ戻すドロップ先として機能させる（本文の人カード一覧は0人のときは表示しない）。
  */
-export function UnassignedArea({
+function UnassignedAreaComponent({
   people,
   isDropTarget = false,
   draggingPersonId = null,
@@ -99,6 +105,7 @@ export function UnassignedArea({
               members={people}
               draggingPersonId={draggingPersonId}
               onPersonPointerDown={onPersonPointerDown}
+              sourceZoneId={UNASSIGNED_ZONE_ID}
               hideLeadingIcon={hideLeadingIcon}
               dense={dense}
             />
@@ -108,3 +115,5 @@ export function UnassignedArea({
     </div>
   );
 }
+
+export const UnassignedArea = memo(UnassignedAreaComponent);
