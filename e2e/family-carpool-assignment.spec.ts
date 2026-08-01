@@ -166,9 +166,10 @@ test('家族が行きの送迎不要（現地集合等）の場合、行きタ�
   await expect(page.getByText('読み込み中...')).toHaveCount(0);
 
   // 行きタブ（初期表示）：家族の行き送迎スイッチがOFFのため配車不要エリアに表示される
+  // （未配車エリアは0名になっても見出し1行の帯として残る）
   await expect(page.getByRole('heading', { name: '配車不要　1名' })).toBeVisible();
   await expect(page.getByText('木村祖父')).toBeVisible();
-  await expect(page.getByRole('heading', { name: /未配車/ })).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: '未配車　0名' })).toBeVisible();
 
   // 帰りタブ：家族の帰り送迎スイッチはONのため未配車エリアに表示される
   await page.getByRole('tab', { name: '帰り' }).click();

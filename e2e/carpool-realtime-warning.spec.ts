@@ -94,6 +94,7 @@ test('人カードの移動により未配車→定員超過へ警告内容が�
 
   // 移動後：未配車は0名になり、鈴木号が定員超過（2/1）となるため
   // 画面を再読み込みすることなく警告内容が「定員超過の車があります」に切り替わる
-  await expect(page.getByText('未配車')).toHaveCount(0);
+  // （未配車エリアは0名になっても見出し1行の帯として残る）
+  await expect(page.getByRole('heading', { name: '未配車　0名' })).toBeVisible();
   await expect(page.getByRole('alert')).toHaveText('定員超過の車があります');
 });

@@ -163,9 +163,10 @@ test('参加かつ送迎不要のコーチが配車不要エリアに表示さ�
   await signInAndOpenCarpoolPage(page, db, eventRef.id);
 
   // 行きタブ（初期表示）：コーチの行き送迎スイッチがOFFのため配車不要エリアに表示される
+  // （未配車エリアは0名になっても見出し1行の帯として残る）
   await expect(page.getByRole('heading', { name: '配車不要　1名' })).toBeVisible();
   await expect(page.getByText('佐藤父')).toBeVisible();
-  await expect(page.getByRole('heading', { name: /未配車/ })).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: '未配車　0名' })).toBeVisible();
 
   // 帰りタブ：コーチの帰り送迎スイッチはONのため未配車エリアに表示される
   await page.getByRole('tab', { name: '帰り' }).click();
