@@ -24,7 +24,7 @@ export interface AssignmentResult {
  * モバイル端末のメインスレッドを合計で長時間ブロックしないよう、1回あたりの予算は短めに抑える。
  * ref: docs/07_配車アルゴリズム.md#5 計算量（Complexity）
  */
-const SEARCH_TIME_BUDGET_MS = 50;
+const SEARCH_TIME_BUDGET_MS = 500;
 
 /**
  * 割当案の適合度を表す目的関数の値（辞書式順序で比較する3つ組）
