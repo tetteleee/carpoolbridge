@@ -361,6 +361,55 @@ export async function loadBoardMasterData(eventId: string): Promise<BoardMasterD
 }
 
 /**
+ * イベント全体で「未回答」（isParticipatingが未選択）の選手・コーチ・家族の人数を算出する。
+ * isParticipatingは方向（行き／帰り）に依存しない値のため、buildCarpoolBoardDataとは別の
+ * 方向非依存の関数として提供する。一時参加者は未回答の状態を経由しない（追加時に常にisParticipating:
+ * trueとなる）ため対象外とする（05_データ設計.md#9参照）。
+ * ref: docs/02_要件定義.md#11 対応する例外, docs/07_配車アルゴリズム.md#6 例外系・境界条件設計
+ */
+export function countUnansweredPeople(masterData: BoardMasterData): number {
+  let count = 0;
+
+  for (const player of masterData.playerById.values()) {
+    if (!player.isActive || !masterData.familyById.get(player.familyId)?.isActive) {
+      continue;
+    }
+    const responsePlayer = masterData.responseByFamilyId
+      .get(player.familyId)
+      ?.players.find((p) => p.playerId === player.id);
+    if (!responsePlayer || responsePlayer.isParticipating === null) {
+      count++;
+    }
+  }
+
+  for (const coach of masterData.coachById.values()) {
+    if (!coach.isActive || !masterData.familyById.get(coach.familyId)?.isActive) {
+      continue;
+    }
+    const responseCoach = masterData.responseByFamilyId
+      .get(coach.familyId)
+      ?.coaches?.find((c) => c.coachId === coach.id);
+    if (!responseCoach || responseCoach.isParticipating === null) {
+      count++;
+    }
+  }
+
+  for (const familyMember of masterData.familyMemberById.values()) {
+    if (!familyMember.isActive || !masterData.familyById.get(familyMember.familyId)?.isActive) {
+      continue;
+    }
+    const responseFamilyMember = masterData.responseByFamilyId
+      .get(familyMember.familyId)
+      ?.familyMembers?.find((f) => f.familyMemberId === familyMember.id);
+    if (!responseFamilyMember || responseFamilyMember.isParticipating === null) {
+      count++;
+    }
+  }
+
+  return count;
+}
+
+/**
  * 配車結果（Carpool）とマスタ・回答データから、対象方向1方向分の表示用データ
  * （未配車・配車不要・車カード）を算出する。
  *

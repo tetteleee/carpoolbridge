@@ -5,6 +5,7 @@ import type { PersonCardData } from '../components/carpool/PersonCard';
 import {
   loadBoardMasterData,
   buildCarpoolBoardData,
+  countUnansweredPeople,
   type BoardMasterData,
 } from '../services/carpool/carpoolBoardData';
 import { reconcileCarpools } from '../services/carpool/reconcileCarpools';
@@ -17,6 +18,8 @@ interface UseCarpoolBoardDataResult {
   noRideNeededPeople: PersonCardData[];
   /** 選択中タブ（行き／帰り）の車カード一覧 */
   carCards: CarCardData[];
+  /** イベント全体の未回答（isParticipating未選択）の選手・コーチ・家族の人数。行き／帰りに依存しない */
+  unansweredCount: number;
   /** 対象イベントの回答が1件もないかどうか（一部家庭のみ未回答の場合は含まない） */
   hasNoResponses: boolean;
   /** マスタ・回答データの取得中かどうか */
@@ -115,7 +118,12 @@ export function useCarpoolBoardData(
     return buildCarpoolBoardData(direction, carpools, masterData);
   }, [masterData, carpools, direction]);
 
+  const unansweredCount = useMemo(
+    () => (masterData ? countUnansweredPeople(masterData) : 0),
+    [masterData]
+  );
+
   const hasNoResponses = masterData !== null && masterData.responseByFamilyId.size === 0;
 
-  return { ...boardData, hasNoResponses, loading, error };
+  return { ...boardData, unansweredCount, hasNoResponses, loading, error };
 }

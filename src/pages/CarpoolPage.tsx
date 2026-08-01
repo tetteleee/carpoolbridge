@@ -51,6 +51,7 @@ export function CarpoolPage() {
     unassignedPeople,
     noRideNeededPeople,
     carCards,
+    unansweredCount,
     hasNoResponses,
     loading: boardDataLoading,
     error: boardDataError,
@@ -60,7 +61,8 @@ export function CarpoolPage() {
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const { hasWarning, message: validationMessage } = useCarpoolValidation(
     carCards,
-    unassignedPeople
+    unassignedPeople,
+    unansweredCount
   );
 
   // sticky header（ヘッダー＋トグル＋サマリー）の実高さを測り、オートスクロール開始位置に反映する
