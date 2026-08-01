@@ -8,6 +8,8 @@ import { UserIcon } from '../icons';
 
 interface CoachSectionProps {
   coachList: Coach[];
+  /** 所属家庭の在籍中の値。falseの間は在籍中トグルを操作不可にしてグレーアウトする（04_画面設計.md#10.4） */
+  familyActive: boolean;
   onNameChange: (coachId: string, name: string) => void;
   onActiveToggle: (coachId: string) => void;
   onAdd: () => void;
@@ -58,6 +60,7 @@ const statusLabelStyle: CSSProperties = {
  */
 export function CoachSection({
   coachList,
+  familyActive,
   onNameChange,
   onActiveToggle,
   onAdd,
@@ -72,7 +75,7 @@ export function CoachSection({
               display: 'flex',
               alignItems: 'center',
               gap: '6px',
-              opacity: coach.isActive ? 1 : 'var(--disabled-opacity)',
+              opacity: familyActive && coach.isActive ? 1 : 'var(--disabled-opacity)',
             }}
           >
             <UserIcon size={13} />
@@ -91,6 +94,7 @@ export function CoachSection({
                 checked={coach.isActive}
                 onChange={() => onActiveToggle(coach.id)}
                 ariaLabel={`${coach.name || 'コーチ'}の在籍状態`}
+                disabled={!familyActive}
               />
               <Button
                 variant="danger"

@@ -8,6 +8,8 @@ import { UserIcon } from '../icons';
 
 interface FamilyMemberSectionProps {
   familyMemberList: FamilyMember[];
+  /** 所属家庭の在籍中の値。falseの間は在籍中トグルを操作不可にしてグレーアウトする（04_画面設計.md#10.4） */
+  familyActive: boolean;
   onNameChange: (familyMemberId: string, name: string) => void;
   onActiveToggle: (familyMemberId: string) => void;
   onAdd: () => void;
@@ -58,6 +60,7 @@ const statusLabelStyle: CSSProperties = {
  */
 export function FamilyMemberSection({
   familyMemberList,
+  familyActive,
   onNameChange,
   onActiveToggle,
   onAdd,
@@ -72,7 +75,7 @@ export function FamilyMemberSection({
               display: 'flex',
               alignItems: 'center',
               gap: '6px',
-              opacity: familyMember.isActive ? 1 : 'var(--disabled-opacity)',
+              opacity: familyActive && familyMember.isActive ? 1 : 'var(--disabled-opacity)',
             }}
           >
             <UserIcon size={13} />
@@ -91,6 +94,7 @@ export function FamilyMemberSection({
                 checked={familyMember.isActive}
                 onChange={() => onActiveToggle(familyMember.id)}
                 ariaLabel={`${familyMember.name || '家族'}の在籍状態`}
+                disabled={!familyActive}
               />
               <Button
                 variant="danger"

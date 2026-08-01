@@ -12,6 +12,8 @@ import { UserIcon } from '../icons';
 
 interface PlayerSectionProps {
   playerList: Player[];
+  /** 所属家庭の在籍中の値。falseの間は在籍中トグルを操作不可にしてグレーアウトする（04_画面設計.md#10.4） */
+  familyActive: boolean;
   onNameChange: (playerId: string, name: string) => void;
   onSchoolEntryYearChange: (playerId: string, schoolEntryYear: number) => void;
   onActiveToggle: (playerId: string) => void;
@@ -75,6 +77,7 @@ const statusLabelStyle: CSSProperties = {
  */
 export function PlayerSection({
   playerList,
+  familyActive,
   onNameChange,
   onSchoolEntryYearChange,
   onActiveToggle,
@@ -92,7 +95,7 @@ export function PlayerSection({
               display: 'flex',
               alignItems: 'center',
               gap: '6px',
-              opacity: player.isActive ? 1 : 'var(--disabled-opacity)',
+              opacity: familyActive && player.isActive ? 1 : 'var(--disabled-opacity)',
             }}
           >
             <UserIcon size={13} />
@@ -127,6 +130,7 @@ export function PlayerSection({
                 checked={player.isActive}
                 onChange={() => onActiveToggle(player.id)}
                 ariaLabel={`${player.name || '選手'}の在籍状態`}
+                disabled={!familyActive}
               />
               <Button
                 variant="danger"

@@ -80,30 +80,6 @@ export async function deactivatePlayer(playerId: string): Promise<void> {
 }
 
 /**
- * 指定した家庭に属する在籍中の選手を、全て論理削除します（isActive を false に一括更新）。
- * 家庭が無効化された際に呼び出されます。
- *
- * @param familyId 対象の家庭ID
- */
-export async function deactivatePlayersByFamilyId(familyId: string): Promise<void> {
-  const colRef = collection(db, firestorePaths.playersCollection());
-  const q = query(colRef, where('familyId', '==', familyId), where('isActive', '==', true));
-  const snapshot = await getDocs(q);
-  if (snapshot.empty) {
-    return;
-  }
-
-  const batch = writeBatch(db);
-  snapshot.docs.forEach((d) => {
-    batch.update(d.ref, {
-      isActive: false,
-      updatedAt: serverTimestamp(),
-    });
-  });
-  await batch.commit();
-}
-
-/**
  * 選手を物理削除します（登録ミスの取り消し用）。
  * 過去の回答・配車結果から参照中でも削除する（05_データ設計.md#12 削除方針）。
  *
