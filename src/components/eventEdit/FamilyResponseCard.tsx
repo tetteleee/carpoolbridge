@@ -546,7 +546,7 @@ export function FamilyResponseCard({
                       fontWeight: 700,
                       padding: '2px 7px',
                       borderRadius: '999px',
-                      background: 'rgba(138, 90, 168, 0.16)',
+                      background: 'rgba(171, 93, 125, 0.16)',
                       color: 'var(--parent-accent)',
                     }}
                   >
