@@ -1,11 +1,26 @@
-import { useState } from 'react';
+import { useState, type CSSProperties } from 'react';
 import { Button } from './common/Button';
-import { Card } from './common/Card';
 import { AppIcon, CheckIcon, CopyIcon } from './icons';
 
 interface RequestAccessProps {
   uid: string;
 }
+
+/** 案内の手順番号（丸数字）の共通スタイル */
+const stepNumberStyle: CSSProperties = {
+  flexShrink: 0,
+  width: '18px',
+  height: '18px',
+  marginTop: '1px',
+  borderRadius: '999px',
+  background: 'var(--code-bg)',
+  color: 'var(--text-h)',
+  fontSize: '11px',
+  fontWeight: 700,
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+};
 
 /**
  * 未登録ユーザー向けの利用申請画面コンポーネント。
@@ -42,144 +57,120 @@ export function RequestAccess({ uid }: RequestAccessProps) {
       style={{
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
         minHeight: '100svh',
-        padding: '24px',
+        padding: '48px 24px 32px',
         boxSizing: 'border-box',
+        background: 'var(--bg)',
       }}
     >
-      <Card
-        id="request-access-card"
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: '20px',
-          width: '100%',
-          maxWidth: '480px',
-          padding: '40px 28px',
-        }}
-      >
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '28px' }}>
         <span
           aria-hidden="true"
           style={{
             display: 'inline-flex',
             alignItems: 'center',
             justifyContent: 'center',
-            width: '56px',
-            height: '56px',
-            borderRadius: '999px',
-            background: 'rgba(61, 90, 128, 0.08)',
+            width: '34px',
+            height: '34px',
+            borderRadius: '10px',
+            background: 'var(--accent-bg)',
+            flexShrink: 0,
           }}
         >
-          <AppIcon size={34} />
+          <AppIcon size={20} />
         </span>
-
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: '4px',
-          }}
-        >
-          <p
-            id="request-access-app-name"
-            style={{
-              margin: 0,
-              fontSize: '13px',
-              fontWeight: 600,
-              color: 'var(--text)',
-              letterSpacing: '0.05em',
-            }}
-          >
-            配車アシスタント
-          </p>
-
-          <h1
-            id="request-access-title"
-            style={{
-              margin: 0,
-              fontSize: '22px',
-              fontWeight: 700,
-              color: 'var(--text-h)',
-              letterSpacing: '0.01em',
-            }}
-          >
-            利用申請
-          </h1>
-        </div>
-
-        <div
-          id="request-access-uid-block"
-          style={{
-            width: '100%',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: '8px',
-          }}
-        >
-          <p
-            id="request-access-uid-label"
-            style={{
-              margin: 0,
-              fontSize: '12px',
-              fontWeight: 600,
-              color: 'var(--text)',
-              letterSpacing: '0.08em',
-              textTransform: 'uppercase',
-            }}
-          >
-            UID
-          </p>
-          <code
-            id="request-access-uid-value"
-            style={{
-              display: 'block',
-              width: '100%',
-              padding: '14px 16px',
-              borderRadius: '10px',
-              border: '1px solid var(--border)',
-              background: 'var(--code-bg)',
-              fontSize: '13px',
-              lineHeight: '1.5',
-              color: 'var(--text-h)',
-              wordBreak: 'break-all',
-              textAlign: 'center',
-              boxSizing: 'border-box',
-            }}
-          >
-            {uid}
-          </code>
-        </div>
-
-        <Button
-          id="request-access-copy-button"
-          variant="primary"
-          icon={copied ? <CheckIcon size={16} /> : <CopyIcon size={16} />}
-          onClick={handleCopy}
-          style={{ width: '100%' }}
-        >
-          {copied ? 'コピーしました' : 'コピー'}
-        </Button>
-
         <p
-          id="request-access-guidance"
+          id="request-access-app-name"
           style={{
             margin: 0,
-            fontSize: '13px',
-            lineHeight: '1.6',
+            fontSize: '12px',
+            fontWeight: 600,
             color: 'var(--text)',
-            textAlign: 'center',
+            letterSpacing: '0.04em',
           }}
         >
-          コピーしたコードをLINEなどで管理者に送ってください
-          <br />
-          登録が完了したら、このページを再読み込みしてください
+          配車アシスタント
         </p>
-      </Card>
+      </div>
+
+      <h1
+        id="request-access-title"
+        style={{
+          margin: '0 0 32px',
+          fontSize: '28px',
+          fontWeight: 800,
+          letterSpacing: '-0.02em',
+          lineHeight: 1.25,
+          color: 'var(--text-h)',
+        }}
+      >
+        利用申請
+      </h1>
+
+      <div id="request-access-uid-block" style={{ width: '100%' }}>
+        <p
+          id="request-access-uid-label"
+          style={{
+            margin: '0 0 8px',
+            fontSize: '11px',
+            fontWeight: 700,
+            color: 'var(--text)',
+            letterSpacing: '0.08em',
+            textTransform: 'uppercase',
+          }}
+        >
+          UID
+        </p>
+        <code
+          id="request-access-uid-value"
+          style={{
+            display: 'block',
+            width: '100%',
+            padding: '16px',
+            borderRadius: '14px',
+            border: '1px solid var(--border)',
+            background: 'var(--code-bg)',
+            fontSize: '13px',
+            lineHeight: '1.5',
+            color: 'var(--text-h)',
+            wordBreak: 'break-all',
+            boxSizing: 'border-box',
+          }}
+        >
+          {uid}
+        </code>
+      </div>
+
+      <Button
+        id="request-access-copy-button"
+        variant="primary"
+        icon={copied ? <CheckIcon size={16} /> : <CopyIcon size={16} />}
+        onClick={handleCopy}
+        style={{ width: '100%', marginTop: '20px' }}
+      >
+        {copied ? 'コピーしました' : 'コピー'}
+      </Button>
+
+      <ol
+        id="request-access-guidance"
+        style={{
+          listStyle: 'none',
+          margin: 'auto 0 0',
+          padding: '28px 0 0',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '10px',
+        }}
+      >
+        <li style={{ display: 'flex', gap: '10px', fontSize: '13px', lineHeight: 1.6, color: 'var(--text)' }}>
+          <span style={stepNumberStyle}>1</span>
+          コピーしたコードをLINEなどで管理者に送ってください
+        </li>
+        <li style={{ display: 'flex', gap: '10px', fontSize: '13px', lineHeight: 1.6, color: 'var(--text)' }}>
+          <span style={stepNumberStyle}>2</span>
+          登録が完了したら、このページを再読み込みしてください
+        </li>
+      </ol>
     </div>
   );
 }
