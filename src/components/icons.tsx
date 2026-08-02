@@ -266,6 +266,17 @@ export function InfoIcon({ size = 18 }: IconProps) {
   );
 }
 
+/** ヘルプ（丸に？）アイコン。使い方・チュートリアルの再表示ボタン等に使う */
+export function HelpIcon({ size = 18 }: IconProps) {
+  return (
+    <svg {...baseProps(size)}>
+      <circle cx="12" cy="12" r="9.25" />
+      <path d="M9.3 9.6a2.9 2.9 0 0 1 5.6 1c0 1.9-2.9 2.5-2.9 3.9" />
+      <circle cx="12" cy="17.2" r="1" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
 /** サマリー（棒グラフ）アイコン */
 export function SummaryIcon({ size = 18 }: IconProps) {
   return (

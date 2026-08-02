@@ -4,7 +4,7 @@ import { EventList } from '../components/EventList';
 import { Header } from '../components/Header';
 import { TutorialGuideModal } from '../components/TutorialGuideModal';
 import { Button } from '../components/common/Button';
-import { InfoIcon, LoadingIndicator, SettingsIcon } from '../components/icons';
+import { HelpIcon, LoadingIndicator, SettingsIcon } from '../components/icons';
 import { useTutorialGuide } from '../hooks/useTutorialGuide';
 import { getEvents } from '../services/event/eventService';
 import { getDestinations } from '../services/master/destinationService';
@@ -94,7 +94,7 @@ export function HomePage() {
                     cursor: 'pointer',
                   }}
                 >
-                  <InfoIcon size={18} />
+                  <HelpIcon size={18} />
                 </button>
                 <Button
                   variant="secondary"
