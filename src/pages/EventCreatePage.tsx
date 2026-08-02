@@ -11,7 +11,7 @@ import type { Destination } from '../types/master';
 /**
  * イベント作成画面。
  * イベント名・日付・目的地を入力し、保存するとホーム画面へ遷移する。
- * 目的地の新規登録UIは対象設計書間の記載矛盾により本画面の対象外（マスタ管理画面T14で行う）。
+ * 目的地の新規登録UIは対象設計書間の記載矛盾により本画面の対象外（登録情報画面T14で行う）。
  */
 export function EventCreatePage() {
   const navigate = useNavigate();
@@ -165,7 +165,7 @@ export function EventCreatePage() {
             <LoadingIndicator />
           ) : destinations.length === 0 ? (
             <span style={{ fontSize: '14px', color: 'var(--text)' }}>
-              登録済みの目的地がありません。先にマスタ管理画面で登録してください
+              登録済みの目的地がありません。先に登録情報画面で登録してください
             </span>
           ) : (
             <select

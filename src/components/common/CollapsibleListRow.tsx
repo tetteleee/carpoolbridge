@@ -49,7 +49,7 @@ const iconChipStyle: CSSProperties = {
 
 /**
  * 折りたたみ可能な一覧行。通常は1行のサマリーのみ表示し、タップで詳細（children）を展開する。
- * 集合場所・目的地・家庭の各編集画面で共通に使う（04_画面設計.md#10 マスタ管理）。
+ * 集合場所・目的地・家庭の各編集画面で共通に使う（04_画面設計.md#10 登録情報）。
  */
 export function CollapsibleListRow({
   icon,
