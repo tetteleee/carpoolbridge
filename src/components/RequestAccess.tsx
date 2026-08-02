@@ -111,21 +111,6 @@ export function RequestAccess({ uid }: RequestAccessProps) {
           </h1>
         </div>
 
-        <p
-          id="request-access-lead"
-          style={{
-            margin: 0,
-            fontSize: '13.5px',
-            lineHeight: '1.7',
-            color: 'var(--text)',
-            textAlign: 'center',
-          }}
-        >
-          はじめてのご利用ですね。
-          <br />
-          下のコードを管理者に送ると、利用できるようになります。
-        </p>
-
         <div
           id="request-access-uid-block"
           style={{
@@ -144,9 +129,10 @@ export function RequestAccess({ uid }: RequestAccessProps) {
               fontWeight: 600,
               color: 'var(--text)',
               letterSpacing: '0.08em',
+              textTransform: 'uppercase',
             }}
           >
-            あなたの利用コード（UID）
+            UID
           </p>
           <code
             id="request-access-uid-value"
@@ -176,22 +162,20 @@ export function RequestAccess({ uid }: RequestAccessProps) {
           onClick={handleCopy}
           style={{ width: '100%' }}
         >
-          {copied ? 'コピーしました' : 'コードをコピー'}
+          {copied ? 'コピーしました' : 'コピー'}
         </Button>
 
         <p
           id="request-access-guidance"
           style={{
             margin: 0,
-            fontSize: '12.5px',
-            lineHeight: '1.7',
+            fontSize: '13px',
+            lineHeight: '1.6',
             color: 'var(--text)',
             textAlign: 'center',
           }}
         >
-          コピーしたコードをLINEなどで管理者に送ってください。
-          <br />
-          登録が完了したら、このページを開き直すと利用できます。
+          コピーしたコードをLINEなどで管理者に送ってください
         </p>
       </Card>
     </div>
