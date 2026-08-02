@@ -186,3 +186,13 @@ code {
 .master-menu-row:active {
   background: rgba(0, 0, 0, 0.05);
 }
+
+/* 配車画面サマリー帯の開閉ボタンも同様に、タップ時の四角い標準ハイライトを消し、
+   控えめな押下フィードバックに差し替える */
+.carpool-summary-toggle {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.carpool-summary-toggle:active {
+  background: rgba(0, 0, 0, 0.05);
+}
