@@ -135,6 +135,19 @@ export function RequestAccess({ uid }: RequestAccessProps) {
         >
           {copied ? 'コピーしました' : 'コピー'}
         </Button>
+
+        <p
+          id="request-access-guidance"
+          style={{
+            margin: 0,
+            fontSize: '13px',
+            lineHeight: '1.6',
+            color: 'var(--text)',
+            textAlign: 'center',
+          }}
+        >
+          コピーしたコードを管理者に送ってください
+        </p>
       </Card>
     </div>
   );
