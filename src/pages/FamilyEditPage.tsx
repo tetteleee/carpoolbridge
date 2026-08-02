@@ -6,7 +6,7 @@ import {
 
 /**
  * 家庭編集画面（所属する選手を含む）。
- * ref: docs/04_画面設計.md#10 マスタ管理 10.4 家庭編集画面
+ * ref: docs/04_画面設計.md#10 登録情報 10.4 家庭編集画面
  */
 export function FamilyEditPage() {
   return (

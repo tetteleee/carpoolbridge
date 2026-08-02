@@ -9,7 +9,7 @@ import { getEmulatorFirestore } from './utils/firebaseAdmin';
  *
  * A[ホーム] -> C[配車画面メイン] -> D[イベント編集 回答入力] -> C（戻る／自動配車）
  * A -> B[イベント作成] -> A
- * A -> F[マスタ管理] -> A
+ * A -> F[登録情報] -> A
  * A -> G[イベント情報編集] -> A
  */
 test('画面遷移図に定義された遷移を一通りたどれる', async ({ page }) => {
@@ -67,8 +67,8 @@ test('画面遷移図に定義された遷移を一通りたどれる', async ({
   await page.reload();
   await expect(page.locator('#home-page')).toBeVisible();
 
-  // A -> F（マスタ管理） -> A（戻る）
-  await page.getByRole('button', { name: 'マスタ管理' }).click();
+  // A -> F（登録情報） -> A（戻る）
+  await page.getByRole('button', { name: '登録情報' }).click();
   await page.waitForURL('**/master');
   await expect(page.locator('#master-page')).toBeVisible();
   await page.getByRole('button', { name: '戻る' }).click();

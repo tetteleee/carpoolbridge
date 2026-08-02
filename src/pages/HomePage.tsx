@@ -68,7 +68,7 @@ export function HomePage() {
               icon={<SettingsIcon size={16} />}
               onClick={() => navigate('/master')}
             >
-              マスタ管理
+              登録情報
             </Button>
           }
         />

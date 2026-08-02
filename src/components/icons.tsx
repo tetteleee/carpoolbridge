@@ -22,7 +22,7 @@ function baseProps(size: number): SVGProps<SVGSVGElement> {
   };
 }
 
-/** 設定（マスタ管理）アイコン */
+/** 設定（登録情報）アイコン */
 export function SettingsIcon({ size = 18 }: IconProps) {
   return (
     <svg {...baseProps(size)}>

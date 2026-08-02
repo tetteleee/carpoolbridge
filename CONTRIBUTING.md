@@ -106,7 +106,7 @@ npm run seed
   GitHub Actionsのデプロイ（`firebase-deploy.yml`）で使っている`FIREBASE_SERVICE_ACCOUNT`と
   同じ種類の鍵です。`gcloud`のインストールやログインは不要です。
 - テストデータの定義は[src/services/dev/seedData.ts](src/services/dev/seedData.ts)にまとまっています。
-  マスタ管理画面の開発用機能「サンプルデータ投入」ボタンとも共通のデータ定義です。
+  登録情報画面の開発用機能「サンプルデータ投入」ボタンとも共通のデータ定義です。
   Firestoreのデータ構造を変更した場合は、このファイルを更新してください。
 
 ### ローカル専用データでの投入（個人情報に近いデータを使いたい場合）
@@ -127,7 +127,7 @@ SEED_SOURCE=local npm run seed
   内容は各自の環境でのみ保持し、他人と共有しないでください。
 - `SEED_SOURCE`を指定しない場合（`npm run seed`のみ）は、従来どおりコミット済みの
   サンプルデータ（`seedData.ts`）が使われます。
-- マスタ管理画面の「サンプルデータ投入」ボタンはこの切り替えの対象外です
+- 登録情報画面の「サンプルデータ投入」ボタンはこの切り替えの対象外です
   （常にコミット済みサンプルデータを投入します）。
 
 #### CSVからseedData.local.jsonを生成する

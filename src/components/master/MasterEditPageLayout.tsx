@@ -27,7 +27,7 @@ interface MasterEditPageLayoutProps<Handle extends MasterSectionHandle> {
  * 集合場所・目的地・家庭の各編集画面で共通のページ構成。
  * ヘッダー（戻る・タイトル・保存ボタン）、保存後に同じ画面へ留まり最新データを再表示する挙動、
  * 未保存確認ダイアログをここに集約する。
- * ref: docs/04_画面設計.md#10 マスタ管理 共通仕様（集合場所・目的地・家庭編集画面）
+ * ref: docs/04_画面設計.md#10 登録情報 共通仕様（集合場所・目的地・家庭編集画面）
  */
 export function MasterEditPageLayout<Handle extends MasterSectionHandle>({
   title,

@@ -2,8 +2,8 @@ import { test, expect } from './utils/fixtures';
 import { getEmulatorFirestore } from './utils/firebaseAdmin';
 
 /**
- * マスタ管理画面群（ハブ画面T56、集合場所・目的地・家庭の各編集画面T57〜T59）を検証するE2Eテスト。
- * ref: docs/04_画面設計.md#10 マスタ管理
+ * 登録情報画面群（ハブ画面T56、集合場所・目的地・家庭の各編集画面T57〜T59）を検証するE2Eテスト。
+ * ref: docs/04_画面設計.md#10 登録情報
  */
 
 async function registerAsStaffAndReload(page: import('@playwright/test').Page) {
@@ -15,12 +15,12 @@ async function registerAsStaffAndReload(page: import('@playwright/test').Page) {
   return db;
 }
 
-test('マスタ管理ハブ画面のURLに直接アクセスできる', async ({ page }) => {
+test('登録情報ハブ画面のURLに直接アクセスできる', async ({ page }) => {
   await page.goto('/master');
   await registerAsStaffAndReload(page);
 
   await expect(page.locator('#master-page')).toBeVisible();
-  await expect(page.locator('#master-page h1')).toHaveText('マスタ管理');
+  await expect(page.locator('#master-page h1')).toHaveText('登録情報');
   await expect(page.locator('#master-menu')).toContainText('集合場所');
   await expect(page.locator('#master-menu')).toContainText('目的地');
   await expect(page.locator('#master-menu')).toContainText('家庭');

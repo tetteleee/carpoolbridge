@@ -19,10 +19,10 @@ interface MenuItem {
 }
 
 /**
- * マスタ管理画面（ハブ画面）。
+ * 登録情報画面（ハブ画面）。
  * 集合場所・目的地・家庭の各編集画面への入口となるメニューを表示する。
  * この画面自体には編集項目・保存操作を持たない。
- * ref: docs/04_画面設計.md#10 マスタ管理 10.1 マスタ管理（ハブ画面）
+ * ref: docs/04_画面設計.md#10 登録情報 10.1 登録情報（ハブ画面）
  */
 export function MasterPage() {
   const navigate = useNavigate();
@@ -96,7 +96,7 @@ export function MasterPage() {
           boxSizing: 'border-box',
         }}
       >
-        <Header title="マスタ管理" backTo="/" />
+        <Header title="登録情報" backTo="/" />
       </div>
 
       <div

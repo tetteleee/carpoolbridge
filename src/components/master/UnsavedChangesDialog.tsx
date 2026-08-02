@@ -10,9 +10,9 @@ interface UnsavedChangesDialogProps {
 }
 
 /**
- * マスタ管理画面の未保存確認ダイアログ。
+ * 登録情報画面の未保存確認ダイアログ。
  * 未保存の編集・追加がある状態で「戻る」が押された場合にのみ表示する。
- * ref: docs/04_画面設計.md#10 マスタ管理
+ * ref: docs/04_画面設計.md#10 登録情報
  */
 export function UnsavedChangesDialog({
   open,

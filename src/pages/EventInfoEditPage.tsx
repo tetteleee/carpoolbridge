@@ -197,7 +197,7 @@ export function EventInfoEditPage() {
               </span>
               {destinations.length === 0 ? (
                 <span style={{ fontSize: '14px', color: 'var(--text)' }}>
-                  登録済みの目的地がありません。先にマスタ管理画面で登録してください
+                  登録済みの目的地がありません。先に登録情報画面で登録してください
                 </span>
               ) : (
                 <select
