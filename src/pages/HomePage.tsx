@@ -2,8 +2,10 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { EventList } from '../components/EventList';
 import { Header } from '../components/Header';
+import { TutorialGuideModal } from '../components/TutorialGuideModal';
 import { Button } from '../components/common/Button';
 import { LoadingIndicator, SettingsIcon } from '../components/icons';
+import { useTutorialGuide } from '../hooks/useTutorialGuide';
 import { getEvents } from '../services/event/eventService';
 import { getDestinations } from '../services/master/destinationService';
 import type { Event } from '../types/event';
@@ -21,6 +23,7 @@ export function HomePage() {
   >({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { show: showTutorial, dismiss: dismissTutorial } = useTutorialGuide();
 
   useEffect(() => {
     Promise.all([getEvents(), getDestinations()])
@@ -35,80 +38,83 @@ export function HomePage() {
   }, []);
 
   return (
-    <div
-      id="home-page"
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        width: '100%',
-        maxWidth: '480px',
-        margin: '0 auto',
-        boxSizing: 'border-box',
-      }}
-    >
+    <>
+      <TutorialGuideModal open={showTutorial} onClose={dismissTutorial} />
       <div
-        id="home-header"
-        style={{
-          position: 'sticky',
-          top: 0,
-          zIndex: 10,
-          background: 'var(--panel-bg)',
-          padding: '16px 16px 20px',
-          borderBottom: '1px solid var(--border)',
-          boxSizing: 'border-box',
-        }}
-      >
-        <Header
-          title="イベント一覧"
-          showAppIcon
-          trailing={
-            <Button
-              variant="secondary"
-              size="sm"
-              icon={<SettingsIcon size={16} />}
-              onClick={() => navigate('/master')}
-            >
-              登録情報
-            </Button>
-          }
-        />
-      </div>
-
-      <div
+        id="home-page"
         style={{
           display: 'flex',
-          justifyContent: 'center',
-          padding: '16px',
+          flexDirection: 'column',
+          width: '100%',
+          maxWidth: '480px',
+          margin: '0 auto',
           boxSizing: 'border-box',
         }}
       >
-        <Button
-          variant="primary"
-          size="sm"
-          onClick={() => navigate('/events/new')}
+        <div
+          id="home-header"
+          style={{
+            position: 'sticky',
+            top: 0,
+            zIndex: 10,
+            background: 'var(--panel-bg)',
+            padding: '16px 16px 20px',
+            borderBottom: '1px solid var(--border)',
+            boxSizing: 'border-box',
+          }}
         >
-          + イベント作成
-        </Button>
-      </div>
-
-      {error && (
-        <p style={{ margin: 0, padding: '0 16px 16px', fontSize: '13px', color: 'var(--negative)' }}>
-          {error}
-        </p>
-      )}
-
-      {loading ? (
-        <div style={{ display: 'flex', justifyContent: 'center', padding: '24px 16px' }}>
-          <LoadingIndicator />
+          <Header
+            title="イベント一覧"
+            showAppIcon
+            trailing={
+              <Button
+                variant="secondary"
+                size="sm"
+                icon={<SettingsIcon size={16} />}
+                onClick={() => navigate('/master')}
+              >
+                登録情報
+              </Button>
+            }
+          />
         </div>
-      ) : (
-        <EventList
-          events={events}
-          destinationNameById={destinationNameById}
-          onEventClick={(eventId) => navigate(`/events/${eventId}/carpool`)}
-          onEditClick={(eventId) => navigate(`/events/${eventId}/edit-info`)}
-        />
-      )}
-    </div>
+
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'center',
+            padding: '16px',
+            boxSizing: 'border-box',
+          }}
+        >
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={() => navigate('/events/new')}
+          >
+            + イベント作成
+          </Button>
+        </div>
+
+        {error && (
+          <p style={{ margin: 0, padding: '0 16px 16px', fontSize: '13px', color: 'var(--negative)' }}>
+            {error}
+          </p>
+        )}
+
+        {loading ? (
+          <div style={{ display: 'flex', justifyContent: 'center', padding: '24px 16px' }}>
+            <LoadingIndicator />
+          </div>
+        ) : (
+          <EventList
+            events={events}
+            destinationNameById={destinationNameById}
+            onEventClick={(eventId) => navigate(`/events/${eventId}/carpool`)}
+            onEditClick={(eventId) => navigate(`/events/${eventId}/edit-info`)}
+          />
+        )}
+      </div>
+    </>
   );
 }
