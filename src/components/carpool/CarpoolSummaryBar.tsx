@@ -68,6 +68,7 @@ export function CarpoolSummaryBar({
         aria-expanded={expanded}
         aria-controls="carpool-summary-bar-chips"
         onClick={onToggleExpanded}
+        className="carpool-summary-toggle"
         style={headerButtonStyle}
       >
         <SummaryIcon size={14} />
