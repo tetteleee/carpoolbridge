@@ -20,8 +20,9 @@ function hasSeenTutorial(): boolean {
 }
 
 /**
- * 初回利用ガイド（チュートリアル）の表示要否を判定するフック。
- * この端末で一度でも閉じていればtrueは返さない（再表示の導線は設けない）。
+ * 初回利用ガイド（チュートリアル）の自動表示要否を判定するフック。
+ * この端末で一度でも閉じていればtrueは返さない。ホーム画面の？ボタンからの
+ * 手動再表示はこのフックの外（呼び出し側のローカルstate）で扱う。
  * ref: docs/04_画面設計.md#5 ホーム（イベント一覧）
  */
 export function useTutorialGuide(): UseTutorialGuideResult {

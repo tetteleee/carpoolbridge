@@ -58,7 +58,8 @@ interface TutorialGuideModalProps {
 /**
  * 初回利用ガイド（チュートリアル）。staffUsers登録済みユーザーがホーム画面を
  * 初めて開いたときに表示する、基本機能のみを紹介する簡易な案内モーダル。
- * 一度閉じると再表示しない（useTutorialGuide参照）。
+ * 自動表示は一度閉じると以後行われない（useTutorialGuide参照）が、
+ * ホーム画面の？ボタンから手動でいつでも再表示できる。
  * ref: docs/04_画面設計.md#5 ホーム（イベント一覧）
  */
 export function TutorialGuideModal({ open, onClose }: TutorialGuideModalProps) {
