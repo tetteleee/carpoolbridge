@@ -177,7 +177,7 @@ export function RequestAccess({ uid }: RequestAccessProps) {
         >
           コピーしたコードをLINEなどで管理者に送ってください
           <br />
-          管理者が登録すると使えるようになります。この画面に戻ってきてください
+          登録が完了したら、このページを再読み込みしてください
         </p>
       </Card>
     </div>
