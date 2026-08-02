@@ -1,6 +1,7 @@
 import { test, expect } from './utils/fixtures';
 import { Timestamp } from 'firebase-admin/firestore';
 import { getEmulatorFirestore } from './utils/firebaseAdmin';
+import { dateOffsetString } from './utils/date';
 
 /**
  * イベント一覧の編集アイコン（T48）・イベント情報編集画面（T50・T50a）を検証するE2Eテスト。
@@ -14,6 +15,8 @@ test('イベント一覧の編集アイコンからイベント情報（名称�
 }) => {
   const db = getEmulatorFirestore();
   const now = Timestamp.now();
+  const initialDate = dateOffsetString(1);
+  const updatedDate = dateOffsetString(2);
 
   const destinationARef = await db.collection('destinations').add({
     name: '目的地A',
@@ -27,7 +30,7 @@ test('イベント一覧の編集アイコンからイベント情報（名称�
   });
   const eventRef = await db.collection('events').add({
     name: '練習試合',
-    date: '2026-08-01',
+    date: initialDate,
     destinationId: destinationARef.id,
     createdAt: now,
     updatedAt: now,
@@ -50,7 +53,7 @@ test('イベント一覧の編集アイコンからイベント情報（名称�
 
   // 既存値が初期表示される
   await expect(page.getByLabel('イベント名')).toHaveValue('練習試合');
-  await expect(page.getByLabel('日付')).toHaveValue('2026-08-01');
+  await expect(page.getByLabel('日付')).toHaveValue(initialDate);
   await expect(page.getByLabel('場所')).toHaveValue(destinationARef.id);
 
   // キャンセル：変更を破棄してホームへ戻る
@@ -64,7 +67,7 @@ test('イベント一覧の編集アイコンからイベント情報（名称�
   await card.getByRole('button', { name: 'イベント情報を編集' }).click();
   await page.waitForURL(`**/events/${eventRef.id}/edit-info`);
   await page.getByLabel('イベント名').fill('練習試合（変更後）');
-  await page.getByLabel('日付').fill('2026-08-02');
+  await page.getByLabel('日付').fill(updatedDate);
   await page.getByLabel('場所').selectOption(destinationBRef.id);
   await page.getByRole('button', { name: '保存' }).click();
   await page.waitForURL('**/');
@@ -75,7 +78,7 @@ test('イベント一覧の編集アイコンからイベント情報（名称�
   const updatedEvent = await eventRef.get();
   expect(updatedEvent.data()).toMatchObject({
     name: '練習試合（変更後）',
-    date: '2026-08-02',
+    date: updatedDate,
     destinationId: destinationBRef.id,
   });
 

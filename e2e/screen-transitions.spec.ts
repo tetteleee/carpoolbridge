@@ -1,6 +1,7 @@
 import { test, expect } from './utils/fixtures';
 import { Timestamp } from 'firebase-admin/firestore';
 import { getEmulatorFirestore } from './utils/firebaseAdmin';
+import { dateOffsetString } from './utils/date';
 
 /**
  * T47: docs/04_画面設計.md#4 画面遷移（mermaid図）に定義された全ての遷移を
@@ -44,7 +45,7 @@ test('画面遷移図に定義された遷移を一通りたどれる', async ({
   });
   const existingEventRef = await db.collection('events').add({
     name: '既存の練習試合',
-    date: '2026-08-01',
+    date: dateOffsetString(1),
     destinationId: destinationRef.id,
     createdAt: now,
     updatedAt: now,
@@ -79,7 +80,7 @@ test('画面遷移図に定義された遷移を一通りたどれる', async ({
   await page.getByRole('button', { name: '+ イベント作成' }).click();
   await page.waitForURL('**/events/new');
   await page.getByLabel('イベント名').fill('新規練習試合');
-  await page.getByLabel('日付').fill('2026-08-10');
+  await page.getByLabel('日付').fill(dateOffsetString(10));
   await page.getByLabel('目的地').selectOption(destinationRef.id);
   await page.getByRole('button', { name: '保存' }).click();
   await page.waitForURL('**/');
