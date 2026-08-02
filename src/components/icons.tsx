@@ -217,8 +217,8 @@ export function LoadingIndicator({ size = 6 }: IconProps) {
 export function CopyIcon({ size = 18 }: IconProps) {
   return (
     <svg {...baseProps(size)}>
-      <rect x="4" y="4" width="12" height="12" rx="2" />
-      <path d="M8 8V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2" />
+      <rect x="4" y="6" width="12" height="12" rx="2" />
+      <path d="M8 10V8a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2" />
     </svg>
   );
 }
