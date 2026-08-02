@@ -4,7 +4,7 @@ import { EventList } from '../components/EventList';
 import { Header } from '../components/Header';
 import { TutorialGuideModal } from '../components/TutorialGuideModal';
 import { Button } from '../components/common/Button';
-import { LoadingIndicator, SettingsIcon } from '../components/icons';
+import { InfoIcon, LoadingIndicator, SettingsIcon } from '../components/icons';
 import { useTutorialGuide } from '../hooks/useTutorialGuide';
 import { getEvents } from '../services/event/eventService';
 import { getDestinations } from '../services/master/destinationService';
@@ -24,6 +24,7 @@ export function HomePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { show: showTutorial, dismiss: dismissTutorial } = useTutorialGuide();
+  const [manualTutorialOpen, setManualTutorialOpen] = useState(false);
 
   useEffect(() => {
     Promise.all([getEvents(), getDestinations()])
@@ -39,7 +40,13 @@ export function HomePage() {
 
   return (
     <>
-      <TutorialGuideModal open={showTutorial} onClose={dismissTutorial} />
+      <TutorialGuideModal
+        open={showTutorial || manualTutorialOpen}
+        onClose={() => {
+          dismissTutorial();
+          setManualTutorialOpen(false);
+        }}
+      />
       <div
         id="home-page"
         style={{
@@ -67,14 +74,37 @@ export function HomePage() {
             title="イベント一覧"
             showAppIcon
             trailing={
-              <Button
-                variant="secondary"
-                size="sm"
-                icon={<SettingsIcon size={16} />}
-                onClick={() => navigate('/master')}
-              >
-                登録情報
-              </Button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <button
+                  type="button"
+                  aria-label="使い方を見る"
+                  onClick={() => setManualTutorialOpen(true)}
+                  style={{
+                    flexShrink: 0,
+                    width: '36px',
+                    height: '36px',
+                    padding: 0,
+                    borderRadius: '50%',
+                    border: '1px solid var(--border)',
+                    background: 'var(--bg)',
+                    color: 'var(--text-h)',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <InfoIcon size={18} />
+                </button>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  icon={<SettingsIcon size={16} />}
+                  onClick={() => navigate('/master')}
+                >
+                  登録情報
+                </Button>
+              </div>
             }
           />
         </div>
