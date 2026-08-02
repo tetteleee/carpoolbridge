@@ -114,17 +114,23 @@ export function useCarpoolBoardData(
 
     let ignore = false;
 
-    reconcileCarpools(eventId, direction, carpools, masterData).then((summary) => {
-      if (ignore || !hasReconcileChanges(summary)) {
-        return;
-      }
-      reconcileNoticeIdRef.current += 1;
-      setReconcileNotice({
-        id: reconcileNoticeIdRef.current,
-        message: buildReconcileSummaryMessage(summary),
+    reconcileCarpools(eventId, direction, carpools, masterData)
+      .then((summary) => {
+        if (ignore || !hasReconcileChanges(summary)) {
+          return;
+        }
+        reconcileNoticeIdRef.current += 1;
+        setReconcileNotice({
+          id: reconcileNoticeIdRef.current,
+          message: buildReconcileSummaryMessage(summary),
+        });
+        onCarpoolsReconciled();
+      })
+      .catch((error) => {
+        // 自動整合は補助的な処理のため、失敗しても配車画面自体は表示を継続する。
+        // 次回画面を開いた際に再度整合が試みられる。
+        console.error('配車結果の自動整合に失敗しました', error);
       });
-      onCarpoolsReconciled();
-    });
 
     return () => {
       ignore = true;
