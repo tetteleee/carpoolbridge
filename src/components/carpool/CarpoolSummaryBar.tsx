@@ -58,11 +58,17 @@ const chipBaseStyle = {
  * 見出し行（本コンポーネント自体）は常時表示し、タップでチップ部分の開閉を切り替える
  * （回答編集画面の家庭カード開閉と同じ「見出し行＋シェブロン」操作に統一する）。
  *
- * チップ部分の開閉は、CSS Grid（grid-template-rows）のtransitionではなく、
- * JSで実測した高さ（px）をheightのtransitionで動かす方式で実装する。
- * grid-template-rowsのアニメーションはSafariでの最適化が弱くコマ落ちしやすいため採用しない。
- * 開いている間はheight: autoに戻し、車の台数変化などチップの内容が変わっても
- * 素の高さに追従できるようにする。
+ * チップ部分の開閉は、heightやgrid-template-rowsといったレイアウトに影響する
+ * プロパティ自体をtransitionさせるのではなく、次の方式で実装する（FLIP方式）。
+ *
+ * - 実際のレイアウト上の高さ（panel要素）は、開閉のたびに一瞬で確定させる
+ *   （useLayoutEffectはペイント前に実行されるため、この瞬時の変化はユーザーには見えない）。
+ * - 見た目のアニメーションは、内側（content要素）のtransform（scaleY）とopacityだけで行う。
+ *   これらはコンポジタスレッドだけで完結できるため、下に続く車カード一覧のDOM量に関わらず
+ *   メインスレッドのレイアウト再計算を毎フレーム発生させずに済み、高リフレッシュレート
+ *   （iPhoneのProMotionなど）でもコマ落ちしにくい。
+ * - 開いている間はheight: autoに戻し、車の台数変化などチップの内容が変わっても
+ *   素の高さに追従できるようにする。
  */
 function CarpoolSummaryBarComponent({
   carCards,
@@ -85,24 +91,30 @@ function CarpoolSummaryBarComponent({
     if (isFirstRenderRef.current) {
       isFirstRenderRef.current = false;
       panel.style.height = expanded ? 'auto' : '0px';
+      content.style.transform = expanded ? 'none' : 'scaleY(0)';
+      content.style.opacity = expanded ? '1' : '0';
       return;
     }
 
     if (expanded) {
+      // 実際のレイアウト上の高さは一瞬で確定させる（ペイント前なので見た目には現れない）。
+      // 直前まで畳んだ状態（transform: scaleY(0) / opacity: 0）で描画されていたため、
+      // そこから見た目だけを広げる形でtransform・opacityがtransitionする。
       panel.style.height = `${content.scrollHeight}px`;
+      content.style.transform = 'none';
+      content.style.opacity = '1';
     } else {
-      // 現在の高さ（開いている間はautoのため実測が必要）を明示指定してから
-      // 0にすることで、heightのtransitionを発生させる
-      const current = panel.getBoundingClientRect().height;
-      panel.style.height = `${current}px`;
-      void panel.offsetHeight; // 強制的にレイアウトを確定させる
-      panel.style.height = '0px';
+      // 見た目をtransform・opacityで縮小・フェードさせる。実際のレイアウトの高さは
+      // フェードが完了してから0にする（その時点では透明なので見た目は破綻しない）。
+      content.style.transform = 'scaleY(0)';
+      content.style.opacity = '0';
     }
 
     const timer = window.setTimeout(() => {
-      if (expanded && panelRef.current) {
-        panelRef.current.style.height = 'auto';
+      if (!panelRef.current) {
+        return;
       }
+      panelRef.current.style.height = expanded ? 'auto' : '0px';
     }, TOGGLE_TRANSITION_MS);
     return () => window.clearTimeout(timer);
   }, [expanded]);
@@ -131,13 +143,7 @@ function CarpoolSummaryBarComponent({
         </span>
       </button>
 
-      <div
-        ref={panelRef}
-        style={{
-          overflow: 'hidden',
-          transition: `height ${TOGGLE_TRANSITION_MS}ms ease`,
-        }}
-      >
+      <div ref={panelRef} style={{ overflow: 'hidden' }}>
         <div
           ref={contentRef}
           id="carpool-summary-bar-chips"
@@ -148,6 +154,9 @@ function CarpoolSummaryBarComponent({
             gap: '4px',
             padding: '0 12px 8px',
             boxSizing: 'border-box',
+            transformOrigin: 'top',
+            transition: `transform ${TOGGLE_TRANSITION_MS}ms ease, opacity ${TOGGLE_TRANSITION_MS}ms ease`,
+            willChange: 'transform, opacity',
           }}
         >
           {unassignedCount > 0 && (
