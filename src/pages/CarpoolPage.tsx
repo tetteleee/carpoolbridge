@@ -117,7 +117,7 @@ export function CarpoolPage() {
     }
     setMoveError(null);
     moveCarpoolMember(eventId, member, sourceZoneId, targetZoneId, carpools)
-      .then(refreshCarpools)
+      .then(() => refreshCarpools())
       .catch(() => {
         setMoveError('人の移動に失敗しました');
         // 失敗時も画面表示を実データに同期し、乖離に気づけない状態を防ぐ
@@ -163,9 +163,10 @@ export function CarpoolPage() {
       const masterData = await loadBoardMasterData(eventId);
       await copyDirectionCarpools(eventId, sourceDirection, targetDirection, masterData);
       setCopySourceDirection(null);
-      if (direction === targetDirection) {
-        await refreshCarpools();
-      } else {
+      // コピー先タブが取得済みキャッシュを持っている場合に古いデータが表示されないよう、
+      // タブ切替前に明示的に再取得しておく
+      await refreshCarpools(targetDirection);
+      if (direction !== targetDirection) {
         setDirection(targetDirection);
       }
     } catch {
