@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { PointerEvent as ReactPointerEvent } from 'react';
+import type { PointerEvent as ReactPointerEvent, RefObject } from 'react';
 import type { CarpoolMember } from '../types/event';
 import type { PersonCardData } from '../components/carpool/PersonCard';
 
@@ -40,11 +40,13 @@ interface UseDragAndDropOptions {
   /** ドロップが確定した時に呼び出す（移動元・移動先のドロップゾーンが異なる場合のみ呼び出される） */
   onDrop: (result: DropResult) => void;
   /**
-   * オートスクロール（上方向）が発生する、画面上端からの範囲（px）。
+   * オートスクロール（上方向）が発生する、画面上端からの範囲（px）を保持するref。
    * sticky header（サマリー表示の有無で高さが変わる）の実高さに追従させるため、
-   * 呼び出し元から都度渡せるようにする。省略時はDEFAULT_AUTO_SCROLL_EDGE_TOP_PXを使う。
+   * 呼び出し元から都度渡せるようにする。値そのものではなくrefで受け取ることで、
+   * 高さが変化するたび（サマリー開閉アニメーション中など）に呼び出し元の
+   * 再レンダリングを発生させないようにする。省略時・未設定時はDEFAULT_AUTO_SCROLL_EDGE_TOP_PXを使う。
    */
-  topEdgePx?: number;
+  topEdgePxRef?: RefObject<number>;
 }
 
 interface UseDragAndDropResult {
@@ -115,7 +117,10 @@ function resolveDropTarget(x: number, y: number): DropTarget | null {
  * ドラッグ開始をキャンセルする。ドラッグ可能な範囲は人カード全体とする
  * （呼び出し元がPersonCardのルート要素にonPointerDownを設定する）。
  */
-export function useDragAndDrop({ onDrop, topEdgePx }: UseDragAndDropOptions): UseDragAndDropResult {
+export function useDragAndDrop({
+  onDrop,
+  topEdgePxRef,
+}: UseDragAndDropOptions): UseDragAndDropResult {
   const [dragState, setDragState] = useState<DragState | null>(null);
   const [hoveredZoneId, setHoveredZoneId] = useState<string | null>(null);
   // pointerdown〜pointerup/cancelの1回のジェスチャーを通じて参照し続けるため、
@@ -127,12 +132,6 @@ export function useDragAndDrop({ onDrop, topEdgePx }: UseDragAndDropOptions): Us
   // オートスクロールの現在の方向。稼働中はrequestAnimationFrameのループを回し続ける
   const autoScrollDirectionRef = useRef<'up' | 'down' | null>(null);
   const autoScrollFrameRef = useRef<number | null>(null);
-  // ドラッグ中のイベントハンドラーはwindowに一度だけ登録するクロージャーのため、
-  // 再レンダリングごとに変わるtopEdgePxをrefに反映して参照する
-  const topEdgePxRef = useRef(topEdgePx ?? DEFAULT_AUTO_SCROLL_EDGE_TOP_PX);
-  useEffect(() => {
-    topEdgePxRef.current = topEdgePx ?? DEFAULT_AUTO_SCROLL_EDGE_TOP_PX;
-  }, [topEdgePx]);
 
   // onDropもrefに反映して参照する。人カード側へ渡すhandlePersonPointerDownの参照を
   // レンダリングを跨いで固定するため（React.memo化した車カード・人カードが
@@ -185,7 +184,8 @@ export function useDragAndDrop({ onDrop, topEdgePx }: UseDragAndDropOptions): Us
   /** ポインターのY座標から、画面端に近ければオートスクロールを開始・継続し、離れれば停止する */
   const updateAutoScroll = useCallback(
     (clientY: number) => {
-      if (clientY < topEdgePxRef.current) {
+      const topEdgePx = topEdgePxRef?.current ?? DEFAULT_AUTO_SCROLL_EDGE_TOP_PX;
+      if (clientY < topEdgePx) {
         autoScrollDirectionRef.current = 'up';
       } else if (clientY > window.innerHeight - AUTO_SCROLL_EDGE_BOTTOM_PX) {
         autoScrollDirectionRef.current = 'down';
@@ -199,7 +199,7 @@ export function useDragAndDrop({ onDrop, topEdgePx }: UseDragAndDropOptions): Us
         startAutoScrollLoop();
       }
     },
-    [stopAutoScroll, startAutoScrollLoop]
+    [stopAutoScroll, startAutoScrollLoop, topEdgePxRef]
   );
 
   const resetAll = useCallback(() => {

@@ -73,9 +73,12 @@ export function CarpoolPage() {
     unansweredCount
   );
 
-  // sticky header（ヘッダー＋トグル＋サマリー）の実高さを測り、オートスクロール開始位置に反映する
+  // sticky header（ヘッダー＋トグル＋サマリー）の実高さを測り、オートスクロール開始位置に反映する。
+  // サマリー開閉アニメーション中は高さが連続的に変化しResizeObserverが毎フレーム発火するため、
+  // stateではなくrefで保持し、高さ変化のたびにページ全体が再レンダリングされないようにする
+  // （開閉アニメーションのカクつき対策）。
   const stickyHeaderRef = useRef<HTMLDivElement>(null);
-  const [stickyHeaderHeight, setStickyHeaderHeight] = useState(0);
+  const topEdgePxRef = useRef(AUTO_SCROLL_TOP_BUFFER_PX);
 
   useEffect(() => {
     const element = stickyHeaderRef.current;
@@ -85,7 +88,7 @@ export function CarpoolPage() {
     const observer = new ResizeObserver((entries) => {
       const entry = entries[0];
       if (entry) {
-        setStickyHeaderHeight(entry.contentRect.height);
+        topEdgePxRef.current = entry.contentRect.height + AUTO_SCROLL_TOP_BUFFER_PX;
       }
     });
     observer.observe(element);
@@ -127,7 +130,7 @@ export function CarpoolPage() {
 
   const { dragState, hoveredZoneId, handlePersonPointerDown } = useDragAndDrop({
     onDrop: handleDrop,
-    topEdgePx: stickyHeaderHeight + AUTO_SCROLL_TOP_BUFFER_PX,
+    topEdgePxRef,
   });
 
   const warningPopupMessage =
