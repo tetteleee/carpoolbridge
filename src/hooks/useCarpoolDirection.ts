@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { getCarpools } from '../services/event/carpoolService';
 import type { Carpool, Direction } from '../types/event';
 
@@ -15,8 +15,11 @@ interface UseCarpoolDirectionResult {
   loading: boolean;
   /** 配車結果の取得に失敗した場合のエラーメッセージ */
   error: string | null;
-  /** 選択中タブの配車結果を再取得する（配車結果を変更した直後の再同期に使用。T43） */
-  refresh: () => Promise<void>;
+  /**
+   * 指定方向の配車結果を再取得する（配車結果を変更した直後の再同期に使用。T43）。
+   * 方向を省略した場合は選択中タブを再取得する。
+   */
+  refresh: (targetDirection?: Direction) => Promise<void>;
 }
 
 /**
@@ -38,9 +41,24 @@ export function useCarpoolDirection(
   >({ OUTWARD: [], RETURN: [] });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // 取得済みの方向を記録し、一度取得済みのタブへ戻った際に不要な再取得・
+  // ローディング表示（＝タブ切替時のチラつき）が起きないようにする
+  const loadedEventIdRef = useRef<string | null>(null);
+  const loadedDirectionsRef = useRef<Set<Direction>>(new Set());
 
   useEffect(() => {
     if (!eventId) {
+      return;
+    }
+
+    if (loadedEventIdRef.current !== eventId) {
+      loadedEventIdRef.current = eventId;
+      loadedDirectionsRef.current = new Set();
+    }
+
+    if (loadedDirectionsRef.current.has(direction)) {
+      setLoading(false);
+      setError(null);
       return;
     }
 
@@ -56,6 +74,7 @@ export function useCarpoolDirection(
         if (ignore) {
           return;
         }
+        loadedDirectionsRef.current.add(direction);
         setCarpoolsByDirection((prev) => ({ ...prev, [direction]: carpools }));
       })
       .catch(() => {
@@ -74,17 +93,22 @@ export function useCarpoolDirection(
     };
   }, [eventId, direction]);
 
-  const refresh = useCallback(async () => {
-    if (!eventId) {
-      return;
-    }
-    try {
-      const carpools = await getCarpools(eventId, direction);
-      setCarpoolsByDirection((prev) => ({ ...prev, [direction]: carpools }));
-    } catch {
-      setError('配車結果の取得に失敗しました');
-    }
-  }, [eventId, direction]);
+  const refresh = useCallback(
+    async (targetDirection?: Direction) => {
+      if (!eventId) {
+        return;
+      }
+      const refreshDirection = targetDirection ?? direction;
+      try {
+        const carpools = await getCarpools(eventId, refreshDirection);
+        loadedDirectionsRef.current.add(refreshDirection);
+        setCarpoolsByDirection((prev) => ({ ...prev, [refreshDirection]: carpools }));
+      } catch {
+        setError('配車結果の取得に失敗しました');
+      }
+    },
+    [eventId, direction]
+  );
 
   return {
     direction,
