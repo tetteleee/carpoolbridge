@@ -1,37 +1,56 @@
-import { useState } from 'react';
 import type { Event } from '../types/event';
 import { Button } from './common/Button';
 import { Card } from './common/Card';
-import { ChevronDownIcon, ChevronRightIcon, GearIcon } from './icons';
+import { ChevronDownIcon, ChevronRightIcon, GearIcon, LoadingIndicator } from './icons';
 import { formatDateWithWeekday, getTodayDateString } from '../utils/date';
 
 interface EventListProps {
-  /** 表示対象のイベント一覧 */
-  events: Event[];
+  /** 本日以降のイベント一覧（日付昇順） */
+  upcomingEvents: Event[];
+  /** 展開・追加取得済みの過去イベント一覧（日付降順＝新しい順） */
+  pastEvents: Event[];
+  /** 過去のイベントの総件数（「過去のイベント（n件）」表示用。展開前から取得済み） */
+  pastEventsCount: number;
+  /** 過去のイベントを展開表示中かどうか */
+  pastExpanded: boolean;
+  /** 過去のイベントにまだ取得していないページが残っているかどうか */
+  pastHasMore: boolean;
+  /** 過去のイベントのページを取得中かどうか */
+  pastLoading: boolean;
   /** 目的地IDから目的地名を引くためのマップ */
   destinationNameById: Record<string, string>;
   /** イベント行タップ時のコールバック（配車画面への遷移に使用） */
   onEventClick: (eventId: string) => void;
   /** 編集アイコンタップ時のコールバック（イベント情報編集画面への遷移に使用） */
   onEditClick: (eventId: string) => void;
+  /** 「過去のイベント（n件）」行タップ時のコールバック（展開・折りたたみ切り替え） */
+  onTogglePast: () => void;
+  /** 「もっと見る」タップ時のコールバック（次ページ取得） */
+  onLoadMorePast: () => void;
 }
 
 /**
  * イベント一覧をホーム画面用に表示するコンポーネント。
  * 本日以降のイベントを日付順に表示し、本日のイベントを強調表示する。
  * 開催日を過ぎたイベントは初期状態では折りたたみ、件数表示の行をタップすると
- * グレーアウトした状態で展開される。状態はラベル文字列ではなく
+ * グレーアウトした状態で展開される。過去のイベントは新しい順に20件ずつ
+ * 追加取得する（「もっと見る」）。状態はラベル文字列ではなく
  * 表示スタイル（カードの縁取り・背景・不透明度）で表現する。
  */
 export function EventList({
-  events,
+  upcomingEvents,
+  pastEvents,
+  pastEventsCount,
+  pastExpanded,
+  pastHasMore,
+  pastLoading,
   destinationNameById,
   onEventClick,
   onEditClick,
+  onTogglePast,
+  onLoadMorePast,
 }: EventListProps) {
-  const [showPast, setShowPast] = useState(false);
-
-  if (events.length === 0) {
+  if (upcomingEvents.length === 0 && pastEventsCount === 0) {
     return (
       <p
         id="event-list-empty"
@@ -49,9 +68,6 @@ export function EventList({
   }
 
   const today = getTodayDateString();
-  const sortedEvents = [...events].sort((a, b) => a.date.localeCompare(b.date));
-  const upcomingEvents = sortedEvents.filter((event) => event.date >= today);
-  const pastEvents = sortedEvents.filter((event) => event.date < today);
 
   const renderEventCard = (event: Event, isPast: boolean) => {
     const isToday = event.date === today;
@@ -210,21 +226,21 @@ export function EventList({
         </p>
       )}
 
-      {pastEvents.length > 0 && (
+      {pastEventsCount > 0 && (
         <>
           <Button
             variant="secondary"
             size="sm"
             id="event-list-past-toggle"
-            onClick={() => setShowPast((prev) => !prev)}
-            aria-expanded={showPast}
+            onClick={onTogglePast}
+            aria-expanded={pastExpanded}
             style={{ justifyContent: 'space-between', width: '100%' }}
           >
-            <span>過去のイベント（{pastEvents.length}件）</span>
+            <span>過去のイベント（{pastEventsCount}件）</span>
             <span
               style={{
                 display: 'inline-flex',
-                transform: showPast ? 'rotate(180deg)' : 'none',
+                transform: pastExpanded ? 'rotate(180deg)' : 'none',
                 transition: 'transform 0.15s ease',
               }}
             >
@@ -232,7 +248,29 @@ export function EventList({
             </span>
           </Button>
 
-          {showPast && pastEvents.map((event) => renderEventCard(event, true))}
+          {pastExpanded && (
+            <>
+              {pastEvents.map((event) => renderEventCard(event, true))}
+
+              {pastLoading && (
+                <div style={{ display: 'flex', justifyContent: 'center', padding: '12px' }}>
+                  <LoadingIndicator />
+                </div>
+              )}
+
+              {!pastLoading && pastHasMore && (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  id="event-list-past-load-more"
+                  onClick={onLoadMorePast}
+                  style={{ width: '100%' }}
+                >
+                  もっと見る
+                </Button>
+              )}
+            </>
+          )}
         </>
       )}
     </div>

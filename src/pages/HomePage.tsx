@@ -6,8 +6,14 @@ import { TutorialGuideModal } from '../components/TutorialGuideModal';
 import { Button } from '../components/common/Button';
 import { HelpIcon, LoadingIndicator, SettingsIcon } from '../components/icons';
 import { useTutorialGuide } from '../hooks/useTutorialGuide';
-import { getEvents } from '../services/event/eventService';
+import {
+  getPastEventsCount,
+  getPastEventsPage,
+  getUpcomingEvents,
+  type PastEventsCursor,
+} from '../services/event/eventService';
 import { getDestinations } from '../services/master/destinationService';
+import { getTodayDateString } from '../utils/date';
 import type { Event } from '../types/event';
 
 /**
@@ -17,7 +23,14 @@ import type { Event } from '../types/event';
  */
 export function HomePage() {
   const navigate = useNavigate();
-  const [events, setEvents] = useState<Event[]>([]);
+  const [today] = useState(() => getTodayDateString());
+  const [upcomingEvents, setUpcomingEvents] = useState<Event[]>([]);
+  const [pastEventsCount, setPastEventsCount] = useState(0);
+  const [pastEvents, setPastEvents] = useState<Event[]>([]);
+  const [pastCursor, setPastCursor] = useState<PastEventsCursor | null>(null);
+  const [pastExpanded, setPastExpanded] = useState(false);
+  const [pastHasMore, setPastHasMore] = useState(false);
+  const [pastLoading, setPastLoading] = useState(false);
   const [destinationNameById, setDestinationNameById] = useState<
     Record<string, string>
   >({});
@@ -27,16 +40,42 @@ export function HomePage() {
   const [manualTutorialOpen, setManualTutorialOpen] = useState(false);
 
   useEffect(() => {
-    Promise.all([getEvents(), getDestinations()])
-      .then(([eventList, destinations]) => {
-        setEvents(eventList);
+    Promise.all([
+      getUpcomingEvents(today),
+      getPastEventsCount(today),
+      getDestinations(),
+    ])
+      .then(([upcoming, pastCount, destinations]) => {
+        setUpcomingEvents(upcoming);
+        setPastEventsCount(pastCount);
         setDestinationNameById(
           Object.fromEntries(destinations.map((d) => [d.id, d.name]))
         );
       })
       .catch(() => setError('イベント一覧の取得に失敗しました'))
       .finally(() => setLoading(false));
-  }, []);
+  }, [today]);
+
+  const loadMorePast = () => {
+    setPastLoading(true);
+    getPastEventsPage(today, pastCursor)
+      .then(({ events: page, hasMore }) => {
+        setPastEvents((prev) => [...prev, ...page]);
+        const last = page[page.length - 1];
+        setPastCursor(last ? { date: last.date, id: last.id } : pastCursor);
+        setPastHasMore(hasMore);
+      })
+      .catch(() => setError('過去のイベントの取得に失敗しました'))
+      .finally(() => setPastLoading(false));
+  };
+
+  const togglePast = () => {
+    const next = !pastExpanded;
+    setPastExpanded(next);
+    if (next && pastEvents.length === 0 && pastEventsCount > 0) {
+      loadMorePast();
+    }
+  };
 
   return (
     <>
@@ -138,10 +177,17 @@ export function HomePage() {
           </div>
         ) : (
           <EventList
-            events={events}
+            upcomingEvents={upcomingEvents}
+            pastEvents={pastEvents}
+            pastEventsCount={pastEventsCount}
+            pastExpanded={pastExpanded}
+            pastHasMore={pastHasMore}
+            pastLoading={pastLoading}
             destinationNameById={destinationNameById}
             onEventClick={(eventId) => navigate(`/events/${eventId}/carpool`)}
             onEditClick={(eventId) => navigate(`/events/${eventId}/edit-info`)}
+            onTogglePast={togglePast}
+            onLoadMorePast={loadMorePast}
           />
         )}
       </div>

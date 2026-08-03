@@ -1,12 +1,19 @@
 import {
   collection,
   doc,
+  documentId,
   addDoc,
   deleteDoc,
+  getCountFromServer,
   getDoc,
   getDocs,
+  limit,
+  orderBy,
+  query,
   serverTimestamp,
+  startAfter,
   updateDoc,
+  where,
   writeBatch,
 } from 'firebase/firestore';
 import { db } from '../../firebase';
@@ -14,6 +21,21 @@ import { firestorePaths } from '../../constants';
 import type { Event } from '../../types/event';
 
 const DELETE_BATCH_SIZE = 400;
+
+/** 過去のイベント一覧を1ページで取得する件数 */
+export const PAST_EVENTS_PAGE_SIZE = 20;
+
+/** 過去のイベントをページ取得する際のカーソル（直前ページ最後のイベント） */
+export interface PastEventsCursor {
+  date: string;
+  id: string;
+}
+
+/** 過去のイベントのページ取得結果 */
+export interface PastEventsPage {
+  events: Event[];
+  hasMore: boolean;
+}
 
 /** 指定コレクション配下の全ドキュメントを物理削除する */
 async function deleteAllDocsInCollection(collectionPath: string): Promise<void> {
@@ -48,14 +70,63 @@ export async function createEvent(
 }
 
 /**
- * イベントの一覧を取得します。
+ * 本日以降のイベントを日付昇順で取得します（ホーム画面上部に表示する分）。
  *
+ * @param todayDate 本日の日付（"YYYY-MM-DD"）
  * @returns イベントの配列
  */
-export async function getEvents(): Promise<Event[]> {
+export async function getUpcomingEvents(todayDate: string): Promise<Event[]> {
   const colRef = collection(db, firestorePaths.eventsCollection());
-  const snapshot = await getDocs(colRef);
+  const q = query(colRef, where('date', '>=', todayDate), orderBy('date', 'asc'));
+  const snapshot = await getDocs(q);
   return snapshot.docs.map((d) => ({ id: d.id, ...d.data() } as Event));
+}
+
+/**
+ * 開催日を過ぎたイベントの件数のみを取得します（ホーム画面の
+ * 「過去のイベント（n件）」表示用）。ドキュメント本体は取得しないため、
+ * 件数が多くても読み取りコストは小さい。
+ *
+ * @param todayDate 本日の日付（"YYYY-MM-DD"）
+ * @returns 過去のイベントの件数
+ */
+export async function getPastEventsCount(todayDate: string): Promise<number> {
+  const colRef = collection(db, firestorePaths.eventsCollection());
+  const q = query(colRef, where('date', '<', todayDate));
+  const snapshot = await getCountFromServer(q);
+  return snapshot.data().count;
+}
+
+/**
+ * 開催日を過ぎたイベントを、開催日が新しい順（今日に近い順）に
+ * {@link PAST_EVENTS_PAGE_SIZE}件ずつページ取得します。
+ * ホーム画面の「過去のイベント」展開・「もっと見る」で使用する。
+ *
+ * @param todayDate 本日の日付（"YYYY-MM-DD"）
+ * @param cursor 前回取得した最後のイベント（date・id）。先頭ページを取得する場合はnull
+ * @returns 取得したイベントと、さらに次ページが存在するかどうか
+ */
+export async function getPastEventsPage(
+  todayDate: string,
+  cursor: PastEventsCursor | null
+): Promise<PastEventsPage> {
+  const colRef = collection(db, firestorePaths.eventsCollection());
+  const baseConstraints = [
+    where('date', '<', todayDate),
+    orderBy('date', 'desc'),
+    orderBy(documentId(), 'desc'),
+    limit(PAST_EVENTS_PAGE_SIZE + 1),
+  ];
+  const q = cursor
+    ? query(colRef, ...baseConstraints, startAfter(cursor.date, cursor.id))
+    : query(colRef, ...baseConstraints);
+  const snapshot = await getDocs(q);
+  const hasMore = snapshot.docs.length > PAST_EVENTS_PAGE_SIZE;
+  const pageDocs = hasMore ? snapshot.docs.slice(0, PAST_EVENTS_PAGE_SIZE) : snapshot.docs;
+  return {
+    events: pageDocs.map((d) => ({ id: d.id, ...d.data() } as Event)),
+    hasMore,
+  };
 }
 
 /**
