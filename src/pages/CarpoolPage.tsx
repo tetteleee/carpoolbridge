@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Header } from '../components/Header';
 import { EventHeaderTitle } from '../components/EventHeaderTitle';
@@ -63,6 +63,11 @@ export function CarpoolPage() {
   } = useCarpoolBoardData(eventId, direction, carpools, refreshCarpools);
   const [moveError, setMoveError] = useState<string | null>(null);
   const [isSummaryVisible, setIsSummaryVisible] = useState(true);
+  // CarpoolSummaryBarをmemo化しているため、開閉ハンドラーの参照を安定させ
+  // 開閉と無関係な再レンダリング（ドラッグ中など）でチップの再描画が起きないようにする
+  const handleToggleSummary = useCallback(() => {
+    setIsSummaryVisible((visible) => !visible);
+  }, []);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [copySourceDirection, setCopySourceDirection] = useState<Direction | null>(null);
   const [copyProcessing, setCopyProcessing] = useState(false);
@@ -237,7 +242,7 @@ export function CarpoolPage() {
             unassignedCount={unassignedPeople.length}
             noRideNeededCount={noRideNeededPeople.length}
             expanded={isSummaryVisible}
-            onToggleExpanded={() => setIsSummaryVisible((visible) => !visible)}
+            onToggleExpanded={handleToggleSummary}
           />
         )}
       </div>
