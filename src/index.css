@@ -77,6 +77,14 @@ textarea:focus-visible,
   outline-offset: 2px;
 }
 
+/* タップ時にブラウザ標準の四角いハイライトが一瞬見える不具合が、個別クラスへの
+   都度対応（.event-card-body等）だけでは新しいボタンで再発し続けていたため、
+   button要素全体に対して一括で無効化する。個別の押下フィードバックが欲しい箇所は
+   従来通り:activeスタイルを追加する */
+button {
+  -webkit-tap-highlight-color: transparent;
+}
+
 #root {
   width: 1126px;
   max-width: 100%;
@@ -157,13 +165,8 @@ code {
   background: var(--code-bg);
 }
 
-/* イベント一覧のタップ時に四角いブラウザ標準ハイライトが出ないようにし、
-   カードの丸みに沿った控えめな押下フィードバックに差し替える */
-.event-card-body,
-.event-card-edit {
-  -webkit-tap-highlight-color: transparent;
-}
-
+/* イベント一覧のカード本体・編集ボタンは、カードの丸みに沿った控えめな
+   押下フィードバックに差し替える（標準ハイライトの無効化は上のbutton一括設定で対応済み） */
 .event-card-body {
   border-radius: 12px;
 }
@@ -176,10 +179,8 @@ code {
   background: rgba(0, 0, 0, 0.08);
 }
 
-/* 登録情報ハブ画面のメニュー行も同様に、タップ時の四角い標準ハイライトを消し、
-   カードの丸みに沿った押下フィードバックに差し替える */
+/* 登録情報ハブ画面のメニュー行も同様に、カードの丸みに沿った押下フィードバックに差し替える */
 .master-menu-row {
-  -webkit-tap-highlight-color: transparent;
   border-radius: 16px;
 }
 
@@ -187,12 +188,7 @@ code {
   background: rgba(0, 0, 0, 0.05);
 }
 
-/* 配車画面サマリー帯の開閉ボタンも同様に、タップ時の四角い標準ハイライトを消し、
-   控えめな押下フィードバックに差し替える */
-.carpool-summary-toggle {
-  -webkit-tap-highlight-color: transparent;
-}
-
+/* 配車画面サマリー帯の開閉ボタンも同様に、控えめな押下フィードバックに差し替える */
 .carpool-summary-toggle:active {
   background: rgba(0, 0, 0, 0.05);
 }
