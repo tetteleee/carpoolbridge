@@ -72,15 +72,19 @@ export function Header({
         </button>
       )}
       {showAppIcon && !backTo && (
-        <span
-          aria-hidden="true"
+        <button
+          type="button"
+          aria-label="ページを更新"
+          onClick={() => window.location.reload()}
           style={{
             ...iconButtonStyle,
+            border: 'none',
             background: 'rgba(61, 90, 128, 0.08)',
+            cursor: 'pointer',
           }}
         >
           <AppIcon size={32} />
-        </span>
+        </button>
       )}
       {titleContent ?? (
         <h1
