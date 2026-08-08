@@ -1,19 +1,11 @@
-import {
-  collection,
-  doc,
-  addDoc,
-  getDoc,
-  getDocs,
-  updateDoc,
-  deleteDoc,
-  serverTimestamp,
-} from 'firebase/firestore';
-import { db } from '../../firebase';
-import { firestorePaths } from '../../constants';
 import type { Family } from '../../types/master';
-import { deletePlayersByFamilyId } from './playerService';
-import { deleteCoachesByFamilyId } from './coachService';
-import { deleteFamilyMembersByFamilyId } from './familyMemberService';
+import type { CarpoolRepository } from '../../repositories/CarpoolRepository';
+import { firestoreRepository } from '../../repositories/firestore';
+
+// firestoreRepositoryは全エンティティの実装が揃うまでPartial<CarpoolRepository>型のため、
+// このファイルが実際に呼ぶメソッドは常に実装済みであることを踏まえてasで実体型に揃える
+// （ref: docs/08_公開版アーキテクチャ設計.md#5 ファイル構成）。
+const repository = firestoreRepository as CarpoolRepository;
 
 /**
  * 家庭を新規登録します。
@@ -25,14 +17,7 @@ import { deleteFamilyMembersByFamilyId } from './familyMemberService';
 export async function createFamily(
   data: Omit<Family, 'id' | 'isActive' | 'createdAt' | 'updatedAt'>
 ): Promise<string> {
-  const colRef = collection(db, firestorePaths.familiesCollection());
-  const docRef = await addDoc(colRef, {
-    ...data,
-    isActive: true,
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp(),
-  });
-  return docRef.id;
+  return repository.createFamily(data);
 }
 
 /**
@@ -41,9 +26,7 @@ export async function createFamily(
  * @returns 家庭の配列
  */
 export async function getFamilies(): Promise<Family[]> {
-  const colRef = collection(db, firestorePaths.familiesCollection());
-  const snapshot = await getDocs(colRef);
-  return snapshot.docs.map((d) => ({ id: d.id, ...d.data() } as Family));
+  return repository.getFamilies();
 }
 
 /**
@@ -53,12 +36,7 @@ export async function getFamilies(): Promise<Family[]> {
  * @returns 家庭。ドキュメントが存在しない場合は null
  */
 export async function getFamily(familyId: string): Promise<Family | null> {
-  const docRef = doc(db, firestorePaths.familyDocument(familyId));
-  const docSnap = await getDoc(docRef);
-  if (!docSnap.exists()) {
-    return null;
-  }
-  return { id: docSnap.id, ...docSnap.data() } as Family;
+  return repository.getFamily(familyId);
 }
 
 /**
@@ -77,11 +55,7 @@ export async function updateFamily(
   familyId: string,
   data: Partial<Pick<Family, 'familyName' | 'vehicleCapacity' | 'pickupLocationId' | 'isActive'>>
 ): Promise<void> {
-  const docRef = doc(db, firestorePaths.familyDocument(familyId));
-  await updateDoc(docRef, {
-    ...data,
-    updatedAt: serverTimestamp(),
-  });
+  return repository.updateFamily(familyId, data);
 }
 
 /**
@@ -92,9 +66,8 @@ export async function updateFamily(
  * @param familyId 削除対象のドキュメントID
  */
 export async function deleteFamily(familyId: string): Promise<void> {
-  await deletePlayersByFamilyId(familyId);
-  await deleteCoachesByFamilyId(familyId);
-  await deleteFamilyMembersByFamilyId(familyId);
-  const docRef = doc(db, firestorePaths.familyDocument(familyId));
-  await deleteDoc(docRef);
+  await repository.deletePlayersByFamilyId(familyId);
+  await repository.deleteCoachesByFamilyId(familyId);
+  await repository.deleteFamilyMembersByFamilyId(familyId);
+  await repository.deleteFamily(familyId);
 }
