@@ -184,9 +184,8 @@ export const db = new CarpoolBridgeDB();
 
 # 6. 対象外
 
-- E2Eテスト（Playwright）の公開版（Dexie）対応。現状のE2E基盤はFirebase Emulator
-  前提のため、公開版のテスト方針は別途検討する
 - Google Drive同期、PWA化、TWA/Google Play公開、広告（`docs/08`同様に対象外のまま）
+- ~~E2Eテスト（Playwright）の公開版（Dexie）対応~~ **解決済み**（8章参照）
 - ~~認証UI・ルーティングの公開版対応~~ **解決済み**（`@app-shell`エイリアスで対応。
   2章参照）。T88実装直後は`App.tsx`の認証ガード（`useAuth`・`checkStaffUserRegistration`）が
   storageModeに関わらず常時有効なままで、`services/auth/staffUserService.ts`が
@@ -202,10 +201,85 @@ export const db = new CarpoolBridgeDB();
 
 ---
 
+# 8. 公開版E2Eテスト設計
+
+## テスト範囲
+
+UI・ビジネスロジックは自チーム版と完全に共通コードであり、既存の`e2e/`配下16本で
+すでに検証済みのため、公開版で重複検証はしない。公開版E2Eは**DexieRepository固有の
+リスクにのみ絞ったスモークテスト**（5本程度）とする。
+
+- マスタデータ（集合場所・家庭等）のCRUDが、ページリロードを跨いでIndexedDBに永続化される
+- イベント作成 → 回答入力 → 自動配車という一連のDexieRepository読み書きチェーンが通しで動く
+- 配車結果画面のドラッグ&ドロップで、`saveCarpools`のupsert・原子性が実際に機能する
+  （移動元・移動先の両方が正しく更新される）
+- 家庭削除時、選手・コーチ・家族への道連れ削除カスケードがDexie上でも機能する
+- 過去イベントの「もっと見る」ページネーション（`getPastEventsPage`のメモリ上カーソル実装）が
+  重複・漏れなく機能する
+
+## テスト基盤
+
+自チーム版のE2E基盤（Firebase Emulator Suite必須）とは前提が異なるため、別のPlaywright設定・
+テストディレクトリとして構築する。既存の`e2e/`・`playwright.config.ts`は変更しない。
+
+```text
+playwright.public.config.ts   # 公開版E2E用の設定（新規）
+e2e-public/                   # 公開版E2Eテスト（新規）
+  utils/
+    fixtures.ts                 # skipTutorial等（clearFirestore相当は不要。後述）
+    seedDexie.ts                 # window.__dexieDb経由の高速データ投入ヘルパー
+  master-data-persistence.spec.ts
+  event-response-carpool-flow.spec.ts
+  carpool-drag-and-drop.spec.ts
+  family-delete-cascade.spec.ts
+  past-events-pagination.spec.ts
+```
+
+### ビルドmode
+
+新設のビルドmode`public-e2e`で`vite dev`を起動する。`vite.config.ts`の`resolve.alias`は
+`mode === 'public'`の判定を`mode.startsWith('public')`に変更し、`public`・`public-e2e`
+どちらでもDexie版・`PublicAppShell`が使われるようにする。
+
+### テストデータの高速投入（デバッグ用windowフック）
+
+既存の自チーム版E2Eは、Firebase Admin SDKでSecurity Rulesを介さず直接Firestoreへ
+書き込むことで、UI操作を介さない高速なテスト前提データ投入を行っている
+（`e2e/utils/firebaseAdmin.ts`）。公開版はサーバーを持たないため同じ手段が使えず、
+代わりに**`public-e2e`ビルドmode限定でDexieのdbインスタンスを`window`に公開する**。
+
+```typescript
+// src/repositories/dexie/db.ts
+if (import.meta.env.VITE_EXPOSE_DEXIE_DB === 'true') {
+  (window as unknown as { __dexieDb?: typeof db }).__dexieDb = db;
+}
+```
+
+`.env.public-e2e`で`VITE_EXPOSE_DEXIE_DB=true`を設定する。本番の公開版ビルド
+（`--mode public`、環境変数なし）ではこのフックは一切含まれない
+（`import.meta.env.VITE_EXPOSE_DEXIE_DB`は未設定＝`undefined`のため、
+if文の条件が静的にfalseと判定されtree-shakingで除去される）。
+
+テストからは`page.evaluate()`経由で`window.__dexieDb`のテーブルに直接read/writeする。
+
+### テスト分離（Firestore Emulatorのクリア相当は不要）
+
+Playwrightは既定で各テストに新しいBrowserContext（＝新しいIndexedDB）を割り当てるため、
+Firestore Emulatorのように明示的なクリア処理（`e2e/utils/fixtures.ts`の`clearFirestore`）は
+不要。テスト間のデータ分離は自動的に確保される。
+
+### 認証まわり
+
+公開版は認証を持たないため（`PublicAppShell`、`docs/10`#2参照）、既存e2eの
+`registerAsStaffAndReload`のようなダンスは不要。`page.goto()`で直接目的の画面へアクセスできる。
+
+---
+
 # 7. 次にやること
 
 1. 本ドキュメントの内容を人間がレビュー・承認する（完了）
 2. `docs/50_タスク作成ルール.md`に従い、5章のT77〜T88を`tasks/`へタスクファイルとして
    作成する（完了）
 3. `dexie`パッケージを`package.json`に追加する（完了）
-4. 系統A→系統Bの順に実装する
+4. 系統A→系統Bの順に実装する（完了）
+5. 8章に従い、公開版E2Eテスト基盤・スモークテスト5本を実装する
