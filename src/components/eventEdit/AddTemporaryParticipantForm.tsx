@@ -87,7 +87,7 @@ const hintStyle: CSSProperties = {
 /**
  * 一時参加者（今回だけ参加する人）の追加フォーム。
  * 家庭カード内の追加行（AddRow）タップで展開する（04_画面設計.md#7 一時参加者の追加）。
- * 「今回限り」「マスタに登録して今後も使う」いずれの場合も、送信内容の確定（Response・
+ * 「今回限り」「家族として登録して今後も使う」いずれの場合も、送信内容の確定（Response・
  * FamilyMemberへの反映）は呼び出し側（FamilyResponseCard）が行う。
  */
 export function AddTemporaryParticipantForm({
@@ -184,7 +184,7 @@ export function AddTemporaryParticipantForm({
               ...(registerToMaster ? toggleOptionSelectedStyle : {}),
             }}
           >
-            マスタに登録して今後も使う
+            家族として登録して今後も使う
           </button>
         </div>
       </div>
@@ -192,7 +192,7 @@ export function AddTemporaryParticipantForm({
       <p style={hintStyle}>
         {registerToMaster
           ? 'この家庭の「家族」として登録し、次回以降のイベントでも使えるようにします。'
-          : '今回のイベントのみ配車対象になります。マスタ（家族一覧）には保存されません。'}
+          : '今回のイベントのみ配車対象になります。家族一覧には保存されません。'}
       </p>
 
       <Button

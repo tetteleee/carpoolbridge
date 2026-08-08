@@ -285,7 +285,7 @@ export function EventEditPage() {
   };
 
   /**
-   * 一時参加者を「マスタに登録」した際、対象家庭の家族一覧へ即座に反映する
+   * 一時参加者を「家族として登録」した際、対象家庭の家族一覧へ即座に反映する
    * （04_画面設計.md#7 一時参加者の追加）。
    */
   const handleFamilyMemberRegistered = (familyId: string, familyMember: FamilyMember) => {
