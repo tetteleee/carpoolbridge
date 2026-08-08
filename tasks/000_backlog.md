@@ -267,3 +267,16 @@ UI・ビジネスロジックは自チーム版と共通コードで既存e2e16�
 公開版E2EはDexieRepository固有のリスク（永続化・カスケード削除・saveCarpoolsの原子性・
 過去イベントページネーション等）に絞ったスモークテスト5本とする。既存の自チーム版E2E基盤
 （Firebase Emulator前提）とは別に、`playwright.public.config.ts`・`e2e-public/`を新設する。
+
+---
+
+## W. PWA化（11_PWA化設計.md）
+
+- T91_PWAアイコン生成基盤 / 11_PWA化設計.md#4,#5 / なし / 未着手
+- T92_vite-plugin-pwa導入・manifest設定 / 11_PWA化設計.md#3,#4,#6 / T91 / 未着手
+- T93_ServiceWorker登録・自動更新配線 / 11_PWA化設計.md#7 / T92 / 未着手
+
+対象範囲は公開版・自チーム版の両方。公開版はフルオフライン対応（アプリシェルを
+事前キャッシュ）、自チーム版はインストール可能にするだけ（認証・Firestore通信は
+引き続きオンライン必須のため事前キャッシュしない）。実装は`vite-plugin-pwa`を用い、
+新バージョン検知時は自動更新（`autoUpdate`）とする。
