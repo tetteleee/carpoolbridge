@@ -8,8 +8,13 @@ import { BackupIcon } from '../components/icons';
 import { exportAllData, importAllData } from '../services/backup/backupService';
 import { BACKUP_SCHEMA_VERSION, type BackupData } from '../types/backup';
 
-/** 公開版（端末内保存のみ）ビルドかどうか。ref: docs/10_DexieRepository実装設計.md#2 */
-const IS_PUBLIC_BUILD = import.meta.env.MODE === 'public';
+/**
+ * 公開版（端末内保存のみ）ビルドかどうか。
+ * vite.config.tsの規約に合わせ、"public"で始まるmode名（本番のpublic・
+ * 公開版E2Eのpublic-e2eを含む）をすべて公開版として扱う。
+ * ref: docs/10_DexieRepository実装設計.md#2, #8
+ */
+const IS_PUBLIC_BUILD = import.meta.env.MODE.startsWith('public');
 
 function pad(n: number): string {
   return String(n).padStart(2, '0');
