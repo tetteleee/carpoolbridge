@@ -12,11 +12,8 @@
  */
 
 import { db } from './db';
-import type { CarpoolRepository } from '../CarpoolRepository';
+import { PAST_EVENTS_PAGE_SIZE, type CarpoolRepository } from '../CarpoolRepository';
 import type { Event } from '../../types/event';
-
-/** 過去のイベント一覧を1ページで取得する件数（T76のFirestore版と同じ値） */
-export const PAST_EVENTS_PAGE_SIZE = 20;
 
 /** (date降順, id降順)の並び順で比較する。Array.prototype.sortにそのまま渡せる */
 function compareByDateDescThenIdDesc(a: Event, b: Event): number {

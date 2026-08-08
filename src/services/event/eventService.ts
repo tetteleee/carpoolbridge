@@ -1,6 +1,6 @@
 import type { Event } from '../../types/event';
 import { repository } from '@repository';
-import { PAST_EVENTS_PAGE_SIZE } from '../../repositories/firestore/eventRepository';
+import { PAST_EVENTS_PAGE_SIZE } from '../../repositories/CarpoolRepository';
 
 /** 過去のイベント一覧を1ページで取得する件数 */
 export { PAST_EVENTS_PAGE_SIZE };

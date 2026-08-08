@@ -29,10 +29,7 @@ import {
 import { db } from '../../firebase';
 import { firestorePaths } from '../../constants';
 import type { Event } from '../../types/event';
-import type { CarpoolRepository } from '../CarpoolRepository';
-
-/** 過去のイベント一覧を1ページで取得する件数 */
-export const PAST_EVENTS_PAGE_SIZE = 20;
+import { PAST_EVENTS_PAGE_SIZE, type CarpoolRepository } from '../CarpoolRepository';
 
 /** FirestoreのドキュメントスナップショットをEvent型へ変換する（Timestamp→Dateの変換を含む） */
 function toEvent(d: QueryDocumentSnapshot<DocumentData>): Event {

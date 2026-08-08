@@ -11,6 +11,15 @@ import type { Event, Response, Carpool, Direction } from '../types/event';
 import type { PastEventsCursor, PastEventsPage } from '../services/event/eventService';
 import type { ResponseWithFamilyId } from '../services/event/responseService';
 
+/**
+ * 過去のイベント一覧を1ページで取得する件数。
+ * Firestore版・Dexie版どちらのgetPastEventsPage実装も参照する共通定数のため、
+ * どちらの実装（repositories/firestore・repositories/dexie）にも依存しないここに置く
+ * （services/event/eventService.tsが特定の実装を直接importしてしまうと、
+ * @repositoryエイリアスによるビルド時の静的除外が効かなくなるため）。
+ */
+export const PAST_EVENTS_PAGE_SIZE = 20;
+
 export interface CarpoolRepository {
   // --- Family ---
   createFamily(
