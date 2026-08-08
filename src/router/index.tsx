@@ -15,6 +15,9 @@ const DestinationEditPage = lazy(() =>
 const FamilyEditPage = lazy(() =>
   import('../pages/FamilyEditPage').then((m) => ({ default: m.FamilyEditPage }))
 );
+const BackupPage = lazy(() =>
+  import('../pages/BackupPage').then((m) => ({ default: m.BackupPage }))
+);
 const EventCreatePage = lazy(() =>
   import('../pages/EventCreatePage').then((m) => ({ default: m.EventCreatePage }))
 );
@@ -62,6 +65,7 @@ export function AppRoutes() {
         <Route path="/master/pickup-locations" element={<PickupLocationEditPage />} />
         <Route path="/master/destinations" element={<DestinationEditPage />} />
         <Route path="/master/families" element={<FamilyEditPage />} />
+        <Route path="/master/backup" element={<BackupPage />} />
         <Route path="/events/new" element={<EventCreatePage />} />
         <Route path="/events/:eventId/edit" element={<EventEditPage />} />
         <Route path="/events/:eventId/edit-info" element={<EventInfoEditPage />} />

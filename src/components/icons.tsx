@@ -289,6 +289,17 @@ export function SummaryIcon({ size = 18 }: IconProps) {
   );
 }
 
+/** データのバックアップアイコン（フロッピーディスク） */
+export function BackupIcon({ size = 18 }: IconProps) {
+  return (
+    <svg {...baseProps(size)}>
+      <path d="M5 3.5h11l3 3V19a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 3.5 19V5A1.5 1.5 0 0 1 5 3.5z" />
+      <rect x="7" y="3.5" width="8" height="5" />
+      <rect x="7" y="13.5" width="10" height="6.5" />
+    </svg>
+  );
+}
+
 /** アプリロゴアイコン（正方形のアプリアイコン画像をそのまま表示） */
 export function AppIcon({ size = 32 }: IconProps) {
   return (

@@ -6,7 +6,14 @@ import { DevSampleDataButton } from '../components/master/DevSampleDataButton';
 import { getPickupLocations } from '../services/master/pickupLocationService';
 import { getDestinations } from '../services/master/destinationService';
 import { getFamilies } from '../services/master/familyService';
-import { ChevronRightIcon, FlagIcon, HomeIcon, LoadingIndicator, MapPinIcon } from '../components/icons';
+import {
+  BackupIcon,
+  ChevronRightIcon,
+  FlagIcon,
+  HomeIcon,
+  LoadingIndicator,
+  MapPinIcon,
+} from '../components/icons';
 
 interface MenuItem {
   path: string;
@@ -187,6 +194,77 @@ export function MasterPage() {
             </button>
           </Card>
         ))}
+
+        <p
+          style={{
+            margin: '8px 0 0',
+            fontSize: '12px',
+            fontWeight: 700,
+            letterSpacing: '0.04em',
+            color: 'var(--text)',
+          }}
+        >
+          データ管理
+        </p>
+
+        <Card style={{ padding: 0 }}>
+          <button
+            type="button"
+            className="master-menu-row"
+            onClick={() => navigate('/master/backup')}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              width: '100%',
+              padding: '14px 16px',
+              border: 'none',
+              background: 'transparent',
+              font: 'inherit',
+              color: 'inherit',
+              textAlign: 'left',
+              cursor: 'pointer',
+              boxSizing: 'border-box',
+            }}
+          >
+            <span
+              style={{
+                flexShrink: 0,
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: '34px',
+                height: '34px',
+                borderRadius: '10px',
+                background: 'var(--border)',
+                color: 'var(--text-h)',
+              }}
+            >
+              <BackupIcon size={18} />
+            </span>
+
+            <span
+              style={{
+                flex: 1,
+                fontSize: '15px',
+                fontWeight: 700,
+                color: 'var(--text-h)',
+              }}
+            >
+              データのバックアップ
+            </span>
+
+            <span
+              style={{
+                flexShrink: 0,
+                display: 'inline-flex',
+                color: 'var(--text)',
+              }}
+            >
+              <ChevronRightIcon size={18} />
+            </span>
+          </button>
+        </Card>
       </div>
 
       <hr

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { EventList } from '../components/EventList';
 import { Header } from '../components/Header';
 import { TutorialGuideModal } from '../components/TutorialGuideModal';
@@ -23,7 +23,16 @@ import type { Event } from '../types/event';
  */
 export function HomePage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [today] = useState(() => getTodayDateString());
+  /**
+   * データのバックアップ画面（読み込み）からの遷移時に表示する完了メッセージ。
+   * 表示後は履歴のstateを消し、戻る/進む操作で再表示されないようにする。
+   * ref: docs/04_画面設計.md#10.5 データのバックアップ画面
+   */
+  const [navigationMessage] = useState<string | null>(
+    () => (location.state as { message?: string } | null)?.message ?? null
+  );
   const [upcomingEvents, setUpcomingEvents] = useState<Event[]>([]);
   const [pastEventsCount, setPastEventsCount] = useState(0);
   const [pastEvents, setPastEvents] = useState<Event[]>([]);
@@ -38,6 +47,12 @@ export function HomePage() {
   const [error, setError] = useState<string | null>(null);
   const { show: showTutorial, dismiss: dismissTutorial } = useTutorialGuide();
   const [manualTutorialOpen, setManualTutorialOpen] = useState(false);
+
+  useEffect(() => {
+    if (location.state) {
+      navigate(location.pathname, { replace: true, state: null });
+    }
+  }, [location.pathname, location.state, navigate]);
 
   useEffect(() => {
     Promise.all([
@@ -164,6 +179,12 @@ export function HomePage() {
             + イベント作成
           </Button>
         </div>
+
+        {navigationMessage && (
+          <p style={{ margin: 0, padding: '0 16px 16px', fontSize: '13px', color: 'var(--positive)' }}>
+            {navigationMessage}
+          </p>
+        )}
 
         {error && (
           <p style={{ margin: 0, padding: '0 16px 16px', fontSize: '13px', color: 'var(--negative)' }}>
