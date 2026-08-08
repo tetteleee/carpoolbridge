@@ -210,3 +210,26 @@ T52では「サマリー帯の開閉状態は永続化せず、画面を開き�
 docs/04_画面設計.md#8 配車サマリー帯の改訂により、この端末のlocalStorageに開閉状態を保存し、
 次回配車画面を開いたときに復元する仕様に変更した。イベント・行き／帰りタブをまたいだ端末単位の
 単一状態として扱う（イベント別・タブ別の個別保存は行わない）。
+
+---
+
+## T. 公開版アーキテクチャ設計 CarpoolRepository抽象化（08_公開版アーキテクチャ設計.md）
+
+- T67_型定義変更・CarpoolRepositoryインターフェース定義 / 08_公開版アーキテクチャ設計.md#4,#5 / なし / 未着手
+- T68_Player_Repository実装 / 08_公開版アーキテクチャ設計.md#5 / T67 / 未着手
+- T69_Coach_Repository実装 / 08_公開版アーキテクチャ設計.md#5 / T67 / 未着手
+- T70_FamilyMember_Repository実装 / 08_公開版アーキテクチャ設計.md#5 / T67 / 未着手
+- T71_Family_Repository実装 / 08_公開版アーキテクチャ設計.md#5,#7 / T67,T68,T69,T70 / 未着手
+- T72_PickupLocation_Repository実装 / 08_公開版アーキテクチャ設計.md#5 / T67 / 未着手
+- T73_Destination_Repository実装 / 08_公開版アーキテクチャ設計.md#5 / T67 / 未着手
+- T74_Response_Repository実装 / 08_公開版アーキテクチャ設計.md#5 / T67 / 未着手
+- T75_Carpool_Repository実装 / 08_公開版アーキテクチャ設計.md#5,#6,#7 / T67 / 未着手
+- T76_Event_Repository実装 / 08_公開版アーキテクチャ設計.md#5,#7 / T67,T74,T75 / 未着手
+
+自チーム版（Firestore）を公開版（IndexedDB/Dexie.js）と共存させるため、既存の
+`src/services/`配下のFirestore直接呼び出しを`CarpoolRepository`インターフェース経由に
+置き換える。コンポーネント・ページ・hooks側の呼び出し元は変更しない（既存の`services/`
+各ファイルを、公開関数はそのまま・内部実装だけRepositoryへ委譲する薄いラッパーとして
+恒久的に維持する方針。経緯はdocs/08_公開版アーキテクチャ設計.md#2参照）。
+`DexieRepository`本体の実装・`storageMode`分岐は本グループの対象外で、T67〜T76完了後に
+別タスクとして着手する。
