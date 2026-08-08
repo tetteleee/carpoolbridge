@@ -1,11 +1,5 @@
 import type { Carpool, Direction } from '../../types/event';
-import type { CarpoolRepository } from '../../repositories/CarpoolRepository';
-import { firestoreRepository } from '../../repositories/firestore';
-
-// firestoreRepositoryは全エンティティの実装が揃うまでPartial<CarpoolRepository>型のため、
-// このファイルが実際に呼ぶメソッドは常に実装済みであることを踏まえてasで実体型に揃える
-// （ref: docs/08_公開版アーキテクチャ設計.md#5 ファイル構成）。
-const repository = firestoreRepository as CarpoolRepository;
+import { repository } from '@repository';
 
 /**
  * 配車結果（車ごとレコード）を新規登録します。

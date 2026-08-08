@@ -89,11 +89,17 @@ ref:
 - `npm run build:public`（公開版）が成功する
 - `services/`配下・`carpoolMember.ts`のいずれにも`repositories/firestore`・
   `repositories/dexie`への直接importが存在しない（`@repository`経由のみ）
-- `npm run build:public`のビルド成果物（`dist/`配下）に`firebase`パッケージ由来のコードが
-  含まれていない（T87時点では呼び出し元が未切り替えのため残っていたが、本タスク完了後は
-  除外される）
+- `npm run build:public`のビルド成果物（`dist/`配下）に、Firestoreデータ層のSDK本体
+  （`getFirestore`・`firestore-*.js`チャンク等）が含まれていない
+  （`dist/assets/*.js`を`grep`して確認する）
 - `npm run build`（自チーム版）のビルド成果物に`dexie`パッケージ由来のコードが
   含まれていない
+- **既知の対象外**: `npm run build:public`のビルド成果物には、`firebase/auth`・
+  `firebase/app`（認証コア）が引き続き含まれる。`App.tsx`の認証ガード
+  （`useAuth`・`checkStaffUserRegistration`）がstorageModeに関わらず常時有効なため。
+  docs/08_公開版アーキテクチャ設計.md#2で「公開版では認証機構ごと削除」と
+  方針は示されているが、UI・ルーティング側で実際に認証フローを外す作業はT67〜T88の
+  対象外（CarpoolRepositoryのデータ層のみが対象）であり、別タスクとして残る
 - `npm run test:e2e`が変更前と同じ結果になる（自チーム版・Firestore Emulator前提のテストが
   引き続きグリーンであることを確認する。公開版のE2E整備はdocs/10_DexieRepository実装設計.md#6の
   通り対象外）

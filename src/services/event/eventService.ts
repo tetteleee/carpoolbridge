@@ -1,12 +1,6 @@
 import type { Event } from '../../types/event';
-import type { CarpoolRepository } from '../../repositories/CarpoolRepository';
-import { firestoreRepository } from '../../repositories/firestore';
+import { repository } from '@repository';
 import { PAST_EVENTS_PAGE_SIZE } from '../../repositories/firestore/eventRepository';
-
-// firestoreRepositoryは全エンティティの実装が揃うまでPartial<CarpoolRepository>型のため、
-// このファイルが実際に呼ぶメソッドは常に実装済みであることを踏まえてasで実体型に揃える
-// （ref: docs/08_公開版アーキテクチャ設計.md#5 ファイル構成）。
-const repository = firestoreRepository as CarpoolRepository;
 
 /** 過去のイベント一覧を1ページで取得する件数 */
 export { PAST_EVENTS_PAGE_SIZE };

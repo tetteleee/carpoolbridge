@@ -172,6 +172,13 @@ export const db = new CarpoolBridgeDB();
 - E2Eテスト（Playwright）の公開版（Dexie）対応。現状のE2E基盤はFirebase Emulator
   前提のため、公開版のテスト方針は別途検討する
 - Google Drive同期、PWA化、TWA/Google Play公開、広告（`docs/08`同様に対象外のまま）
+- **認証UI・ルーティングの公開版対応**（T88実装時に判明）。`docs/08_公開版アーキテクチャ設計.md#2`
+  で「認証は公開版では機構ごと削除する」と方針は示されていたが、本ドキュメント（および
+  T67〜T88）が対象とするのは`CarpoolRepository`のデータ層のみである。`App.tsx`の認証ガード
+  （`useAuth`・`checkStaffUserRegistration`、`firebase/auth`を使用）はstorageModeに関わらず
+  常時有効なままのため、公開版ビルド（`npm run build:public`）にも`firebase/auth`・
+  `firebase/app`（認証コア）が引き続き含まれる（Firestoreデータ層のSDK本体は完全に除外できて
+  いることを確認済み）。実際に認証フローをUI・ルーティングレベルで外す作業は別タスクとする
 
 ---
 
