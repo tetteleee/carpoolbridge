@@ -155,4 +155,12 @@ export interface CarpoolRepository {
   saveCarpools(eventId: string, carpools: Carpool[]): Promise<void>;
   deleteAllCarpools(eventId: string): Promise<void>;
   deleteCarpool(eventId: string, carpoolId: string): Promise<void>;
+
+  /**
+   * バックアップ読み込み専用。families・players・coaches・familyMembers・
+   * pickupLocations・destinations・events（配下のresponses・carpoolsを含む）を
+   * 全件物理削除する。staffUsersは対象外。他の画面・機能から呼び出さないこと。
+   * ref: docs/12_データバックアップ機能設計.md#6
+   */
+  clearAllData(): Promise<void>;
 }

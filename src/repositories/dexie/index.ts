@@ -18,6 +18,7 @@ import { destinationRepository } from './destinationRepository';
 import { responseRepository } from './responseRepository';
 import { carpoolRepository } from './carpoolRepository';
 import { eventRepository } from './eventRepository';
+import { clearAllDataRepository } from './clearAllData';
 
 export const repository: CarpoolRepository = {
   ...playerRepository,
@@ -29,4 +30,5 @@ export const repository: CarpoolRepository = {
   ...responseRepository,
   ...carpoolRepository,
   ...eventRepository,
+  ...clearAllDataRepository,
 };
