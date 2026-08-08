@@ -243,8 +243,8 @@ docs/04_画面設計.md#8 配車サマリー帯の改訂により、この端末
 - T79_Coach_DexieRepository実装 / 10_DexieRepository実装設計.md#3,#4 / T77 / done
 - T80_FamilyMember_DexieRepository実装 / 10_DexieRepository実装設計.md#3,#4 / T77 / done
 - T81_Family_DexieRepository実装 / 10_DexieRepository実装設計.md#3,#4 / T77,T78,T79,T80 / done
-- T82_PickupLocation_DexieRepository実装 / 10_DexieRepository実装設計.md#3,#4 / T77 / 未着手
-- T83_Destination_DexieRepository実装 / 10_DexieRepository実装設計.md#3,#4 / T77 / 未着手
+- T82_PickupLocation_DexieRepository実装 / 10_DexieRepository実装設計.md#3,#4 / T77 / done
+- T83_Destination_DexieRepository実装 / 10_DexieRepository実装設計.md#3,#4 / T77 / done
 - T84_Response_DexieRepository実装 / 10_DexieRepository実装設計.md#4 / T77 / 未着手
 - T85_Carpool_DexieRepository実装 / 10_DexieRepository実装設計.md#4 / T77 / 未着手
 - T86_Event_DexieRepository実装 / 10_DexieRepository実装設計.md#4 / T77,T84,T85 / 未着手
