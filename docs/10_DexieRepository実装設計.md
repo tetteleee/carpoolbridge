@@ -131,25 +131,36 @@ export const db = new CarpoolBridgeDB();
 
 # 5. 影響範囲・タスク分割方針
 
-`docs/08`のT67〜T76と対になる形で、以下の2系統のタスクに分割する
+`docs/08`のT67〜T76と対になる形で、以下の2系統・12タスク（T77〜T88）に分割した
 （`docs/50_タスク作成ルール.md`の粒度に従う）。
 
-## 系統A: DexieRepository実装（エンティティ単位、T67〜T76と同じ9分割）
+## 系統A: DexieRepository実装（T77〜T86）
 
-Player→Coach→FamilyMember→Family→PickupLocation→Destination→Response→Carpool→Event
-の順（カスケード処理がある関係で、依存関係はdocs/08の8章と同じ制約を引き継ぐ）。
+| タスク | 内容 | 備考 |
+|---|---|---|
+| T77 | Dexie基盤（`db.ts`全テーブル定義・`dexie/index.ts`の空の器） | T67のDexie版 |
+| T78 | Player DexieRepository実装 | |
+| T79 | Coach DexieRepository実装 | |
+| T80 | FamilyMember DexieRepository実装 | |
+| T81 | Family DexieRepository実装 | `deleteFamily`のカスケードがT78〜T80に依存するため後回し |
+| T82 | PickupLocation DexieRepository実装 | |
+| T83 | Destination DexieRepository実装 | |
+| T84 | Response DexieRepository実装 | |
+| T85 | Carpool DexieRepository実装（`saveCarpools`含む） | |
+| T86 | Event DexieRepository実装 | `deleteEvent`のカスケードがT84・T85に依存するため最後 |
 
-## 系統B: storageMode切り替え配線（横断）
+依存関係はdocs/08の8章（Firestore版）と同じ制約を引き継ぐ。
 
-- `vite.config.ts`の`resolve.alias`設定
-- `package.json`の`build:local`スクリプト追加
-- `services/`配下10ファイル・`carpoolMember.ts`のimport切り替え
-  （`firestoreRepository`直接importから`@repository`経由へ）
-- `.env.local.sample`等、公開版ビルド用の環境変数サンプル整備（公開版は
-  Firebase関連の環境変数が不要になるため、既存`.env.sample`とは別に用意する）
+## 系統B: storageMode切り替え配線（T87〜T88）
+
+| タスク | 内容 |
+|---|---|
+| T87 | `vite.config.ts`の`resolve.alias`設定・`package.json`の`build:local`スクリプト追加 |
+| T88 | `services/`配下9ファイル・`carpoolMember.ts`のimportを`@repository`経由に切り替え |
 
 系統Bは系統Aの全エンティティ実装が完了してから着手する
 （`@repository`が`CarpoolRepository`を完全に満たさないと型エラーになるため）。
+公開版ビルドに新規の環境変数は不要なため、`.env.local.sample`等の追加整備は行わない。
 
 ---
 
@@ -163,8 +174,8 @@ Player→Coach→FamilyMember→Family→PickupLocation→Destination→Response
 
 # 7. 次にやること
 
-1. 本ドキュメントの内容を人間がレビュー・承認する
-2. 承認後、`docs/50_タスク作成ルール.md`に従い、5章の系統A（T77〜T85相当）・
-   系統B（T86以降相当）を`tasks/`へタスクファイルとして作成する
-3. `dexie`パッケージを`package.json`に追加する
+1. 本ドキュメントの内容を人間がレビュー・承認する（完了）
+2. `docs/50_タスク作成ルール.md`に従い、5章のT77〜T88を`tasks/`へタスクファイルとして
+   作成する（完了）
+3. `dexie`パッケージを`package.json`に追加する（完了）
 4. 系統A→系統Bの順に実装する

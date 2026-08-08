@@ -233,3 +233,25 @@ docs/04_画面設計.md#8 配車サマリー帯の改訂により、この端末
 恒久的に維持する方針。経緯はdocs/08_公開版アーキテクチャ設計.md#2参照）。
 `DexieRepository`本体の実装・`storageMode`分岐は本グループの対象外で、T67〜T76完了後に
 別タスクとして着手する。
+
+---
+
+## U. DexieRepository実装・storageMode切り替え（10_DexieRepository実装設計.md）
+
+- T77_Dexie基盤_db定義・空の器 / 10_DexieRepository実装設計.md#3,#4 / なし / 未着手
+- T78_Player_DexieRepository実装 / 10_DexieRepository実装設計.md#3,#4 / T77 / 未着手
+- T79_Coach_DexieRepository実装 / 10_DexieRepository実装設計.md#3,#4 / T77 / 未着手
+- T80_FamilyMember_DexieRepository実装 / 10_DexieRepository実装設計.md#3,#4 / T77 / 未着手
+- T81_Family_DexieRepository実装 / 10_DexieRepository実装設計.md#3,#4 / T77,T78,T79,T80 / 未着手
+- T82_PickupLocation_DexieRepository実装 / 10_DexieRepository実装設計.md#3,#4 / T77 / 未着手
+- T83_Destination_DexieRepository実装 / 10_DexieRepository実装設計.md#3,#4 / T77 / 未着手
+- T84_Response_DexieRepository実装 / 10_DexieRepository実装設計.md#4 / T77 / 未着手
+- T85_Carpool_DexieRepository実装 / 10_DexieRepository実装設計.md#4 / T77 / 未着手
+- T86_Event_DexieRepository実装 / 10_DexieRepository実装設計.md#4 / T77,T84,T85 / 未着手
+- T87_storageMode切り替え配線 / 10_DexieRepository実装設計.md#2 / T77〜T86 / 未着手
+- T88_呼び出し元をrepositoryエイリアス経由に切り替え / 10_DexieRepository実装設計.md#2,#5 / T77〜T87 / 未着手
+
+`docs/08`で対象外としていた`DexieRepository`本体の実装と`storageMode`切り替え機構。
+T77〜T86でエンティティ単位のDexieRepositoryを実装し、T87〜T88でビルド時のstorageMode
+静的切り替え（Vite `resolve.alias`）・呼び出し元の配線を行う。経緯は
+docs/10_DexieRepository実装設計.md参照。
