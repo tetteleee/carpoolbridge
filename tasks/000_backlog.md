@@ -248,7 +248,7 @@ docs/04_画面設計.md#8 配車サマリー帯の改訂により、この端末
 - T84_Response_DexieRepository実装 / 10_DexieRepository実装設計.md#4 / T77 / done
 - T85_Carpool_DexieRepository実装 / 10_DexieRepository実装設計.md#4 / T77 / done
 - T86_Event_DexieRepository実装 / 10_DexieRepository実装設計.md#4 / T77,T84,T85 / done
-- T87_storageMode切り替え配線 / 10_DexieRepository実装設計.md#2 / T77〜T86 / 未着手
+- T87_storageMode切り替え配線 / 10_DexieRepository実装設計.md#2 / T77〜T86 / done
 - T88_呼び出し元をrepositoryエイリアス経由に切り替え / 10_DexieRepository実装設計.md#2,#5 / T77〜T87 / 未着手
 
 `docs/08`で対象外としていた`DexieRepository`本体の実装と`storageMode`切り替え機構。

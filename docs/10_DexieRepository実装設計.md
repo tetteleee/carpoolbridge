@@ -31,7 +31,7 @@ export default defineConfig(({ mode }) => ({
     alias: {
       '@repository': path.resolve(
         __dirname,
-        mode === 'local'
+        mode === 'public'
           ? 'src/repositories/dexie/index.ts'
           : 'src/repositories/firestore/index.ts'
       ),
@@ -41,16 +41,19 @@ export default defineConfig(({ mode }) => ({
 }));
 ```
 
+（実装時の注記: 当初mode名を`local`とする想定だったが、Viteは`local`を`.env.local`の
+サフィックスと衝突する予約語としており、mode名に使えない。`public`に変更した。）
+
 - `services/`配下・`carpoolMember.ts`は、現在の
   `import { firestoreRepository } from '../../repositories/firestore';`を
-  `import { repository } from '@repository';`に置き換える（T77以降で対応）
+  `import { repository } from '@repository';`に置き換える（T88で対応）
 - `@repository`は常に`CarpoolRepository`を満たすオブジェクトをエクスポートする
   という契約のみを共有し、呼び出し元はFirestore/Dexieどちらの実装かを意識しない
-- ビルドコマンドは`vite build --mode local`（公開版）／`vite build --mode cloud`
-  ※`--mode`未指定時の通常`vite build`は現状通り自チーム版（Firestore）とする
+- ビルドコマンドは`vite build --mode public`（公開版）／`--mode`未指定の通常`vite build`
+  （自チーム版）
   （既存の`npm run build`・`.github/workflows/firebase-deploy.yml`は無改修で
   自チーム版ビルドのまま動作し続ける）
-- `package.json`に`build:local`スクリプトを追加する（`vite build --mode local`）
+- `package.json`に`build:public`スクリプトを追加する（`vite build --mode public`）
 
 ---
 
@@ -155,7 +158,7 @@ export const db = new CarpoolBridgeDB();
 
 | タスク | 内容 |
 |---|---|
-| T87 | `vite.config.ts`の`resolve.alias`設定・`package.json`の`build:local`スクリプト追加 |
+| T87 | `vite.config.ts`の`resolve.alias`設定・`package.json`の`build:public`スクリプト追加 |
 | T88 | `services/`配下9ファイル・`carpoolMember.ts`のimportを`@repository`経由に切り替え |
 
 系統Bは系統Aの全エンティティ実装が完了してから着手する

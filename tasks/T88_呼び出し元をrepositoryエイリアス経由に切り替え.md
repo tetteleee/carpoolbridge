@@ -86,9 +86,14 @@ ref:
 ## 6. 受け入れ条件
 
 - `npm run build`（自チーム版）が成功する
-- `npm run build:local`（公開版）が成功する
+- `npm run build:public`（公開版）が成功する
 - `services/`配下・`carpoolMember.ts`のいずれにも`repositories/firestore`・
   `repositories/dexie`への直接importが存在しない（`@repository`経由のみ）
+- `npm run build:public`のビルド成果物（`dist/`配下）に`firebase`パッケージ由来のコードが
+  含まれていない（T87時点では呼び出し元が未切り替えのため残っていたが、本タスク完了後は
+  除外される）
+- `npm run build`（自チーム版）のビルド成果物に`dexie`パッケージ由来のコードが
+  含まれていない
 - `npm run test:e2e`が変更前と同じ結果になる（自チーム版・Firestore Emulator前提のテストが
   引き続きグリーンであることを確認する。公開版のE2E整備はdocs/10_DexieRepository実装設計.md#6の
   通り対象外）

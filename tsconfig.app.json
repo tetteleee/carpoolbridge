@@ -16,6 +16,13 @@
     "noEmit": true,
     "jsx": "react-jsx",
 
+    /* @repositoryエイリアス（実体はvite.config.tsのresolve.aliasでビルドmodeにより
+       Firestore/Dexieへ切り替わる。tscでの型チェック用にfirestore版を参照先とする。
+       ref: docs/10_DexieRepository実装設計.md#2） */
+    "paths": {
+      "@repository": ["./src/repositories/firestore/index.ts"]
+    },
+
     /* Linting */
     "noUnusedLocals": true,
     "noUnusedParameters": true,

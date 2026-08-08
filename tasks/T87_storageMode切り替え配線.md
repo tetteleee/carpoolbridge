@@ -11,10 +11,13 @@ ref:
 
 ## 2. このタスクのゴール
 
-`vite.config.ts`に`resolve.alias`を追加し、ビルドmode（`--mode local`かどうか）に応じて
+`vite.config.ts`に`resolve.alias`を追加し、ビルドmode（`--mode public`かどうか）に応じて
 `@repository`の解決先を`repositories/firestore/index.ts`（自チーム版）と
 `repositories/dexie/index.ts`（公開版）で静的に切り替える仕組みを作る。
 `package.json`に公開版ビルド用のスクリプトを追加する。
+
+（実装時の注記: 当初`--mode local`を想定していたが、Viteは`local`を`.env.local`の
+サフィックスと衝突するためmode名に使えない（ビルドエラーになる）。`public`に変更した。）
 
 このタスクでは配線（設定）のみを行い、`services/`配下の呼び出し元の切り替えはT88で行う。
 
@@ -31,14 +34,13 @@ ref:
 
 - `vite.config.ts`を`defineConfig(({ mode }) => ({ ... }))`の関数形式に変更し、
   `resolve.alias`で`@repository`を以下のように切り替える。
-  - `mode === 'local'` → `src/repositories/dexie/index.ts`
+  - `mode === 'public'` → `src/repositories/dexie/index.ts`
   - それ以外（通常の`vite build`、`vite dev`等） → `src/repositories/firestore/index.ts`
-  （docs/10_DexieRepository実装設計.md#2のコード例を参照）
-- `tsconfig`側で`@repository`のパスエイリアスをTypeScriptにも認識させる必要がある場合は、
-  `tsconfig.app.json`（または該当する設定ファイル）の`compilerOptions.paths`にも
-  同様のエイリアスを追加する（型チェック時にVite側のalias解決に依存しないようにするため。
-  T88で実際に`@repository`をimportする際にビルドエラーが出た場合はここを確認する）
-- `package.json`の`scripts`に`"build:local": "tsc -b && vite build --mode local"`を追加する
+  （docs/10_DexieRepository実装設計.md#2のコード例を参照。ただしmode名は`public`に読み替える）
+- `tsconfig.app.json`の`compilerOptions.paths`に`@repository`を追加し、TypeScriptにも
+  型チェック用の解決先（`src/repositories/firestore/index.ts`固定でよい）を認識させる
+  （Vite側のalias解決とは独立に、tscが単独でも型エラーを出さないようにするため）
+- `package.json`の`scripts`に`"build:public": "tsc -b && vite build --mode public"`を追加する
   （既存の`"build": "tsc -b && vite build"`は変更しない。自チーム版は引き続き
   `npm run build`のまま、`.github/workflows/firebase-deploy.yml`も無改修で動作する）
 
@@ -55,11 +57,11 @@ ref:
 ## 6. 受け入れ条件
 
 - `npm run build`（自チーム版）が引き続き成功する
-- `npm run build:local`（公開版）が成功する
-- `npm run build:local`のビルド成果物（`dist/`配下）に`firebase`パッケージ由来のコードが
-  含まれていない（`grep`等でバンドル済みJSファイルを確認する）
-- `npm run build`（自チーム版）のビルド成果物に`dexie`パッケージ由来のコードが
-  含まれていない
+- `npm run build:public`（公開版）が成功する
+- **注**: この時点では`services/`配下がまだ`repositories/firestore`を直接importしたままのため、
+  `npm run build:public`の成果物にも`firebase`パッケージ由来のコードが残る（想定通り）。
+  「公開版ビルドにFirebaseコードが含まれない」ことの確認はT88の受け入れ条件とする
+  （呼び出し元の切り替えが完了して初めて意味を持つため）
 
 ---
 
