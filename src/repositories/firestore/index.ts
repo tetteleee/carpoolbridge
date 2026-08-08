@@ -15,6 +15,7 @@ import { pickupLocationRepository } from './pickupLocationRepository';
 import { destinationRepository } from './destinationRepository';
 import { responseRepository } from './responseRepository';
 import { carpoolRepository } from './carpoolRepository';
+import { eventRepository } from './eventRepository';
 
 export const firestoreRepository: Partial<CarpoolRepository> = {
   ...playerRepository,
@@ -25,4 +26,5 @@ export const firestoreRepository: Partial<CarpoolRepository> = {
   ...destinationRepository,
   ...responseRepository,
   ...carpoolRepository,
+  ...eventRepository,
 };

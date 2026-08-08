@@ -1,29 +1,15 @@
-import {
-  collection,
-  doc,
-  documentId,
-  addDoc,
-  deleteDoc,
-  getCountFromServer,
-  getDoc,
-  getDocs,
-  limit,
-  orderBy,
-  query,
-  serverTimestamp,
-  startAfter,
-  updateDoc,
-  where,
-  writeBatch,
-} from 'firebase/firestore';
-import { db } from '../../firebase';
-import { firestorePaths } from '../../constants';
 import type { Event } from '../../types/event';
+import type { CarpoolRepository } from '../../repositories/CarpoolRepository';
+import { firestoreRepository } from '../../repositories/firestore';
+import { PAST_EVENTS_PAGE_SIZE } from '../../repositories/firestore/eventRepository';
 
-const DELETE_BATCH_SIZE = 400;
+// firestoreRepositoryは全エンティティの実装が揃うまでPartial<CarpoolRepository>型のため、
+// このファイルが実際に呼ぶメソッドは常に実装済みであることを踏まえてasで実体型に揃える
+// （ref: docs/08_公開版アーキテクチャ設計.md#5 ファイル構成）。
+const repository = firestoreRepository as CarpoolRepository;
 
 /** 過去のイベント一覧を1ページで取得する件数 */
-export const PAST_EVENTS_PAGE_SIZE = 20;
+export { PAST_EVENTS_PAGE_SIZE };
 
 /** 過去のイベントをページ取得する際のカーソル（直前ページ最後のイベント） */
 export interface PastEventsCursor {
@@ -37,19 +23,6 @@ export interface PastEventsPage {
   hasMore: boolean;
 }
 
-/** 指定コレクション配下の全ドキュメントを物理削除する */
-async function deleteAllDocsInCollection(collectionPath: string): Promise<void> {
-  const colRef = collection(db, collectionPath);
-  const snapshot = await getDocs(colRef);
-  const docs = snapshot.docs;
-
-  for (let i = 0; i < docs.length; i += DELETE_BATCH_SIZE) {
-    const batch = writeBatch(db);
-    docs.slice(i, i + DELETE_BATCH_SIZE).forEach((d) => batch.delete(d.ref));
-    await batch.commit();
-  }
-}
-
 /**
  * イベントを新規登録します。
  * createdAt・updatedAt はサーバー時刻で自動設定されます。
@@ -60,13 +33,7 @@ async function deleteAllDocsInCollection(collectionPath: string): Promise<void> 
 export async function createEvent(
   data: Omit<Event, 'id' | 'createdAt' | 'updatedAt'>
 ): Promise<string> {
-  const colRef = collection(db, firestorePaths.eventsCollection());
-  const docRef = await addDoc(colRef, {
-    ...data,
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp(),
-  });
-  return docRef.id;
+  return repository.createEvent(data);
 }
 
 /**
@@ -76,10 +43,7 @@ export async function createEvent(
  * @returns イベントの配列
  */
 export async function getUpcomingEvents(todayDate: string): Promise<Event[]> {
-  const colRef = collection(db, firestorePaths.eventsCollection());
-  const q = query(colRef, where('date', '>=', todayDate), orderBy('date', 'asc'));
-  const snapshot = await getDocs(q);
-  return snapshot.docs.map((d) => ({ id: d.id, ...d.data() } as Event));
+  return repository.getUpcomingEvents(todayDate);
 }
 
 /**
@@ -91,10 +55,7 @@ export async function getUpcomingEvents(todayDate: string): Promise<Event[]> {
  * @returns 過去のイベントの件数
  */
 export async function getPastEventsCount(todayDate: string): Promise<number> {
-  const colRef = collection(db, firestorePaths.eventsCollection());
-  const q = query(colRef, where('date', '<', todayDate));
-  const snapshot = await getCountFromServer(q);
-  return snapshot.data().count;
+  return repository.getPastEventsCount(todayDate);
 }
 
 /**
@@ -110,23 +71,7 @@ export async function getPastEventsPage(
   todayDate: string,
   cursor: PastEventsCursor | null
 ): Promise<PastEventsPage> {
-  const colRef = collection(db, firestorePaths.eventsCollection());
-  const baseConstraints = [
-    where('date', '<', todayDate),
-    orderBy('date', 'desc'),
-    orderBy(documentId(), 'desc'),
-    limit(PAST_EVENTS_PAGE_SIZE + 1),
-  ];
-  const q = cursor
-    ? query(colRef, ...baseConstraints, startAfter(cursor.date, cursor.id))
-    : query(colRef, ...baseConstraints);
-  const snapshot = await getDocs(q);
-  const hasMore = snapshot.docs.length > PAST_EVENTS_PAGE_SIZE;
-  const pageDocs = hasMore ? snapshot.docs.slice(0, PAST_EVENTS_PAGE_SIZE) : snapshot.docs;
-  return {
-    events: pageDocs.map((d) => ({ id: d.id, ...d.data() } as Event)),
-    hasMore,
-  };
+  return repository.getPastEventsPage(todayDate, cursor);
 }
 
 /**
@@ -136,12 +81,7 @@ export async function getPastEventsPage(
  * @returns イベント。ドキュメントが存在しない場合は null
  */
 export async function getEvent(eventId: string): Promise<Event | null> {
-  const docRef = doc(db, firestorePaths.eventDocument(eventId));
-  const docSnap = await getDoc(docRef);
-  if (!docSnap.exists()) {
-    return null;
-  }
-  return { id: docSnap.id, ...docSnap.data() } as Event;
+  return repository.getEvent(eventId);
 }
 
 /**
@@ -155,22 +95,17 @@ export async function updateEvent(
   eventId: string,
   data: Pick<Event, 'name' | 'date' | 'destinationId'>
 ): Promise<void> {
-  const docRef = doc(db, firestorePaths.eventDocument(eventId));
-  await updateDoc(docRef, {
-    ...data,
-    updatedAt: serverTimestamp(),
-  });
+  return repository.updateEvent(eventId, data);
 }
 
 /**
  * イベントを、配下の回答（Response）・配車結果（Carpool、行き・帰り両方向）ごと物理削除します。
- * クライアントSDKには再帰削除がないため、サブコレクションを先に削除してからイベント本体を削除する。
  * 復元手段は用意しない（05_データ設計.md#12 削除方針）。
  *
  * @param eventId 削除対象のドキュメントID
  */
 export async function deleteEvent(eventId: string): Promise<void> {
-  await deleteAllDocsInCollection(firestorePaths.responsesCollection(eventId));
-  await deleteAllDocsInCollection(firestorePaths.carpoolsCollection(eventId));
-  await deleteDoc(doc(db, firestorePaths.eventDocument(eventId)));
+  await repository.deleteAllResponses(eventId);
+  await repository.deleteAllCarpools(eventId);
+  await repository.deleteEvent(eventId);
 }
