@@ -1,18 +1,11 @@
-import {
-  collection,
-  doc,
-  addDoc,
-  getDocs,
-  query,
-  where,
-  updateDoc,
-  deleteDoc,
-  writeBatch,
-  serverTimestamp,
-} from 'firebase/firestore';
-import { db } from '../../firebase';
-import { firestorePaths } from '../../constants';
 import type { Coach } from '../../types/master';
+import type { CarpoolRepository } from '../../repositories/CarpoolRepository';
+import { firestoreRepository } from '../../repositories/firestore';
+
+// firestoreRepositoryは全エンティティの実装が揃うまでPartial<CarpoolRepository>型のため、
+// このファイルが実際に呼ぶCoach関連メソッドは常に実装済みであることを踏まえてasで実体型に揃える
+// （ref: docs/08_公開版アーキテクチャ設計.md#5 ファイル構成）。
+const repository = firestoreRepository as CarpoolRepository;
 
 /**
  * コーチを新規登録します。
@@ -24,14 +17,7 @@ import type { Coach } from '../../types/master';
 export async function createCoach(
   data: Omit<Coach, 'id' | 'isActive' | 'createdAt' | 'updatedAt'>
 ): Promise<string> {
-  const colRef = collection(db, firestorePaths.coachesCollection());
-  const docRef = await addDoc(colRef, {
-    ...data,
-    isActive: true,
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp(),
-  });
-  return docRef.id;
+  return repository.createCoach(data);
 }
 
 /**
@@ -41,10 +27,7 @@ export async function createCoach(
  * @returns コーチの配列
  */
 export async function getCoachesByFamilyId(familyId: string): Promise<Coach[]> {
-  const colRef = collection(db, firestorePaths.coachesCollection());
-  const q = query(colRef, where('familyId', '==', familyId));
-  const snapshot = await getDocs(q);
-  return snapshot.docs.map((d) => ({ id: d.id, ...d.data() } as Coach));
+  return repository.getCoachesByFamilyId(familyId);
 }
 
 /**
@@ -55,9 +38,7 @@ export async function getCoachesByFamilyId(familyId: string): Promise<Coach[]> {
  * @returns コーチの配列（全家庭分）
  */
 export async function getAllCoaches(): Promise<Coach[]> {
-  const colRef = collection(db, firestorePaths.coachesCollection());
-  const snapshot = await getDocs(colRef);
-  return snapshot.docs.map((d) => ({ id: d.id, ...d.data() } as Coach));
+  return repository.getAllCoaches();
 }
 
 /**
@@ -71,11 +52,7 @@ export async function updateCoach(
   coachId: string,
   data: Partial<Pick<Coach, 'name' | 'isActive'>>
 ): Promise<void> {
-  const docRef = doc(db, firestorePaths.coachDocument(coachId));
-  await updateDoc(docRef, {
-    ...data,
-    updatedAt: serverTimestamp(),
-  });
+  return repository.updateCoach(coachId, data);
 }
 
 /**
@@ -85,8 +62,7 @@ export async function updateCoach(
  * @param coachId 削除対象のドキュメントID
  */
 export async function deleteCoach(coachId: string): Promise<void> {
-  const docRef = doc(db, firestorePaths.coachDocument(coachId));
-  await deleteDoc(docRef);
+  return repository.deleteCoach(coachId);
 }
 
 /**
@@ -96,14 +72,5 @@ export async function deleteCoach(coachId: string): Promise<void> {
  * @param familyId 対象の家庭ID
  */
 export async function deleteCoachesByFamilyId(familyId: string): Promise<void> {
-  const colRef = collection(db, firestorePaths.coachesCollection());
-  const q = query(colRef, where('familyId', '==', familyId));
-  const snapshot = await getDocs(q);
-  if (snapshot.empty) {
-    return;
-  }
-
-  const batch = writeBatch(db);
-  snapshot.docs.forEach((d) => batch.delete(d.ref));
-  await batch.commit();
+  return repository.deleteCoachesByFamilyId(familyId);
 }

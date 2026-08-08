@@ -8,7 +8,9 @@
 
 import type { CarpoolRepository } from '../CarpoolRepository';
 import { playerRepository } from './playerRepository';
+import { coachRepository } from './coachRepository';
 
 export const firestoreRepository: Partial<CarpoolRepository> = {
   ...playerRepository,
+  ...coachRepository,
 };
