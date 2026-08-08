@@ -1,5 +1,3 @@
-import { Timestamp } from 'firebase/firestore';
-
 /**
  * 往路（行き）または復路（帰り）を表す方向
  */
@@ -18,9 +16,9 @@ export interface Event {
   /** 目的地ID */
   destinationId: string;
   /** 作成日時 */
-  createdAt: Timestamp;
+  createdAt: Date;
   /** 更新日時 */
-  updatedAt: Timestamp;
+  updatedAt: Date;
 }
 
 /**
