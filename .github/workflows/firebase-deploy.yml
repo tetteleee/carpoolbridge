@@ -1,20 +1,27 @@
 name: Firebase Deploy
 
 on:
-  push:
+  workflow_run:
+    workflows: ["E2E Tests"]
+    types: [completed]
     branches:
       - main
-    paths-ignore:
-      - "docs/**"
-      - "tasks/**"
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    # E2E Tests（Lint含む）がmainブランチで成功した場合のみデプロイする。
+    # E2E Testsがpaths-ignore（docs/**, tasks/**のみの変更）で起動しなかった場合は
+    # このworkflow_runイベント自体が発生しないため、デプロイも従来通りスキップされる。
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          # workflow_runイベントはデフォルトでdefaultブランチをcheckoutするため、
+          # E2E Testsを実際にトリガーしたコミットを明示的に指定する。
+          ref: ${{ github.event.workflow_run.head_sha }}
 
       - name: Setup Node
         uses: actions/setup-node@v4
