@@ -1,15 +1,11 @@
-import {
-  collection,
-  doc,
-  addDoc,
-  getDoc,
-  getDocs,
-  updateDoc,
-  deleteDoc,
-} from 'firebase/firestore';
-import { db } from '../../firebase';
-import { firestorePaths } from '../../constants';
 import type { Destination } from '../../types/master';
+import type { CarpoolRepository } from '../../repositories/CarpoolRepository';
+import { firestoreRepository } from '../../repositories/firestore';
+
+// firestoreRepositoryは全エンティティの実装が揃うまでPartial<CarpoolRepository>型のため、
+// このファイルが実際に呼ぶDestination関連メソッドは常に実装済みであることを踏まえてasで
+// 実体型に揃える（ref: docs/08_公開版アーキテクチャ設計.md#5 ファイル構成）。
+const repository = firestoreRepository as CarpoolRepository;
 
 /**
  * 目的地を新規登録します。
@@ -20,9 +16,7 @@ import type { Destination } from '../../types/master';
 export async function createDestination(
   data: Omit<Destination, 'id'>
 ): Promise<string> {
-  const colRef = collection(db, firestorePaths.destinationsCollection());
-  const docRef = await addDoc(colRef, data);
-  return docRef.id;
+  return repository.createDestination(data);
 }
 
 /**
@@ -31,9 +25,7 @@ export async function createDestination(
  * @returns 目的地の配列
  */
 export async function getDestinations(): Promise<Destination[]> {
-  const colRef = collection(db, firestorePaths.destinationsCollection());
-  const snapshot = await getDocs(colRef);
-  return snapshot.docs.map((d) => ({ id: d.id, ...d.data() } as Destination));
+  return repository.getDestinations();
 }
 
 /**
@@ -45,12 +37,7 @@ export async function getDestinations(): Promise<Destination[]> {
 export async function getDestination(
   destinationId: string
 ): Promise<Destination | null> {
-  const docRef = doc(db, firestorePaths.destinationDocument(destinationId));
-  const docSnap = await getDoc(docRef);
-  if (!docSnap.exists()) {
-    return null;
-  }
-  return { id: docSnap.id, ...docSnap.data() } as Destination;
+  return repository.getDestination(destinationId);
 }
 
 /**
@@ -63,8 +50,7 @@ export async function updateDestination(
   destinationId: string,
   data: Partial<Pick<Destination, 'name' | 'latitude' | 'longitude'>>
 ): Promise<void> {
-  const docRef = doc(db, firestorePaths.destinationDocument(destinationId));
-  await updateDoc(docRef, data);
+  return repository.updateDestination(destinationId, data);
 }
 
 /**
@@ -74,6 +60,5 @@ export async function updateDestination(
  * @param destinationId 削除対象のドキュメントID
  */
 export async function deleteDestination(destinationId: string): Promise<void> {
-  const docRef = doc(db, firestorePaths.destinationDocument(destinationId));
-  await deleteDoc(docRef);
+  return repository.deleteDestination(destinationId);
 }
