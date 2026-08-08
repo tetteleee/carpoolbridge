@@ -280,3 +280,19 @@ UI・ビジネスロジックは自チーム版と共通コードで既存e2e16�
 事前キャッシュ）、自チーム版はインストール可能にするだけ（認証・Firestore通信は
 引き続きオンライン必須のため事前キャッシュしない）。実装は`vite-plugin-pwa`を用い、
 新バージョン検知時は自動更新（`autoUpdate`）とする。
+
+---
+
+## X. 開発用「サンプル回答生成」機能の削除
+
+- T94_開発用「サンプル回答生成」機能の削除 / 04_画面設計.md#7, 05_データ設計.md#12（いずれも改訂） / T31 / done
+
+T31で実装した「サンプル回答生成」機能（イベント編集 回答入力画面）は運用上未使用のため削除した。
+`DevSampleResponseButton.tsx`・`seedSampleResponses.ts`・対応するE2E
+（`e2e/event-edit-sample-response.spec.ts`）を削除し、`EventEditPage.tsx`から呼び出し・
+再マウント用の`responseVersion`state・`handleResponsesGenerated`を除去した。
+`responseService.deleteAllResponses`（本機能専用のラッパー関数）も未使用となったため削除した
+（`repository.deleteAllResponses`自体はイベント削除カスケード`eventService.deleteEvent`で
+引き続き使用するため存置）。`04_画面設計.md#7`・`05_データ設計.md#12`の該当記述、
+`08_公開版アーキテクチャ設計.md#9`の言及も削除・修正した。T31のタスクファイル自体は
+実装当時の記録として残す。

@@ -5,7 +5,6 @@ import { EventHeaderTitle } from '../components/EventHeaderTitle';
 import { Button } from '../components/common/Button';
 import { FamilyResponseCard } from '../components/eventEdit/FamilyResponseCard';
 import { CarpoolRecreateDialog } from '../components/eventEdit/CarpoolRecreateDialog';
-import { DevSampleResponseButton } from '../components/eventEdit/DevSampleResponseButton';
 import { CarIcon, ChevronDownIcon, LoadingIndicator } from '../components/icons';
 import { getEvent } from '../services/event/eventService';
 import { getDestination } from '../services/master/destinationService';
@@ -94,7 +93,6 @@ export function EventEditPage() {
   const [responsesByFamilyId, setResponsesByFamilyId] = useState<
     Record<string, Response>
   >({});
-  const [responseVersion, setResponseVersion] = useState(0);
   // 折りたたまれている家庭ID（家庭一覧の取得後に全家庭IDで初期化し、全折りたたみ状態から始める。
   // 04_画面設計.md#7「家庭カードの折りたたみ」参照）
   const [collapsedFamilyIds, setCollapsedFamilyIds] = useState<Set<string>>(new Set());
@@ -261,24 +259,6 @@ export function EventEditPage() {
       return;
     }
     await runCreation(eventId);
-  };
-
-  /**
-   * サンプル回答生成（開発用機能）の完了後、最新の回答を再取得して画面に反映する。
-   * FamilyResponseCardは初回描画時のpropsを内部状態の初期値として保持するため、
-   * keyにresponseVersionを含めて再マウントさせることで最新の回答内容を反映させる。
-   */
-  const handleResponsesGenerated = async () => {
-    if (!eventId) {
-      return;
-    }
-    const responsesData = await getResponses(eventId);
-    setResponsesByFamilyId(
-      Object.fromEntries(
-        responsesData.map(({ familyId, ...response }) => [familyId, response])
-      )
-    );
-    setResponseVersion((v) => v + 1);
   };
 
   /**
@@ -463,7 +443,7 @@ export function EventEditPage() {
 
             {families.map((family) => (
               <FamilyResponseCard
-                key={`${family.id}-${responseVersion}`}
+                key={family.id}
                 eventId={eventId}
                 family={family}
                 playerList={playersByFamilyId[family.id] ?? []}
@@ -483,13 +463,6 @@ export function EventEditPage() {
               />
             ))}
           </>
-        )}
-
-        {eventId && !loading && !error && (
-          <DevSampleResponseButton
-            eventId={eventId}
-            onGenerated={handleResponsesGenerated}
-          />
         )}
       </div>
 
