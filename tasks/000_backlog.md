@@ -222,7 +222,7 @@ docs/04_画面設計.md#8 配車サマリー帯の改訂により、この端末
 - T71_Family_Repository実装 / 08_公開版アーキテクチャ設計.md#5,#7 / T67,T68,T69,T70 / done
 - T72_PickupLocation_Repository実装 / 08_公開版アーキテクチャ設計.md#5 / T67 / done
 - T73_Destination_Repository実装 / 08_公開版アーキテクチャ設計.md#5 / T67 / done
-- T74_Response_Repository実装 / 08_公開版アーキテクチャ設計.md#5 / T67 / 未着手
+- T74_Response_Repository実装 / 08_公開版アーキテクチャ設計.md#5 / T67 / done
 - T75_Carpool_Repository実装 / 08_公開版アーキテクチャ設計.md#5,#6,#7 / T67 / 未着手
 - T76_Event_Repository実装 / 08_公開版アーキテクチャ設計.md#5,#7 / T67,T74,T75 / 未着手
 

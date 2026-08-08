@@ -1,15 +1,11 @@
-import {
-  doc,
-  getDoc,
-  getDocs,
-  collection,
-  setDoc,
-  updateDoc,
-  deleteDoc,
-} from 'firebase/firestore';
-import { db } from '../../firebase';
-import { firestorePaths } from '../../constants';
 import type { Response } from '../../types/event';
+import type { CarpoolRepository } from '../../repositories/CarpoolRepository';
+import { firestoreRepository } from '../../repositories/firestore';
+
+// firestoreRepositoryは全エンティティの実装が揃うまでPartial<CarpoolRepository>型のため、
+// このファイルが実際に呼ぶResponse関連メソッドは常に実装済みであることを踏まえてasで
+// 実体型に揃える（ref: docs/08_公開版アーキテクチャ設計.md#5 ファイル構成）。
+const repository = firestoreRepository as CarpoolRepository;
 
 /**
  * 家庭IDを付与した回答（一覧取得時に使用）
@@ -33,8 +29,7 @@ export async function createResponse(
   familyId: string,
   data: Response
 ): Promise<void> {
-  const docRef = doc(db, firestorePaths.responseDocument(eventId, familyId));
-  await setDoc(docRef, data);
+  return repository.createResponse(eventId, familyId, data);
 }
 
 /**
@@ -49,8 +44,7 @@ export async function updateResponse(
   familyId: string,
   data: Partial<Response>
 ): Promise<void> {
-  const docRef = doc(db, firestorePaths.responseDocument(eventId, familyId));
-  await updateDoc(docRef, data);
+  return repository.updateResponse(eventId, familyId, data);
 }
 
 /**
@@ -61,11 +55,7 @@ export async function updateResponse(
  * @returns 回答の配列（各要素にfamilyIdを含む）
  */
 export async function getResponses(eventId: string): Promise<ResponseWithFamilyId[]> {
-  const colRef = collection(db, firestorePaths.responsesCollection(eventId));
-  const snapshot = await getDocs(colRef);
-  return snapshot.docs.map(
-    (d) => ({ familyId: d.id, ...d.data() } as ResponseWithFamilyId)
-  );
+  return repository.getResponses(eventId);
 }
 
 /**
@@ -79,12 +69,7 @@ export async function getResponse(
   eventId: string,
   familyId: string
 ): Promise<Response | null> {
-  const docRef = doc(db, firestorePaths.responseDocument(eventId, familyId));
-  const docSnap = await getDoc(docRef);
-  if (!docSnap.exists()) {
-    return null;
-  }
-  return docSnap.data() as Response;
+  return repository.getResponse(eventId, familyId);
 }
 
 /**
@@ -96,9 +81,7 @@ export async function getResponse(
  * @returns 未回答の場合true（ドキュメントが存在しない場合）
  */
 export async function isUnanswered(eventId: string, familyId: string): Promise<boolean> {
-  const docRef = doc(db, firestorePaths.responseDocument(eventId, familyId));
-  const docSnap = await getDoc(docRef);
-  return !docSnap.exists();
+  return repository.isUnanswered(eventId, familyId);
 }
 
 /**
@@ -109,7 +92,5 @@ export async function isUnanswered(eventId: string, familyId: string): Promise<b
  * @param eventId 対象のイベントID
  */
 export async function deleteAllResponses(eventId: string): Promise<void> {
-  const colRef = collection(db, firestorePaths.responsesCollection(eventId));
-  const snapshot = await getDocs(colRef);
-  await Promise.all(snapshot.docs.map((d) => deleteDoc(d.ref)));
+  return repository.deleteAllResponses(eventId);
 }
