@@ -10,6 +10,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test:e2e": "playwright test",
+    "test:e2e:public": "playwright test --config=playwright.public.config.ts",
     "seed": "tsx scripts/seed/seed.ts",
     "seed:local": "SEED_SOURCE=local tsx scripts/seed/seed.ts",
     "seed:from-csv": "tsx scripts/seed/csvToLocalJson.ts"

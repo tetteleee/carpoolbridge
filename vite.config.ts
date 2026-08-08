@@ -13,22 +13,28 @@ import path from 'path'
 // エイリアス。自チーム版はFirebase Authenticationによる匿名認証・staffUsers確認を行うが、
 // 公開版は個人情報をサーバーへ送らない設計のため認証機構を持たない
 // （ref: docs/08_公開版アーキテクチャ設計.md#2, docs/10_DexieRepository実装設計.md#6）。
-export default defineConfig(({ mode }) => ({
-  plugins: [react()],
-  resolve: {
-    alias: {
-      '@repository': path.resolve(
-        __dirname,
-        mode === 'public'
-          ? 'src/repositories/dexie/index.ts'
-          : 'src/repositories/firestore/index.ts'
-      ),
-      '@app-shell': path.resolve(
-        __dirname,
-        mode === 'public'
-          ? 'src/appShell/PublicAppShell.tsx'
-          : 'src/appShell/CloudAppShell.tsx'
-      ),
+// isPublicMode: 本番の公開版（public）・公開版E2E（public-e2e）のどちらもDexie/PublicAppShellを
+// 使う。E2E用のmode名を追加した際にここへの追記漏れが起きないよう、"public"で始まるmode名は
+// すべて公開版として扱う（ref: docs/10_DexieRepository実装設計.md#8）。
+export default defineConfig(({ mode }) => {
+  const isPublicMode = mode.startsWith('public')
+  return {
+    plugins: [react()],
+    resolve: {
+      alias: {
+        '@repository': path.resolve(
+          __dirname,
+          isPublicMode
+            ? 'src/repositories/dexie/index.ts'
+            : 'src/repositories/firestore/index.ts'
+        ),
+        '@app-shell': path.resolve(
+          __dirname,
+          isPublicMode
+            ? 'src/appShell/PublicAppShell.tsx'
+            : 'src/appShell/CloudAppShell.tsx'
+        ),
+      },
     },
-  },
-}))
+  }
+})

@@ -63,3 +63,13 @@ class CarpoolBridgeDB extends Dexie {
 }
 
 export const db = new CarpoolBridgeDB();
+
+// 公開版E2Eテスト（public-e2eビルドmode）専用のデバッグフック。
+// Firebase Admin SDKでSecurity Rulesを介さずFirestoreへ直接書き込むのと同じ要領で、
+// page.evaluate()経由でIndexedDBへ直接テストデータを投入できるようにする。
+// 本番の公開版ビルド（--mode public、VITE_EXPOSE_DEXIE_DB未設定）ではこのブロックは
+// 静的にfalseとなりtree-shakingで除去される。
+// ref: docs/10_DexieRepository実装設計.md#8 公開版E2Eテスト設計
+if (import.meta.env.VITE_EXPOSE_DEXIE_DB === 'true') {
+  (window as unknown as { __dexieDb?: typeof db }).__dexieDb = db;
+}
