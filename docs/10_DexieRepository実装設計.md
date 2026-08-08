@@ -53,6 +53,21 @@ export default defineConfig(({ mode }) => ({
   （自チーム版）
   （既存の`npm run build`・`.github/workflows/firebase-deploy.yml`は無改修で
   自チーム版ビルドのまま動作し続ける）
+
+## `@app-shell`エイリアス（認証の有無の切り替え）
+
+`@repository`と同じ仕組みを、認証（Firebase Authentication・staffUsers確認）の有無にも
+適用する。自チーム版は`App.tsx`相当の認証ガード込みシェル、公開版は認証を一切持たない
+シェルを、それぞれ独立したファイルとして用意し`resolve.alias`で切り替える。
+
+- `src/appShell/CloudAppShell.tsx`: 匿名認証・`staffUsers`確認・`AuthGuard`によるルーティング
+  制御を行う（旧`App.tsx`の中身をそのまま移設したもの）
+- `src/appShell/PublicAppShell.tsx`: 認証を一切行わず`<BrowserRouter><AppRoutes /></BrowserRouter>`
+  のみを返す
+- `App.tsx`は`import { AppShell } from '@app-shell'; return <AppShell />;`のみに簡素化する
+- `vite.config.ts`の`resolve.alias`に`@app-shell`を追加し、`mode === 'public'`で
+  `PublicAppShell.tsx`、それ以外で`CloudAppShell.tsx`に切り替える
+- `tsconfig.app.json`の`paths`にも`@app-shell`（自チーム版を参照先）を追加する
 - `package.json`に`build:public`スクリプトを追加する（`vite build --mode public`）
 
 ---
@@ -172,17 +187,18 @@ export const db = new CarpoolBridgeDB();
 - E2Eテスト（Playwright）の公開版（Dexie）対応。現状のE2E基盤はFirebase Emulator
   前提のため、公開版のテスト方針は別途検討する
 - Google Drive同期、PWA化、TWA/Google Play公開、広告（`docs/08`同様に対象外のまま）
-- **認証UI・ルーティングの公開版対応**（T88実装時に判明。コードレビューでの再検証により
-  詳細を訂正）。`docs/08_公開版アーキテクチャ設計.md#2`で「認証は公開版では機構ごと削除する」と
-  方針は示されていたが、本ドキュメント（および`T67`〜`T88`）が対象とするのは
-  `CarpoolRepository`のデータ層のみである。`App.tsx`の認証ガード（`useAuth`・
-  `checkStaffUserRegistration`）はstorageModeに関わらず常時有効なままであり、特に
-  `services/auth/staffUserService.ts`が`firebase/firestore`の`doc`・`getDoc`を直接使って
-  `staffUsers`コレクションを参照しているため、公開版ビルド（`npm run build:public`）にも
-  **Firestore SDK本体を含むFirebase一式**が引き続き含まれる（`CarpoolRepository`経由の
-  データ操作＝`@repository`エイリアス配下では、Firestoreデータ層のSDKを完全に除外できている
-  ことを確認済み。混入しているのは認証チェック専用の別経路）。実際に認証フローを
-  UI・ルーティングレベルで公開版から外す作業は別タスクとする
+- ~~認証UI・ルーティングの公開版対応~~ **解決済み**（`@app-shell`エイリアスで対応。
+  2章参照）。T88実装直後は`App.tsx`の認証ガード（`useAuth`・`checkStaffUserRegistration`）が
+  storageModeに関わらず常時有効なままで、`services/auth/staffUserService.ts`が
+  `firebase/firestore`を直接使うため公開版ビルドにもFirestore SDK本体を含むFirebase一式が
+  残っていたが、`@app-shell`による切り替えで公開版ビルドから完全に除外した
+  （`npm run build:public`成果物に`firebase`関連チャンク・文字列が一切含まれないことを確認済み）
+- ~~開発用サンプルデータ・サンプル回答生成ボタンのFirestore依存~~ **解決済み**。
+  `DevSampleDataButton.tsx`・`DevSampleResponseButton.tsx`は`import.meta.env.DEV`で
+  表示自体はガードされていたが、`seedSampleData`/`generateSampleResponses`の
+  importが静的だったため、`MasterPage`・`EventEditPage`の遅延読み込みチャンクに
+  Firestore依存コードが混入していた。クリックハンドラ内での動的import（
+  `await import('../../services/dev/seedSampleData')`）に変更し解消した
 
 ---
 

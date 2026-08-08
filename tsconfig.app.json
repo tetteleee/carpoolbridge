@@ -16,11 +16,12 @@
     "noEmit": true,
     "jsx": "react-jsx",
 
-    /* @repositoryエイリアス（実体はvite.config.tsのresolve.aliasでビルドmodeにより
-       Firestore/Dexieへ切り替わる。tscでの型チェック用にfirestore版を参照先とする。
-       ref: docs/10_DexieRepository実装設計.md#2） */
+    /* @repository・@app-shellエイリアス（実体はvite.config.tsのresolve.aliasで
+       ビルドmodeにより切り替わる。tscでの型チェック用に自チーム版を参照先とする。
+       ref: docs/10_DexieRepository実装設計.md#2 */
     "paths": {
-      "@repository": ["./src/repositories/firestore/index.ts"]
+      "@repository": ["./src/repositories/firestore/index.ts"],
+      "@app-shell": ["./src/appShell/CloudAppShell.tsx"]
     },
 
     /* Linting */

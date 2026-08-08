@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { generateSampleResponses } from '../../services/dev/seedSampleResponses';
 import { Button } from '../common/Button';
 import { CodeIcon } from '../icons';
 
@@ -42,6 +41,9 @@ export function DevSampleResponseButton({
   const handleExecute = async () => {
     setRunning(true);
     try {
+      // 開発環境限定の機能かつFirestore(自チーム版)専用のため、公開版ビルドの
+      // バンドルへ混入させないよう動的importにする（このボタン自体もDEV環境でのみ表示される）
+      const { generateSampleResponses } = await import('../../services/dev/seedSampleResponses');
       await generateSampleResponses(eventId);
       setMessage({ text: 'サンプル回答を生成しました', isError: false });
       onGenerated?.();
