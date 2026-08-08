@@ -215,7 +215,7 @@ docs/04_画面設計.md#8 配車サマリー帯の改訂により、この端末
 
 ## T. 公開版アーキテクチャ設計 CarpoolRepository抽象化（08_公開版アーキテクチャ設計.md）
 
-- T67_型定義変更・CarpoolRepositoryインターフェース定義 / 08_公開版アーキテクチャ設計.md#4,#5 / なし / 未着手
+- T67_型定義変更・CarpoolRepositoryインターフェース定義 / 08_公開版アーキテクチャ設計.md#4,#5 / なし / done
 - T68_Player_Repository実装 / 08_公開版アーキテクチャ設計.md#5 / T67 / 未着手
 - T69_Coach_Repository実装 / 08_公開版アーキテクチャ設計.md#5 / T67 / 未着手
 - T70_FamilyMember_Repository実装 / 08_公開版アーキテクチャ設計.md#5 / T67 / 未着手
