@@ -13,7 +13,6 @@ import { getFamilies } from '../services/master/familyService';
 import { getAllPlayers } from '../services/master/playerService';
 import { getAllCoaches } from '../services/master/coachService';
 import { getAllFamilyMembers } from '../services/master/familyMemberService';
-import { getPickupLocations } from '../services/master/pickupLocationService';
 import { getResponses } from '../services/event/responseService';
 import { getCarpools, deleteAllCarpools } from '../services/event/carpoolService';
 import { runCarpoolAssignment } from '../services/carpool/runCarpoolAssignment';
@@ -21,7 +20,7 @@ import { formatDateWithWeekday } from '../utils/date';
 import { getFamilyHighestGrade } from '../utils/schoolGrade';
 import { computeResponseStatus, type ResponseStatus } from '../utils/responseStatus';
 import type { Event, Response } from '../types/event';
-import type { Player, Coach, Family, FamilyMember, PickupLocation } from '../types/master';
+import type { Player, Coach, Family, FamilyMember } from '../types/master';
 
 /**
  * 対象イベントの行き・帰り両方向の配車を作成する。
@@ -90,7 +89,6 @@ export function EventEditPage() {
   const [familyMembersByFamilyId, setFamilyMembersByFamilyId] = useState<
     Record<string, FamilyMember[]>
   >({});
-  const [pickupLocationList, setPickupLocationList] = useState<PickupLocation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [responsesByFamilyId, setResponsesByFamilyId] = useState<
@@ -114,10 +112,9 @@ export function EventEditPage() {
       return;
     }
 
-    Promise.all([getEvent(eventId), getFamilies(), getResponses(eventId), getPickupLocations()])
-      .then(async ([eventData, familiesData, responsesData, pickupLocationsData]) => {
+    Promise.all([getEvent(eventId), getFamilies(), getResponses(eventId)])
+      .then(async ([eventData, familiesData, responsesData]) => {
         setEvent(eventData);
-        setPickupLocationList(pickupLocationsData);
 
         const activeFamilies = familiesData.filter((family) => family.isActive);
         const activeFamilyIds = new Set(activeFamilies.map((family) => family.id));
@@ -472,7 +469,6 @@ export function EventEditPage() {
                 playerList={playersByFamilyId[family.id] ?? []}
                 coachList={coachesByFamilyId[family.id] ?? []}
                 familyMemberList={familyMembersByFamilyId[family.id] ?? []}
-                pickupLocationList={pickupLocationList}
                 response={responsesByFamilyId[family.id]}
                 isOpen={!collapsedFamilyIds.has(family.id)}
                 onToggleOpen={() => handleToggleFamilyOpen(family.id)}

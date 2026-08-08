@@ -132,30 +132,23 @@ export async function runCarpoolAssignment(
     const hasRidingCoach = (response.coaches ?? []).some(
       (coach) => activeCoachIds.has(coach.coachId) && isCoachRidingForDirection(coach, direction)
     );
+    const hasRidingTemporaryParticipant = (response.temporaryParticipants ?? []).some(
+      (temporaryParticipant) =>
+        isTemporaryParticipantRidingForDirection(temporaryParticipant, direction)
+    );
 
-    if (
-      (driving || hasRidingPlayer || hasRidingFamilyMember || hasRidingCoach) &&
-      !usedLocationIds.has(family.pickupLocationId)
-    ) {
+    const hasAnyRidingMember =
+      driving ||
+      hasRidingPlayer ||
+      hasRidingFamilyMember ||
+      hasRidingCoach ||
+      hasRidingTemporaryParticipant;
+
+    if (hasAnyRidingMember && !usedLocationIds.has(family.pickupLocationId)) {
       usedLocationIds.add(family.pickupLocationId);
       const location = pickupLocationById.get(family.pickupLocationId);
       if (location) {
         usedPickupLocations.push(location);
-      }
-    }
-
-    // 一時参加者は所属家庭ではなく自分専用の集合場所を持ちうる（複数人いれば場所も複数になりうる）ため、
-    // 家庭のpickupLocationIdとは別に、それぞれの集合場所を個別にバリデーション対象へ追加する
-    for (const temporaryParticipant of response.temporaryParticipants ?? []) {
-      if (
-        isTemporaryParticipantRidingForDirection(temporaryParticipant, direction) &&
-        !usedLocationIds.has(temporaryParticipant.pickupLocationId)
-      ) {
-        usedLocationIds.add(temporaryParticipant.pickupLocationId);
-        const location = pickupLocationById.get(temporaryParticipant.pickupLocationId);
-        if (location) {
-          usedPickupLocations.push(location);
-        }
       }
     }
   }
@@ -236,13 +229,12 @@ export async function runCarpoolAssignment(
       }
     }
 
-    // 一時参加者のみ、所属家庭のpickupLocationIdではなく本人に指定した集合場所を使用する
     for (const temporaryParticipant of response.temporaryParticipants ?? []) {
       if (isTemporaryParticipantRidingForDirection(temporaryParticipant, direction)) {
         passengers.push({
           familyId: family.id,
-          pickupLocationId: temporaryParticipant.pickupLocationId,
-          pickupLocation: toLocation(temporaryParticipant.pickupLocationId),
+          pickupLocationId: family.pickupLocationId,
+          pickupLocation: toLocation(family.pickupLocationId),
           member: {
             type: 'temporary',
             familyId: family.id,

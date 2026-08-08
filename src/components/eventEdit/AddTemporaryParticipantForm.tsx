@@ -1,17 +1,12 @@
 import { useState, type CSSProperties } from 'react';
-import type { PickupLocation } from '../../types/master';
 import { Button } from '../common/Button';
 import { CloseIcon } from '../icons';
 
 interface AddTemporaryParticipantFormProps {
   /** 対象家庭ID（DOM要素のid付与に使用） */
   familyId: string;
-  /** 集合場所の初期選択値（追加操作を行った家庭の集合場所） */
-  defaultPickupLocationId: string;
-  /** 集合場所の選択肢一覧 */
-  pickupLocationList: PickupLocation[];
   /** 「追加する」押下時に呼び出す */
-  onSubmit: (input: { name: string; pickupLocationId: string; registerToMaster: boolean }) => void;
+  onSubmit: (input: { name: string; registerToMaster: boolean }) => void;
   /** キャンセル（フォームを閉じる） */
   onCancel: () => void;
 }
@@ -92,13 +87,10 @@ const hintStyle: CSSProperties = {
  */
 export function AddTemporaryParticipantForm({
   familyId,
-  defaultPickupLocationId,
-  pickupLocationList,
   onSubmit,
   onCancel,
 }: AddTemporaryParticipantFormProps) {
   const [name, setName] = useState('');
-  const [pickupLocationId, setPickupLocationId] = useState(defaultPickupLocationId);
   const [registerToMaster, setRegisterToMaster] = useState(false);
 
   const trimmedName = name.trim();
@@ -107,7 +99,7 @@ export function AddTemporaryParticipantForm({
     if (!trimmedName) {
       return;
     }
-    onSubmit({ name: trimmedName, pickupLocationId, registerToMaster });
+    onSubmit({ name: trimmedName, registerToMaster });
   };
 
   return (
@@ -141,22 +133,6 @@ export function AddTemporaryParticipantForm({
           placeholder="例：山田じいじ"
           style={textInputStyle}
         />
-      </label>
-
-      <label style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-        <span style={fieldLabelStyle}>集合場所</span>
-        <select
-          id={`temporary-participant-pickup-location-${familyId}`}
-          value={pickupLocationId}
-          onChange={(e) => setPickupLocationId(e.target.value)}
-          style={textInputStyle}
-        >
-          {pickupLocationList.map((location) => (
-            <option key={location.id} value={location.id}>
-              {location.name}
-            </option>
-          ))}
-        </select>
       </label>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>

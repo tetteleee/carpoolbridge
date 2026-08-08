@@ -54,25 +54,19 @@ function toGradeLabel(schoolEntryYear: number): string | null {
 
 /**
  * 乗車メンバー（CarpoolMember）の集合場所IDを取得する。対応するマスタが見つからない場合はnull。
- * type: "temporary"のみ、所属家庭のFamily.pickupLocationIdではなく、追加時に指定した
- * Response.temporaryParticipants[].pickupLocationIdを直接参照する（05_データ設計.md#10参照）。
+ * 種別によらず、所属家庭のFamily.pickupLocationIdを参照する（05_データ設計.md#10参照）。
  */
 function getMemberPickupLocationId(
   member: CarpoolMember,
   masterData: BoardMasterData
 ): string | null {
-  if (member.type === 'temporary') {
-    const temporaryParticipant = masterData.responseByFamilyId
-      .get(member.familyId)
-      ?.temporaryParticipants?.find((t) => t.id === member.temporaryParticipantId);
-    return temporaryParticipant?.pickupLocationId ?? null;
-  }
-
   let familyId: string | undefined;
   if (member.type === 'player') {
     familyId = masterData.playerById.get(member.playerId)?.familyId;
   } else if (member.type === 'family') {
     familyId = masterData.familyMemberById.get(member.familyMemberId)?.familyId;
+  } else if (member.type === 'temporary') {
+    familyId = member.familyId;
   } else {
     familyId = masterData.coachById.get(member.coachId)?.familyId;
   }
