@@ -255,3 +255,28 @@ docs/04_画面設計.md#8 配車サマリー帯の改訂により、この端末
 T77〜T86でエンティティ単位のDexieRepositoryを実装し、T87〜T88でビルド時のstorageMode
 静的切り替え（Vite `resolve.alias`）・呼び出し元の配線を行う。経緯は
 docs/10_DexieRepository実装設計.md参照。
+
+---
+
+## V. 公開版E2Eテスト整備（10_DexieRepository実装設計.md#8）
+
+- T89_公開版E2E基盤構築 / 10_DexieRepository実装設計.md#8 / T88 / done
+- T90_公開版E2Eスモークテスト実装 / 10_DexieRepository実装設計.md#8 / T89 / done
+
+UI・ビジネスロジックは自チーム版と共通コードで既存e2e16本により検証済みのため、
+公開版E2EはDexieRepository固有のリスク（永続化・カスケード削除・saveCarpoolsの原子性・
+過去イベントページネーション等）に絞ったスモークテスト5本とする。既存の自チーム版E2E基盤
+（Firebase Emulator前提）とは別に、`playwright.public.config.ts`・`e2e-public/`を新設する。
+
+---
+
+## W. PWA化（11_PWA化設計.md）
+
+- T91_PWAアイコン生成基盤 / 11_PWA化設計.md#4,#5 / なし / done
+- T92_vite-plugin-pwa導入・manifest設定 / 11_PWA化設計.md#3,#4,#6 / T91 / done
+- T93_ServiceWorker登録・自動更新配線 / 11_PWA化設計.md#7 / T92 / done
+
+対象範囲は公開版・自チーム版の両方。公開版はフルオフライン対応（アプリシェルを
+事前キャッシュ）、自チーム版はインストール可能にするだけ（認証・Firestore通信は
+引き続きオンライン必須のため事前キャッシュしない）。実装は`vite-plugin-pwa`を用い、
+新バージョン検知時は自動更新（`autoUpdate`）とする。
