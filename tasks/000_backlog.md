@@ -261,7 +261,7 @@ docs/10_DexieRepository実装設計.md参照。
 ## V. 公開版E2Eテスト整備（10_DexieRepository実装設計.md#8）
 
 - T89_公開版E2E基盤構築 / 10_DexieRepository実装設計.md#8 / T88 / done
-- T90_公開版E2Eスモークテスト実装 / 10_DexieRepository実装設計.md#8 / T89 / 未着手
+- T90_公開版E2Eスモークテスト実装 / 10_DexieRepository実装設計.md#8 / T89 / done
 
 UI・ビジネスロジックは自チーム版と共通コードで既存e2e16本により検証済みのため、
 公開版E2EはDexieRepository固有のリスク（永続化・カスケード削除・saveCarpoolsの原子性・

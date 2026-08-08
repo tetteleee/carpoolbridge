@@ -9,6 +9,19 @@ import type { Page } from '@playwright/test';
  * ref: docs/10_DexieRepository実装設計.md#8 公開版E2Eテスト設計
  */
 
+/**
+ * window.__dexieDbが使えるようになるまで待つ。
+ *
+ * repositories/dexie/index.ts（db.tsを含む）はservices/配下経由でしかimportされておらず、
+ * services/配下を実際に使うページコンポーネントはReact.lazyで遅延読み込みされる
+ * （src/router/index.tsx参照）。そのため`page.goto('/')`直後はまだチャンクの読み込みが
+ * 完了しておらずwindow.__dexieDbが存在しないことがある。seedDexieの各関数を呼ぶ前に
+ * 必ずこれを呼ぶこと。
+ */
+export async function waitForDexieDb(page: Page): Promise<void> {
+  await page.waitForFunction(() => (window as unknown as { __dexieDb?: unknown }).__dexieDb !== undefined);
+}
+
 /** window.__dexieDbの指定テーブルへ1件追加する */
 async function addRecord(page: Page, table: string, record: Record<string, unknown>): Promise<void> {
   await page.evaluate(
@@ -145,6 +158,42 @@ export async function seedEvent(page: Page, input: SeedEventInput): Promise<stri
     ...input,
   });
   return id;
+}
+
+export interface SeedResponsePlayerInput {
+  playerId: string;
+  isParticipating: boolean | null;
+  noOutwardRide: boolean;
+  noReturnRide: boolean;
+}
+
+export interface SeedResponseInput {
+  eventId: string;
+  familyId: string;
+  driverOutward: boolean | null;
+  driverReturn: boolean | null;
+  capacityToday?: number | null;
+  remarks?: string;
+  players?: SeedResponsePlayerInput[];
+}
+
+/**
+ * 回答（Response）を直接投入する。ドラッグ&ドロップ等、回答入力画面のUI操作自体が
+ * 検証対象ではないテストで、前提データとして高速に用意するために使う。
+ */
+export async function seedResponse(page: Page, input: SeedResponseInput): Promise<void> {
+  const { eventId, familyId, ...rest } = input;
+  await addRecord(page, 'responses', {
+    eventId,
+    familyId,
+    capacityToday: null,
+    remarks: '',
+    players: [],
+    coaches: [],
+    familyMembers: [],
+    temporaryParticipants: [],
+    ...rest,
+  });
 }
 
 /** window.__dexieDbの指定テーブルの全レコードを取得する（カスケード削除の確認等に使用） */
