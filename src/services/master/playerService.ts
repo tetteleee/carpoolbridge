@@ -1,18 +1,5 @@
-import {
-  collection,
-  doc,
-  addDoc,
-  getDocs,
-  query,
-  where,
-  updateDoc,
-  deleteDoc,
-  writeBatch,
-  serverTimestamp,
-} from 'firebase/firestore';
-import { db } from '../../firebase';
-import { firestorePaths } from '../../constants';
 import type { Player } from '../../types/master';
+import { repository } from '@repository';
 
 /**
  * 選手を新規登録します。
@@ -24,14 +11,7 @@ import type { Player } from '../../types/master';
 export async function createPlayer(
   data: Omit<Player, 'id' | 'isActive' | 'createdAt' | 'updatedAt'>
 ): Promise<string> {
-  const colRef = collection(db, firestorePaths.playersCollection());
-  const docRef = await addDoc(colRef, {
-    ...data,
-    isActive: true,
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp(),
-  });
-  return docRef.id;
+  return repository.createPlayer(data);
 }
 
 /**
@@ -41,10 +21,7 @@ export async function createPlayer(
  * @returns 選手の配列
  */
 export async function getPlayersByFamilyId(familyId: string): Promise<Player[]> {
-  const colRef = collection(db, firestorePaths.playersCollection());
-  const q = query(colRef, where('familyId', '==', familyId));
-  const snapshot = await getDocs(q);
-  return snapshot.docs.map((d) => ({ id: d.id, ...d.data() } as Player));
+  return repository.getPlayersByFamilyId(familyId);
 }
 
 /**
@@ -55,9 +32,7 @@ export async function getPlayersByFamilyId(familyId: string): Promise<Player[]> 
  * @returns 選手の配列（全家庭分）
  */
 export async function getAllPlayers(): Promise<Player[]> {
-  const colRef = collection(db, firestorePaths.playersCollection());
-  const snapshot = await getDocs(colRef);
-  return snapshot.docs.map((d) => ({ id: d.id, ...d.data() } as Player));
+  return repository.getAllPlayers();
 }
 
 /**
@@ -71,11 +46,7 @@ export async function updatePlayer(
   playerId: string,
   data: Partial<Pick<Player, 'name' | 'schoolEntryYear' | 'isActive'>>
 ): Promise<void> {
-  const docRef = doc(db, firestorePaths.playerDocument(playerId));
-  await updateDoc(docRef, {
-    ...data,
-    updatedAt: serverTimestamp(),
-  });
+  return repository.updatePlayer(playerId, data);
 }
 
 /**
@@ -85,11 +56,7 @@ export async function updatePlayer(
  * @param playerId 削除対象のドキュメントID
  */
 export async function deactivatePlayer(playerId: string): Promise<void> {
-  const docRef = doc(db, firestorePaths.playerDocument(playerId));
-  await updateDoc(docRef, {
-    isActive: false,
-    updatedAt: serverTimestamp(),
-  });
+  return repository.deactivatePlayer(playerId);
 }
 
 /**
@@ -99,8 +66,7 @@ export async function deactivatePlayer(playerId: string): Promise<void> {
  * @param playerId 削除対象のドキュメントID
  */
 export async function deletePlayer(playerId: string): Promise<void> {
-  const docRef = doc(db, firestorePaths.playerDocument(playerId));
-  await deleteDoc(docRef);
+  return repository.deletePlayer(playerId);
 }
 
 /**
@@ -110,14 +76,5 @@ export async function deletePlayer(playerId: string): Promise<void> {
  * @param familyId 対象の家庭ID
  */
 export async function deletePlayersByFamilyId(familyId: string): Promise<void> {
-  const colRef = collection(db, firestorePaths.playersCollection());
-  const q = query(colRef, where('familyId', '==', familyId));
-  const snapshot = await getDocs(q);
-  if (snapshot.empty) {
-    return;
-  }
-
-  const batch = writeBatch(db);
-  snapshot.docs.forEach((d) => batch.delete(d.ref));
-  await batch.commit();
+  return repository.deletePlayersByFamilyId(familyId);
 }

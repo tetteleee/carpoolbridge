@@ -1,5 +1,3 @@
-import { Timestamp } from 'firebase/firestore';
-
 /**
  * 家庭（Family）を表す型
  * 1家庭につき1レコード
@@ -15,8 +13,8 @@ export interface Family {
   pickupLocationId: string;
   /** 在籍中（falseで卒団・非表示扱い） */
   isActive: boolean;
-  createdAt: Timestamp;
-  updatedAt: Timestamp;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 /**
@@ -30,8 +28,8 @@ export interface Player {
   schoolEntryYear: number;
   /** 在籍中（falseで卒団・非表示扱い） */
   isActive: boolean;
-  createdAt: Timestamp;
-  updatedAt: Timestamp;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 /**
@@ -44,8 +42,8 @@ export interface Coach {
   name: string;
   /** 在籍中（falseで非表示扱い） */
   isActive: boolean;
-  createdAt: Timestamp;
-  updatedAt: Timestamp;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 /**
@@ -58,8 +56,8 @@ export interface FamilyMember {
   name: string;
   /** 在籍中（falseで非表示扱い） */
   isActive: boolean;
-  createdAt: Timestamp;
-  updatedAt: Timestamp;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 /**

@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { seedSampleData } from '../../services/dev/seedSampleData';
 import { Button } from '../common/Button';
 import { CodeIcon } from '../icons';
 
@@ -37,6 +36,9 @@ export function DevSampleDataButton({ onSeeded }: DevSampleDataButtonProps) {
   const handleExecute = async () => {
     setRunning(true);
     try {
+      // 開発環境限定の機能かつFirestore(自チーム版)専用のため、公開版ビルドの
+      // バンドルへ混入させないよう動的importにする（このボタン自体もDEV環境でのみ表示される）
+      const { seedSampleData } = await import('../../services/dev/seedSampleData');
       await seedSampleData();
       setMessage({ text: 'サンプルデータを投入しました', isError: false });
       onSeeded?.();

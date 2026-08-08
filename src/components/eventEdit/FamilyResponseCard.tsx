@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
-import { Timestamp } from 'firebase/firestore';
 import type {
   Response,
   ResponseCoach,
@@ -354,8 +353,8 @@ export function FamilyResponseCard({
         familyId: family.id,
         name: input.name,
         isActive: true,
-        createdAt: Timestamp.now(),
-        updatedAt: Timestamp.now(),
+        createdAt: new Date(),
+        updatedAt: new Date(),
       });
       applyFamilyMemberPatch(familyMemberId, {
         isParticipating: true,

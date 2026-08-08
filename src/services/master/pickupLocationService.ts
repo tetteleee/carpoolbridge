@@ -1,15 +1,5 @@
-import {
-  collection,
-  doc,
-  addDoc,
-  getDoc,
-  getDocs,
-  updateDoc,
-  deleteDoc,
-} from 'firebase/firestore';
-import { db } from '../../firebase';
-import { firestorePaths } from '../../constants';
 import type { PickupLocation } from '../../types/master';
+import { repository } from '@repository';
 
 /**
  * 集合場所を新規登録します。
@@ -20,9 +10,7 @@ import type { PickupLocation } from '../../types/master';
 export async function createPickupLocation(
   data: Omit<PickupLocation, 'id'>
 ): Promise<string> {
-  const colRef = collection(db, firestorePaths.pickupLocationsCollection());
-  const docRef = await addDoc(colRef, data);
-  return docRef.id;
+  return repository.createPickupLocation(data);
 }
 
 /**
@@ -31,9 +19,7 @@ export async function createPickupLocation(
  * @returns 集合場所の配列
  */
 export async function getPickupLocations(): Promise<PickupLocation[]> {
-  const colRef = collection(db, firestorePaths.pickupLocationsCollection());
-  const snapshot = await getDocs(colRef);
-  return snapshot.docs.map((d) => ({ id: d.id, ...d.data() } as PickupLocation));
+  return repository.getPickupLocations();
 }
 
 /**
@@ -45,12 +31,7 @@ export async function getPickupLocations(): Promise<PickupLocation[]> {
 export async function getPickupLocation(
   locationId: string
 ): Promise<PickupLocation | null> {
-  const docRef = doc(db, firestorePaths.pickupLocationDocument(locationId));
-  const docSnap = await getDoc(docRef);
-  if (!docSnap.exists()) {
-    return null;
-  }
-  return { id: docSnap.id, ...docSnap.data() } as PickupLocation;
+  return repository.getPickupLocation(locationId);
 }
 
 /**
@@ -63,8 +44,7 @@ export async function updatePickupLocation(
   locationId: string,
   data: Partial<Pick<PickupLocation, 'name' | 'latitude' | 'longitude'>>
 ): Promise<void> {
-  const docRef = doc(db, firestorePaths.pickupLocationDocument(locationId));
-  await updateDoc(docRef, data);
+  return repository.updatePickupLocation(locationId, data);
 }
 
 /**
@@ -74,6 +54,5 @@ export async function updatePickupLocation(
  * @param locationId 削除対象のドキュメントID
  */
 export async function deletePickupLocation(locationId: string): Promise<void> {
-  const docRef = doc(db, firestorePaths.pickupLocationDocument(locationId));
-  await deleteDoc(docRef);
+  return repository.deletePickupLocation(locationId);
 }

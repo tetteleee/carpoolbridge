@@ -3,10 +3,8 @@
  * ref: docs/04_画面設計.md#8 ドラッグ＆ドロップ, docs/05_データ設計.md#10 Carpool（配車結果）
  */
 
-import { doc, writeBatch } from 'firebase/firestore';
-import { db } from '../../firebase';
-import { firestorePaths } from '../../constants/firestorePaths';
 import type { Carpool, CarpoolMember } from '../../types/event';
+import { repository } from '@repository';
 
 /** 未配車エリアを表すドロップゾーンID（車カードはCarpool.idをそのままドロップゾーンIDとして使う） */
 export const UNASSIGNED_ZONE_ID = 'unassigned';
@@ -25,8 +23,8 @@ export function memberKey(member: CarpoolMember): string {
  * 車内の表示順は集合場所グルーピング＋学年・名前順で一意に決まるため（ref: docs/04_画面設計.md#集合場所グルーピング）、
  * 移動先ゾーン内での挿入位置は指定せず、常に末尾へ追加する。
  * 移動元と移動先が同一ゾーンの場合は何もしない（ref: docs/04_画面設計.md#挿入位置）。
- * 移動元・移動先の更新は1つのFirestoreバッチにまとめ、片方だけ成功して
- * 乗客がどの車にも属さない状態になることを防ぐ。
+ * 移動元・移動先の更新は repository.saveCarpools で1回にまとめ、片方だけ成功して
+ * 乗客がどの車にも属さない状態になることを防ぐ（ref: docs/08_公開版アーキテクチャ設計.md#6）。
  *
  * @param eventId 対象のイベントID
  * @param member 移動対象の乗車メンバー
@@ -46,34 +44,30 @@ export async function moveCarpoolMember(
   }
 
   const key = memberKey(member);
-  const batch = writeBatch(db);
-  let hasWrite = false;
+  const updatedCarpools: Carpool[] = [];
 
   if (sourceZoneId !== UNASSIGNED_ZONE_ID) {
     const sourceCarpool = carpools.find((carpool) => carpool.id === sourceZoneId);
     if (sourceCarpool) {
-      const sourceDocRef = doc(db, firestorePaths.carpoolDocument(eventId, sourceCarpool.id));
-      batch.update(sourceDocRef, {
+      updatedCarpools.push({
+        ...sourceCarpool,
         members: sourceCarpool.members.filter((m) => memberKey(m) !== key),
       });
-      hasWrite = true;
     }
   }
 
   if (targetZoneId !== UNASSIGNED_ZONE_ID) {
     const targetCarpool = carpools.find((carpool) => carpool.id === targetZoneId);
     if (targetCarpool) {
-      const targetDocRef = doc(db, firestorePaths.carpoolDocument(eventId, targetCarpool.id));
       const membersWithoutDuplicate = targetCarpool.members.filter((m) => memberKey(m) !== key);
-      batch.update(targetDocRef, {
+      updatedCarpools.push({
+        ...targetCarpool,
         members: [...membersWithoutDuplicate, member],
       });
-      hasWrite = true;
     }
   }
 
-  if (hasWrite) {
-    await batch.commit();
+  if (updatedCarpools.length > 0) {
+    await repository.saveCarpools(eventId, updatedCarpools);
   }
 }
-

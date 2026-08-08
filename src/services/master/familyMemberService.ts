@@ -1,18 +1,5 @@
-import {
-  collection,
-  doc,
-  addDoc,
-  getDocs,
-  query,
-  where,
-  updateDoc,
-  deleteDoc,
-  writeBatch,
-  serverTimestamp,
-} from 'firebase/firestore';
-import { db } from '../../firebase';
-import { firestorePaths } from '../../constants';
 import type { FamilyMember } from '../../types/master';
+import { repository } from '@repository';
 
 /**
  * 家族を新規登録します。
@@ -24,14 +11,7 @@ import type { FamilyMember } from '../../types/master';
 export async function createFamilyMember(
   data: Omit<FamilyMember, 'id' | 'isActive' | 'createdAt' | 'updatedAt'>
 ): Promise<string> {
-  const colRef = collection(db, firestorePaths.familyMembersCollection());
-  const docRef = await addDoc(colRef, {
-    ...data,
-    isActive: true,
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp(),
-  });
-  return docRef.id;
+  return repository.createFamilyMember(data);
 }
 
 /**
@@ -41,10 +21,7 @@ export async function createFamilyMember(
  * @returns 家族の配列
  */
 export async function getFamilyMembersByFamilyId(familyId: string): Promise<FamilyMember[]> {
-  const colRef = collection(db, firestorePaths.familyMembersCollection());
-  const q = query(colRef, where('familyId', '==', familyId));
-  const snapshot = await getDocs(q);
-  return snapshot.docs.map((d) => ({ id: d.id, ...d.data() } as FamilyMember));
+  return repository.getFamilyMembersByFamilyId(familyId);
 }
 
 /**
@@ -55,9 +32,7 @@ export async function getFamilyMembersByFamilyId(familyId: string): Promise<Fami
  * @returns 家族の配列（全家庭分）
  */
 export async function getAllFamilyMembers(): Promise<FamilyMember[]> {
-  const colRef = collection(db, firestorePaths.familyMembersCollection());
-  const snapshot = await getDocs(colRef);
-  return snapshot.docs.map((d) => ({ id: d.id, ...d.data() } as FamilyMember));
+  return repository.getAllFamilyMembers();
 }
 
 /**
@@ -71,11 +46,7 @@ export async function updateFamilyMember(
   familyMemberId: string,
   data: Partial<Pick<FamilyMember, 'name' | 'isActive'>>
 ): Promise<void> {
-  const docRef = doc(db, firestorePaths.familyMemberDocument(familyMemberId));
-  await updateDoc(docRef, {
-    ...data,
-    updatedAt: serverTimestamp(),
-  });
+  return repository.updateFamilyMember(familyMemberId, data);
 }
 
 /**
@@ -85,8 +56,7 @@ export async function updateFamilyMember(
  * @param familyMemberId 削除対象のドキュメントID
  */
 export async function deleteFamilyMember(familyMemberId: string): Promise<void> {
-  const docRef = doc(db, firestorePaths.familyMemberDocument(familyMemberId));
-  await deleteDoc(docRef);
+  return repository.deleteFamilyMember(familyMemberId);
 }
 
 /**
@@ -96,14 +66,5 @@ export async function deleteFamilyMember(familyMemberId: string): Promise<void> 
  * @param familyId 対象の家庭ID
  */
 export async function deleteFamilyMembersByFamilyId(familyId: string): Promise<void> {
-  const colRef = collection(db, firestorePaths.familyMembersCollection());
-  const q = query(colRef, where('familyId', '==', familyId));
-  const snapshot = await getDocs(q);
-  if (snapshot.empty) {
-    return;
-  }
-
-  const batch = writeBatch(db);
-  snapshot.docs.forEach((d) => batch.delete(d.ref));
-  await batch.commit();
+  return repository.deleteFamilyMembersByFamilyId(familyId);
 }

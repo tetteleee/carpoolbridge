@@ -210,3 +210,48 @@ T52では「サマリー帯の開閉状態は永続化せず、画面を開き�
 docs/04_画面設計.md#8 配車サマリー帯の改訂により、この端末のlocalStorageに開閉状態を保存し、
 次回配車画面を開いたときに復元する仕様に変更した。イベント・行き／帰りタブをまたいだ端末単位の
 単一状態として扱う（イベント別・タブ別の個別保存は行わない）。
+
+---
+
+## T. 公開版アーキテクチャ設計 CarpoolRepository抽象化（08_公開版アーキテクチャ設計.md）
+
+- T67_型定義変更・CarpoolRepositoryインターフェース定義 / 08_公開版アーキテクチャ設計.md#4,#5 / なし / done
+- T68_Player_Repository実装 / 08_公開版アーキテクチャ設計.md#5 / T67 / done
+- T69_Coach_Repository実装 / 08_公開版アーキテクチャ設計.md#5 / T67 / done
+- T70_FamilyMember_Repository実装 / 08_公開版アーキテクチャ設計.md#5 / T67 / done
+- T71_Family_Repository実装 / 08_公開版アーキテクチャ設計.md#5,#7 / T67,T68,T69,T70 / done
+- T72_PickupLocation_Repository実装 / 08_公開版アーキテクチャ設計.md#5 / T67 / done
+- T73_Destination_Repository実装 / 08_公開版アーキテクチャ設計.md#5 / T67 / done
+- T74_Response_Repository実装 / 08_公開版アーキテクチャ設計.md#5 / T67 / done
+- T75_Carpool_Repository実装 / 08_公開版アーキテクチャ設計.md#5,#6,#7 / T67 / done
+- T76_Event_Repository実装 / 08_公開版アーキテクチャ設計.md#5,#7 / T67,T74,T75 / done
+
+自チーム版（Firestore）を公開版（IndexedDB/Dexie.js）と共存させるため、既存の
+`src/services/`配下のFirestore直接呼び出しを`CarpoolRepository`インターフェース経由に
+置き換える。コンポーネント・ページ・hooks側の呼び出し元は変更しない（既存の`services/`
+各ファイルを、公開関数はそのまま・内部実装だけRepositoryへ委譲する薄いラッパーとして
+恒久的に維持する方針。経緯はdocs/08_公開版アーキテクチャ設計.md#2参照）。
+`DexieRepository`本体の実装・`storageMode`分岐は本グループの対象外で、T67〜T76完了後に
+別タスクとして着手する。
+
+---
+
+## U. DexieRepository実装・storageMode切り替え（10_DexieRepository実装設計.md）
+
+- T77_Dexie基盤_db定義・空の器 / 10_DexieRepository実装設計.md#3,#4 / なし / done
+- T78_Player_DexieRepository実装 / 10_DexieRepository実装設計.md#3,#4 / T77 / done
+- T79_Coach_DexieRepository実装 / 10_DexieRepository実装設計.md#3,#4 / T77 / done
+- T80_FamilyMember_DexieRepository実装 / 10_DexieRepository実装設計.md#3,#4 / T77 / done
+- T81_Family_DexieRepository実装 / 10_DexieRepository実装設計.md#3,#4 / T77,T78,T79,T80 / done
+- T82_PickupLocation_DexieRepository実装 / 10_DexieRepository実装設計.md#3,#4 / T77 / done
+- T83_Destination_DexieRepository実装 / 10_DexieRepository実装設計.md#3,#4 / T77 / done
+- T84_Response_DexieRepository実装 / 10_DexieRepository実装設計.md#4 / T77 / done
+- T85_Carpool_DexieRepository実装 / 10_DexieRepository実装設計.md#4 / T77 / done
+- T86_Event_DexieRepository実装 / 10_DexieRepository実装設計.md#4 / T77,T84,T85 / done
+- T87_storageMode切り替え配線 / 10_DexieRepository実装設計.md#2 / T77〜T86 / done
+- T88_呼び出し元をrepositoryエイリアス経由に切り替え / 10_DexieRepository実装設計.md#2,#5,#6 / T77〜T87 / done
+
+`docs/08`で対象外としていた`DexieRepository`本体の実装と`storageMode`切り替え機構。
+T77〜T86でエンティティ単位のDexieRepositoryを実装し、T87〜T88でビルド時のstorageMode
+静的切り替え（Vite `resolve.alias`）・呼び出し元の配線を行う。経緯は
+docs/10_DexieRepository実装設計.md参照。

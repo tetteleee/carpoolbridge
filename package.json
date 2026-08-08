@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:public": "tsc -b && vite build --mode public",
     "lint": "eslint .",
     "preview": "vite preview",
     "test:e2e": "playwright test",
@@ -14,6 +15,7 @@
     "seed:from-csv": "tsx scripts/seed/csvToLocalJson.ts"
   },
   "dependencies": {
+    "dexie": "^4.4.4",
     "firebase": "^12.16.0",
     "html2canvas": "^1.4.1",
     "react": "^19.2.7",

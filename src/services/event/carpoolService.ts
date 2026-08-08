@@ -1,17 +1,5 @@
-import {
-  doc,
-  getDoc,
-  getDocs,
-  collection,
-  query,
-  where,
-  addDoc,
-  updateDoc,
-  deleteDoc,
-} from 'firebase/firestore';
-import { db } from '../../firebase';
-import { firestorePaths } from '../../constants';
 import type { Carpool, Direction } from '../../types/event';
+import { repository } from '@repository';
 
 /**
  * 配車結果（車ごとレコード）を新規登録します。
@@ -25,9 +13,7 @@ export async function createCarpool(
   eventId: string,
   data: Omit<Carpool, 'id'>
 ): Promise<string> {
-  const colRef = collection(db, firestorePaths.carpoolsCollection(eventId));
-  const docRef = await addDoc(colRef, data);
-  return docRef.id;
+  return repository.createCarpool(eventId, data);
 }
 
 /**
@@ -42,10 +28,7 @@ export async function getCarpools(
   eventId: string,
   direction?: Direction
 ): Promise<Carpool[]> {
-  const colRef = collection(db, firestorePaths.carpoolsCollection(eventId));
-  const queryRef = direction ? query(colRef, where('direction', '==', direction)) : colRef;
-  const snapshot = await getDocs(queryRef);
-  return snapshot.docs.map((d) => ({ id: d.id, ...d.data() } as Carpool));
+  return repository.getCarpools(eventId, direction);
 }
 
 /**
@@ -59,12 +42,7 @@ export async function getCarpool(
   eventId: string,
   carpoolId: string
 ): Promise<Carpool | null> {
-  const docRef = doc(db, firestorePaths.carpoolDocument(eventId, carpoolId));
-  const docSnap = await getDoc(docRef);
-  if (!docSnap.exists()) {
-    return null;
-  }
-  return { id: docSnap.id, ...docSnap.data() } as Carpool;
+  return repository.getCarpool(eventId, carpoolId);
 }
 
 /**
@@ -79,8 +57,7 @@ export async function updateCarpool(
   carpoolId: string,
   data: Partial<Omit<Carpool, 'id'>>
 ): Promise<void> {
-  const docRef = doc(db, firestorePaths.carpoolDocument(eventId, carpoolId));
-  await updateDoc(docRef, data);
+  return repository.updateCarpool(eventId, carpoolId, data);
 }
 
 /**
@@ -91,9 +68,7 @@ export async function updateCarpool(
  * @param eventId 対象のイベントID
  */
 export async function deleteAllCarpools(eventId: string): Promise<void> {
-  const colRef = collection(db, firestorePaths.carpoolsCollection(eventId));
-  const snapshot = await getDocs(colRef);
-  await Promise.all(snapshot.docs.map((d) => deleteDoc(d.ref)));
+  return repository.deleteAllCarpools(eventId);
 }
 
 /**
@@ -108,8 +83,8 @@ export async function deleteCarpoolsByDirection(
   eventId: string,
   direction: Direction
 ): Promise<void> {
-  const carpools = await getCarpools(eventId, direction);
-  await Promise.all(carpools.map((carpool) => deleteCarpool(eventId, carpool.id)));
+  const carpools = await repository.getCarpools(eventId, direction);
+  await Promise.all(carpools.map((carpool) => repository.deleteCarpool(eventId, carpool.id)));
 }
 
 /**
@@ -121,6 +96,5 @@ export async function deleteCarpoolsByDirection(
  * @param carpoolId 削除対象の配車結果ID
  */
 export async function deleteCarpool(eventId: string, carpoolId: string): Promise<void> {
-  const docRef = doc(db, firestorePaths.carpoolDocument(eventId, carpoolId));
-  await deleteDoc(docRef);
+  return repository.deleteCarpool(eventId, carpoolId);
 }
