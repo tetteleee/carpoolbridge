@@ -13,6 +13,7 @@ export const destinationRepository: Pick<
   | 'getDestination'
   | 'updateDestination'
   | 'deleteDestination'
+  | 'restoreDestination'
 > = {
   async createDestination(data) {
     const id = crypto.randomUUID();
@@ -35,5 +36,9 @@ export const destinationRepository: Pick<
 
   async deleteDestination(destinationId) {
     await db.destinations.delete(destinationId);
+  },
+
+  async restoreDestination(destination) {
+    await db.destinations.put({ ...destination });
   },
 };

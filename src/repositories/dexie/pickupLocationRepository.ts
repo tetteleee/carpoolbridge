@@ -13,6 +13,7 @@ export const pickupLocationRepository: Pick<
   | 'getPickupLocation'
   | 'updatePickupLocation'
   | 'deletePickupLocation'
+  | 'restorePickupLocation'
 > = {
   async createPickupLocation(data) {
     const id = crypto.randomUUID();
@@ -35,5 +36,9 @@ export const pickupLocationRepository: Pick<
 
   async deletePickupLocation(locationId) {
     await db.pickupLocations.delete(locationId);
+  },
+
+  async restorePickupLocation(location) {
+    await db.pickupLocations.put({ ...location });
   },
 };

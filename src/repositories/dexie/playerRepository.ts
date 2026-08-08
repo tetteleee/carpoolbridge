@@ -15,6 +15,7 @@ export const playerRepository: Pick<
   | 'deactivatePlayer'
   | 'deletePlayer'
   | 'deletePlayersByFamilyId'
+  | 'restorePlayer'
 > = {
   async createPlayer(data) {
     const id = crypto.randomUUID();
@@ -50,5 +51,9 @@ export const playerRepository: Pick<
 
   async deletePlayersByFamilyId(familyId) {
     await db.players.where('familyId').equals(familyId).delete();
+  },
+
+  async restorePlayer(player) {
+    await db.players.put({ ...player });
   },
 };

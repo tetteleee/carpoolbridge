@@ -14,6 +14,7 @@ export const familyMemberRepository: Pick<
   | 'updateFamilyMember'
   | 'deleteFamilyMember'
   | 'deleteFamilyMembersByFamilyId'
+  | 'restoreFamilyMember'
 > = {
   async createFamilyMember(data) {
     const id = crypto.randomUUID();
@@ -45,5 +46,9 @@ export const familyMemberRepository: Pick<
 
   async deleteFamilyMembersByFamilyId(familyId) {
     await db.familyMembers.where('familyId').equals(familyId).delete();
+  },
+
+  async restoreFamilyMember(familyMember) {
+    await db.familyMembers.put({ ...familyMember });
   },
 };

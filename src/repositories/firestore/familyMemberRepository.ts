@@ -12,8 +12,10 @@ import {
   where,
   updateDoc,
   deleteDoc,
+  setDoc,
   writeBatch,
   serverTimestamp,
+  Timestamp,
   type DocumentData,
   type QueryDocumentSnapshot,
 } from 'firebase/firestore';
@@ -43,6 +45,7 @@ export const familyMemberRepository: Pick<
   | 'updateFamilyMember'
   | 'deleteFamilyMember'
   | 'deleteFamilyMembersByFamilyId'
+  | 'restoreFamilyMember'
 > = {
   async createFamilyMember(data) {
     const colRef = collection(db, firestorePaths.familyMembersCollection());
@@ -92,5 +95,16 @@ export const familyMemberRepository: Pick<
     const batch = writeBatch(db);
     snapshot.docs.forEach((d) => batch.delete(d.ref));
     await batch.commit();
+  },
+
+  async restoreFamilyMember(familyMember) {
+    const docRef = doc(db, firestorePaths.familyMemberDocument(familyMember.id));
+    await setDoc(docRef, {
+      familyId: familyMember.familyId,
+      name: familyMember.name,
+      isActive: familyMember.isActive,
+      createdAt: Timestamp.fromDate(familyMember.createdAt),
+      updatedAt: Timestamp.fromDate(familyMember.updatedAt),
+    });
   },
 };

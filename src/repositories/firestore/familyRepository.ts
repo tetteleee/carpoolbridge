@@ -15,7 +15,9 @@ import {
   getDocs,
   updateDoc,
   deleteDoc,
+  setDoc,
   serverTimestamp,
+  Timestamp,
   type DocumentData,
   type QueryDocumentSnapshot,
   type DocumentSnapshot,
@@ -41,7 +43,7 @@ function toFamily(d: QueryDocumentSnapshot<DocumentData> | DocumentSnapshot<Docu
 
 export const familyRepository: Pick<
   CarpoolRepository,
-  'createFamily' | 'getFamilies' | 'getFamily' | 'updateFamily' | 'deleteFamily'
+  'createFamily' | 'getFamilies' | 'getFamily' | 'updateFamily' | 'deleteFamily' | 'restoreFamily'
 > = {
   async createFamily(data) {
     const colRef = collection(db, firestorePaths.familiesCollection());
@@ -80,5 +82,17 @@ export const familyRepository: Pick<
   async deleteFamily(familyId) {
     const docRef = doc(db, firestorePaths.familyDocument(familyId));
     await deleteDoc(docRef);
+  },
+
+  async restoreFamily(family) {
+    const docRef = doc(db, firestorePaths.familyDocument(family.id));
+    await setDoc(docRef, {
+      familyName: family.familyName,
+      vehicleCapacity: family.vehicleCapacity,
+      pickupLocationId: family.pickupLocationId,
+      isActive: family.isActive,
+      createdAt: Timestamp.fromDate(family.createdAt),
+      updatedAt: Timestamp.fromDate(family.updatedAt),
+    });
   },
 };

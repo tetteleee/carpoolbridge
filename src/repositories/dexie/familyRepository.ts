@@ -12,7 +12,7 @@ import type { CarpoolRepository } from '../CarpoolRepository';
 
 export const familyRepository: Pick<
   CarpoolRepository,
-  'createFamily' | 'getFamilies' | 'getFamily' | 'updateFamily' | 'deleteFamily'
+  'createFamily' | 'getFamilies' | 'getFamily' | 'updateFamily' | 'deleteFamily' | 'restoreFamily'
 > = {
   async createFamily(data) {
     const id = crypto.randomUUID();
@@ -41,5 +41,9 @@ export const familyRepository: Pick<
 
   async deleteFamily(familyId) {
     await db.families.delete(familyId);
+  },
+
+  async restoreFamily(family) {
+    await db.families.put({ ...family });
   },
 };

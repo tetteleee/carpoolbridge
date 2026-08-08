@@ -12,8 +12,10 @@ import {
   where,
   updateDoc,
   deleteDoc,
+  setDoc,
   writeBatch,
   serverTimestamp,
+  Timestamp,
   type DocumentData,
   type QueryDocumentSnapshot,
 } from 'firebase/firestore';
@@ -45,6 +47,7 @@ export const playerRepository: Pick<
   | 'deactivatePlayer'
   | 'deletePlayer'
   | 'deletePlayersByFamilyId'
+  | 'restorePlayer'
 > = {
   async createPlayer(data) {
     const colRef = collection(db, firestorePaths.playersCollection());
@@ -102,5 +105,17 @@ export const playerRepository: Pick<
     const batch = writeBatch(db);
     snapshot.docs.forEach((d) => batch.delete(d.ref));
     await batch.commit();
+  },
+
+  async restorePlayer(player) {
+    const docRef = doc(db, firestorePaths.playerDocument(player.id));
+    await setDoc(docRef, {
+      familyId: player.familyId,
+      name: player.name,
+      schoolEntryYear: player.schoolEntryYear,
+      isActive: player.isActive,
+      createdAt: Timestamp.fromDate(player.createdAt),
+      updatedAt: Timestamp.fromDate(player.updatedAt),
+    });
   },
 };

@@ -12,8 +12,10 @@ import {
   where,
   updateDoc,
   deleteDoc,
+  setDoc,
   writeBatch,
   serverTimestamp,
+  Timestamp,
   type DocumentData,
   type QueryDocumentSnapshot,
 } from 'firebase/firestore';
@@ -43,6 +45,7 @@ export const coachRepository: Pick<
   | 'updateCoach'
   | 'deleteCoach'
   | 'deleteCoachesByFamilyId'
+  | 'restoreCoach'
 > = {
   async createCoach(data) {
     const colRef = collection(db, firestorePaths.coachesCollection());
@@ -92,5 +95,16 @@ export const coachRepository: Pick<
     const batch = writeBatch(db);
     snapshot.docs.forEach((d) => batch.delete(d.ref));
     await batch.commit();
+  },
+
+  async restoreCoach(coach) {
+    const docRef = doc(db, firestorePaths.coachDocument(coach.id));
+    await setDoc(docRef, {
+      familyId: coach.familyId,
+      name: coach.name,
+      isActive: coach.isActive,
+      createdAt: Timestamp.fromDate(coach.createdAt),
+      updatedAt: Timestamp.fromDate(coach.updatedAt),
+    });
   },
 };

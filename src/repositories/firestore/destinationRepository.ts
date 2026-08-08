@@ -11,6 +11,7 @@ import {
   getDocs,
   updateDoc,
   deleteDoc,
+  setDoc,
 } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { firestorePaths } from '../../constants';
@@ -24,6 +25,7 @@ export const destinationRepository: Pick<
   | 'getDestination'
   | 'updateDestination'
   | 'deleteDestination'
+  | 'restoreDestination'
 > = {
   async createDestination(data) {
     const colRef = collection(db, firestorePaths.destinationsCollection());
@@ -54,5 +56,14 @@ export const destinationRepository: Pick<
   async deleteDestination(destinationId) {
     const docRef = doc(db, firestorePaths.destinationDocument(destinationId));
     await deleteDoc(docRef);
+  },
+
+  async restoreDestination(destination) {
+    const docRef = doc(db, firestorePaths.destinationDocument(destination.id));
+    await setDoc(docRef, {
+      name: destination.name,
+      latitude: destination.latitude,
+      longitude: destination.longitude,
+    });
   },
 };

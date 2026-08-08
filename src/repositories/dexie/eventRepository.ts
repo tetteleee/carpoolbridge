@@ -32,6 +32,7 @@ export const eventRepository: Pick<
   | 'getEvent'
   | 'updateEvent'
   | 'deleteEvent'
+  | 'restoreEvent'
 > = {
   async createEvent(data) {
     const id = crypto.randomUUID();
@@ -80,5 +81,9 @@ export const eventRepository: Pick<
 
   async deleteEvent(eventId) {
     await db.events.delete(eventId);
+  },
+
+  async restoreEvent(event) {
+    await db.events.put({ ...event });
   },
 };

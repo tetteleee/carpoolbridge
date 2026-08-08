@@ -32,6 +32,11 @@ export interface CarpoolRepository {
     data: Partial<Pick<Family, 'familyName' | 'vehicleCapacity' | 'pickupLocationId' | 'isActive'>>
   ): Promise<void>;
   deleteFamily(familyId: string): Promise<void>; // 単一ドキュメント削除のみ（カスケードは各serviceファイル側で行う）
+  /**
+   * バックアップ読み込み専用。指定されたidでそのまま作成・上書きする（upsert）。
+   * ref: docs/12_データバックアップ機能設計.md#6
+   */
+  restoreFamily(family: Family): Promise<void>;
 
   // --- Player ---
   createPlayer(
@@ -46,6 +51,11 @@ export interface CarpoolRepository {
   deactivatePlayer(playerId: string): Promise<void>;
   deletePlayer(playerId: string): Promise<void>;
   deletePlayersByFamilyId(familyId: string): Promise<void>;
+  /**
+   * バックアップ読み込み専用。指定されたidでそのまま作成・上書きする（upsert）。
+   * ref: docs/12_データバックアップ機能設計.md#6
+   */
+  restorePlayer(player: Player): Promise<void>;
 
   // --- Coach ---
   createCoach(
@@ -56,6 +66,11 @@ export interface CarpoolRepository {
   updateCoach(coachId: string, data: Partial<Pick<Coach, 'name' | 'isActive'>>): Promise<void>;
   deleteCoach(coachId: string): Promise<void>;
   deleteCoachesByFamilyId(familyId: string): Promise<void>;
+  /**
+   * バックアップ読み込み専用。指定されたidでそのまま作成・上書きする（upsert）。
+   * ref: docs/12_データバックアップ機能設計.md#6
+   */
+  restoreCoach(coach: Coach): Promise<void>;
 
   // --- FamilyMember ---
   createFamilyMember(
@@ -69,6 +84,11 @@ export interface CarpoolRepository {
   ): Promise<void>;
   deleteFamilyMember(familyMemberId: string): Promise<void>;
   deleteFamilyMembersByFamilyId(familyId: string): Promise<void>;
+  /**
+   * バックアップ読み込み専用。指定されたidでそのまま作成・上書きする（upsert）。
+   * ref: docs/12_データバックアップ機能設計.md#6
+   */
+  restoreFamilyMember(familyMember: FamilyMember): Promise<void>;
 
   // --- PickupLocation ---
   createPickupLocation(data: Omit<PickupLocation, 'id'>): Promise<string>;
@@ -79,6 +99,11 @@ export interface CarpoolRepository {
     data: Partial<Pick<PickupLocation, 'name' | 'latitude' | 'longitude'>>
   ): Promise<void>;
   deletePickupLocation(locationId: string): Promise<void>;
+  /**
+   * バックアップ読み込み専用。指定されたidでそのまま作成・上書きする（upsert）。
+   * ref: docs/12_データバックアップ機能設計.md#6
+   */
+  restorePickupLocation(location: PickupLocation): Promise<void>;
 
   // --- Destination ---
   createDestination(data: Omit<Destination, 'id'>): Promise<string>;
@@ -89,6 +114,11 @@ export interface CarpoolRepository {
     data: Partial<Pick<Destination, 'name' | 'latitude' | 'longitude'>>
   ): Promise<void>;
   deleteDestination(destinationId: string): Promise<void>;
+  /**
+   * バックアップ読み込み専用。指定されたidでそのまま作成・上書きする（upsert）。
+   * ref: docs/12_データバックアップ機能設計.md#6
+   */
+  restoreDestination(destination: Destination): Promise<void>;
 
   // --- Event ---
   createEvent(data: Omit<Event, 'id' | 'createdAt' | 'updatedAt'>): Promise<string>;
@@ -98,6 +128,11 @@ export interface CarpoolRepository {
   getEvent(eventId: string): Promise<Event | null>;
   updateEvent(eventId: string, data: Pick<Event, 'name' | 'date' | 'destinationId'>): Promise<void>;
   deleteEvent(eventId: string): Promise<void>; // 単一ドキュメント削除のみ（カスケードは各serviceファイル側で行う）
+  /**
+   * バックアップ読み込み専用。指定されたidでそのまま作成・上書きする（upsert）。
+   * ref: docs/12_データバックアップ機能設計.md#6
+   */
+  restoreEvent(event: Event): Promise<void>;
 
   // --- Response ---
   createResponse(eventId: string, familyId: string, data: Response): Promise<void>;

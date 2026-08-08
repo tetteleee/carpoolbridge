@@ -11,6 +11,7 @@ import {
   getDocs,
   updateDoc,
   deleteDoc,
+  setDoc,
 } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { firestorePaths } from '../../constants';
@@ -24,6 +25,7 @@ export const pickupLocationRepository: Pick<
   | 'getPickupLocation'
   | 'updatePickupLocation'
   | 'deletePickupLocation'
+  | 'restorePickupLocation'
 > = {
   async createPickupLocation(data) {
     const colRef = collection(db, firestorePaths.pickupLocationsCollection());
@@ -54,5 +56,14 @@ export const pickupLocationRepository: Pick<
   async deletePickupLocation(locationId) {
     const docRef = doc(db, firestorePaths.pickupLocationDocument(locationId));
     await deleteDoc(docRef);
+  },
+
+  async restorePickupLocation(location) {
+    const docRef = doc(db, firestorePaths.pickupLocationDocument(location.id));
+    await setDoc(docRef, {
+      name: location.name,
+      latitude: location.latitude,
+      longitude: location.longitude,
+    });
   },
 };

@@ -20,9 +20,11 @@ import {
   orderBy,
   query,
   serverTimestamp,
+  setDoc,
   startAfter,
   updateDoc,
   where,
+  Timestamp,
   type DocumentData,
   type QueryDocumentSnapshot,
 } from 'firebase/firestore';
@@ -53,6 +55,7 @@ export const eventRepository: Pick<
   | 'getEvent'
   | 'updateEvent'
   | 'deleteEvent'
+  | 'restoreEvent'
 > = {
   async createEvent(data) {
     const colRef = collection(db, firestorePaths.eventsCollection());
@@ -118,5 +121,16 @@ export const eventRepository: Pick<
   async deleteEvent(eventId) {
     const docRef = doc(db, firestorePaths.eventDocument(eventId));
     await deleteDoc(docRef);
+  },
+
+  async restoreEvent(event) {
+    const docRef = doc(db, firestorePaths.eventDocument(event.id));
+    await setDoc(docRef, {
+      name: event.name,
+      date: event.date,
+      destinationId: event.destinationId,
+      createdAt: Timestamp.fromDate(event.createdAt),
+      updatedAt: Timestamp.fromDate(event.updatedAt),
+    });
   },
 };

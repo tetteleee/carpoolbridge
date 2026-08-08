@@ -14,6 +14,7 @@ export const coachRepository: Pick<
   | 'updateCoach'
   | 'deleteCoach'
   | 'deleteCoachesByFamilyId'
+  | 'restoreCoach'
 > = {
   async createCoach(data) {
     const id = crypto.randomUUID();
@@ -45,5 +46,9 @@ export const coachRepository: Pick<
 
   async deleteCoachesByFamilyId(familyId) {
     await db.coaches.where('familyId').equals(familyId).delete();
+  },
+
+  async restoreCoach(coach) {
+    await db.coaches.put({ ...coach });
   },
 };
