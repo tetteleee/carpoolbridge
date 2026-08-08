@@ -172,13 +172,17 @@ export const db = new CarpoolBridgeDB();
 - E2Eテスト（Playwright）の公開版（Dexie）対応。現状のE2E基盤はFirebase Emulator
   前提のため、公開版のテスト方針は別途検討する
 - Google Drive同期、PWA化、TWA/Google Play公開、広告（`docs/08`同様に対象外のまま）
-- **認証UI・ルーティングの公開版対応**（T88実装時に判明）。`docs/08_公開版アーキテクチャ設計.md#2`
-  で「認証は公開版では機構ごと削除する」と方針は示されていたが、本ドキュメント（および
-  T67〜T88）が対象とするのは`CarpoolRepository`のデータ層のみである。`App.tsx`の認証ガード
-  （`useAuth`・`checkStaffUserRegistration`、`firebase/auth`を使用）はstorageModeに関わらず
-  常時有効なままのため、公開版ビルド（`npm run build:public`）にも`firebase/auth`・
-  `firebase/app`（認証コア）が引き続き含まれる（Firestoreデータ層のSDK本体は完全に除外できて
-  いることを確認済み）。実際に認証フローをUI・ルーティングレベルで外す作業は別タスクとする
+- **認証UI・ルーティングの公開版対応**（T88実装時に判明。コードレビューでの再検証により
+  詳細を訂正）。`docs/08_公開版アーキテクチャ設計.md#2`で「認証は公開版では機構ごと削除する」と
+  方針は示されていたが、本ドキュメント（および`T67`〜`T88`）が対象とするのは
+  `CarpoolRepository`のデータ層のみである。`App.tsx`の認証ガード（`useAuth`・
+  `checkStaffUserRegistration`）はstorageModeに関わらず常時有効なままであり、特に
+  `services/auth/staffUserService.ts`が`firebase/firestore`の`doc`・`getDoc`を直接使って
+  `staffUsers`コレクションを参照しているため、公開版ビルド（`npm run build:public`）にも
+  **Firestore SDK本体を含むFirebase一式**が引き続き含まれる（`CarpoolRepository`経由の
+  データ操作＝`@repository`エイリアス配下では、Firestoreデータ層のSDKを完全に除外できている
+  ことを確認済み。混入しているのは認証チェック専用の別経路）。実際に認証フローを
+  UI・ルーティングレベルで公開版から外す作業は別タスクとする
 
 ---
 
