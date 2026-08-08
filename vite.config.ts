@@ -32,7 +32,6 @@ export default defineConfig(({ mode }) => {
         // 二重の登録経路にならないよう無効化する。ref: docs/11_PWA化設計.md#7
         injectRegister: null,
         includeAssets: [
-          'favicon.svg',
           'favicon-32x32.png',
           'favicon-16x16.png',
           'apple-touch-icon.png',
@@ -41,7 +40,8 @@ export default defineConfig(({ mode }) => {
           name: '配車アシスタント',
           short_name: '配車アシスタント',
           description: '学童野球チームの配車調整を効率化するアプリ',
-          theme_color: '#3d5a80',
+          // UIの--accent（src/index.css）と揃える
+          theme_color: '#2563eb',
           background_color: '#ffffff',
           display: 'standalone',
           start_url: '/',

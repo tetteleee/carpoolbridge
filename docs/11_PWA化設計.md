@@ -57,7 +57,7 @@ IndexedDBに保存されているため、オフライン対応との親和性�
   "name": "配車アシスタント",
   "short_name": "配車アシスタント",
   "description": "学童野球チームの配車調整を効率化するアプリ",
-  "theme_color": "#3d5a80",
+  "theme_color": "#2563eb",
   "background_color": "#ffffff",
   "display": "standalone",
   "start_url": "/",
@@ -69,22 +69,27 @@ IndexedDBに保存されているため、オフライン対応との親和性�
 }
 ```
 
-- `theme_color`は既存`public/favicon.svg`のブランドカラー（`#3d5a80`）を流用する
-- アイコンは既存`favicon.svg`と同じ図案（車・人型シルエット）をフルキャンバス
-  （余白なしでクロップしていない512×512）で書き出し、192px・512pxのPNGに
-  ラスタライズする
+- `theme_color`はUIの`--accent`（`src/index.css`、`#2563eb`）と揃える
+- アイコンはアプリロゴの実体である`src/assets/app-icon.png`（`AppIcon`コンポーネント・
+  favicon各種と共通の画像。512×512）から192px・512pxのPNGに書き出す
 - maskable icon（Android等のアイコン安全域対応）は本フェーズの対象外とする
   （8章参照）。視覚的な微調整が必要でありYAGNIの観点から今回は見送る
+
+（実装時の注記: 本ドキュメント作成時点では、旧`public/favicon.svg`の図案を
+フルキャンバスで書き出したSVGをアイコンソースとする想定だったが、実装と
+並行してアプリアイコンが新デザイン（`src/assets/app-icon.png`、PR #61）に
+差し替えられたため、そちらを唯一のソースとする方針に修正した。
+`favicon.svg`は削除済みのため、`theme_color`も同ファイル由来の値から
+UIの`--accent`に変更している。）
 
 ---
 
 # 5. アイコン生成
 
-`favicon.svg`はfavicon表示用に一部をクロップしたviewBox（`30 42 452 452`）に
-なっているため、PWAアイコン用には全体（`0 0 512 512`）を使った別ソースSVGを
-新規に用意する（図案・ブランドカラーは同一）。
+アプリロゴの実体である`src/assets/app-icon.png`（512×512のPNG。favicon各種・
+`AppIcon`コンポーネントと共通の画像）から、`sharp`（Node.jsの画像処理
+ライブラリ）で192px・512pxのPNGにリサイズする。
 
-このSVGから`sharp`（Node.jsの画像処理ライブラリ）でPNGを生成する。
 一度きりの変換ではなく、将来ロゴを変更した際にも再生成できるよう、
 既存の`scripts/seed/`と同様の位置づけで`scripts/generate-pwa-icons.ts`として
 スクリプト化し、`sharp`は`devDependencies`に残す。
@@ -93,13 +98,14 @@ IndexedDBに保存されているため、オフライン対応との親和性�
 scripts/
   generate-pwa-icons.ts   # 新規: public/pwa-*.pngを生成するワンショットスクリプト
 public/
-  pwa-icon-source.svg     # 新規: フルキャンバス版アイコンソース
   pwa-192x192.png         # 新規: 生成物（コミットする）
   pwa-512x512.png         # 新規: 生成物（コミットする）
 ```
 
 生成物のPNG自体はコミットする（ビルド時に毎回生成する必要はなく、
-デプロイ時の依存を増やさないため）。
+デプロイ時の依存を増やさないため）。ロゴを変更した場合は
+`src/assets/app-icon.png`を更新したうえで
+`npx tsx scripts/generate-pwa-icons.ts`を再実行する。
 
 ---
 
@@ -164,7 +170,7 @@ VitePWA({
 
 | タスク | 内容 | 変更対象ファイル |
 |---|---|---|
-| T91 | PWAアイコン生成基盤 | `scripts/generate-pwa-icons.ts`（新規）、`public/pwa-icon-source.svg`（新規）、`public/pwa-192x192.png`・`public/pwa-512x512.png`（新規生成物）、`package.json`（`sharp`追加） |
+| T91 | PWAアイコン生成基盤 | `scripts/generate-pwa-icons.ts`（新規）、`public/pwa-192x192.png`・`public/pwa-512x512.png`（新規生成物、`src/assets/app-icon.png`から生成）、`package.json`（`sharp`追加） |
 | T92 | vite-plugin-pwa導入・manifest設定・mode別Service Worker戦略 | `vite.config.ts`、`package.json`（`vite-plugin-pwa`追加）、`.gitignore`（`dev-dist/`追加） |
 | T93 | Service Worker登録・自動更新配線 | `src/main.tsx` |
 
