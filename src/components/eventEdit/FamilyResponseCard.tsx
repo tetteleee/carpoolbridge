@@ -44,7 +44,7 @@ interface FamilyResponseCardProps {
   /** 回答状況（回答済み／一部回答／未回答）が変化した際に呼び出す（ヘッダー集計表示用） */
   onStatusChange: (status: ResponseStatus) => void;
   /**
-   * 一時参加者を「マスタに登録」した際、新規作成したFamilyMemberを呼び出し側へ通知する。
+   * 一時参加者を「家族として登録」した際、新規作成したFamilyMemberを呼び出し側へ通知する。
    * 呼び出し側（EventEditPage）でfamilyMemberListへ反映し、家族欄に即座に表示させるために使用する
    * （04_画面設計.md#7 一時参加者の追加）。
    */
@@ -323,7 +323,7 @@ export function FamilyResponseCard({
     persist(next, { temporaryParticipants: nextTemporaryParticipants });
   };
 
-  /** 一時参加者を取り消す。マスタに存在しないため、確認ダイアログなしでその場から削除する（04_画面設計.md#7） */
+  /** 一時参加者を取り消す。FamilyMemberとして登録されていないため、確認ダイアログなしでその場から削除する（04_画面設計.md#7） */
   const handleRemoveTemporaryParticipant = (temporaryParticipantId: string) => {
     const nextTemporaryParticipants = current.temporaryParticipants.filter(
       (t) => t.id !== temporaryParticipantId
@@ -336,7 +336,7 @@ export function FamilyResponseCard({
   /**
    * 今回だけ参加する人を追加する（04_画面設計.md#7 一時参加者の追加）。
    * 「今回限り」はこのResponseドキュメント内（temporaryParticipants）にのみ保持し、
-   * 「マスタに登録」は通常のFamilyMemberとして新規作成したうえで、この家庭の家族回答へ追加する。
+   * 「家族として登録」は通常のFamilyMemberとして新規作成したうえで、この家庭の家族回答へ追加する。
    * 紐づけ先の家庭は選択させず、常にこのカードの家庭（family.id）に登録する。
    * いずれの場合も、追加した時点で参加○・行き帰りとも送迎ありの状態で確定させる
    * （未回答の状態を経由しない）。
