@@ -58,3 +58,19 @@ jobs:
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
           projectId: carpoolbridge
           channelId: live
+
+      # 公開版（build:public）は自チーム版とは別のFirebaseプロジェクト（carpoolbridge-go）へ
+      # デプロイする。Firestoreを使わないためRulesデプロイは不要。自チーム版側のステップが
+      # 失敗しても公開版のデプロイは独立して実行されるよう if: always() を付ける。
+      # ref: docs/12_公開版配布・ホスティング設計.md#4
+      - name: Build (public)
+        if: always()
+        run: npm run build:public
+
+      - name: Deploy Firebase Hosting (public)
+        if: always()
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_PUBLIC }}
+          projectId: carpoolbridge-go
+          channelId: live

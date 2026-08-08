@@ -1,5 +1,6 @@
 {
   "projects": {
-    "default": "carpoolbridge"
+    "default": "carpoolbridge",
+    "public": "carpoolbridge-go"
   }
 }
