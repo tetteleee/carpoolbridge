@@ -13,6 +13,7 @@ import { familyMemberRepository } from './familyMemberRepository';
 import { familyRepository } from './familyRepository';
 import { pickupLocationRepository } from './pickupLocationRepository';
 import { destinationRepository } from './destinationRepository';
+import { responseRepository } from './responseRepository';
 
 export const dexieRepository: Partial<CarpoolRepository> = {
   ...playerRepository,
@@ -21,4 +22,5 @@ export const dexieRepository: Partial<CarpoolRepository> = {
   ...familyRepository,
   ...pickupLocationRepository,
   ...destinationRepository,
+  ...responseRepository,
 };
