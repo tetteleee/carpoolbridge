@@ -239,10 +239,10 @@ docs/04_画面設計.md#8 配車サマリー帯の改訂により、この端末
 ## U. DexieRepository実装・storageMode切り替え（10_DexieRepository実装設計.md）
 
 - T77_Dexie基盤_db定義・空の器 / 10_DexieRepository実装設計.md#3,#4 / なし / done
-- T78_Player_DexieRepository実装 / 10_DexieRepository実装設計.md#3,#4 / T77 / 未着手
-- T79_Coach_DexieRepository実装 / 10_DexieRepository実装設計.md#3,#4 / T77 / 未着手
-- T80_FamilyMember_DexieRepository実装 / 10_DexieRepository実装設計.md#3,#4 / T77 / 未着手
-- T81_Family_DexieRepository実装 / 10_DexieRepository実装設計.md#3,#4 / T77,T78,T79,T80 / 未着手
+- T78_Player_DexieRepository実装 / 10_DexieRepository実装設計.md#3,#4 / T77 / done
+- T79_Coach_DexieRepository実装 / 10_DexieRepository実装設計.md#3,#4 / T77 / done
+- T80_FamilyMember_DexieRepository実装 / 10_DexieRepository実装設計.md#3,#4 / T77 / done
+- T81_Family_DexieRepository実装 / 10_DexieRepository実装設計.md#3,#4 / T77,T78,T79,T80 / done
 - T82_PickupLocation_DexieRepository実装 / 10_DexieRepository実装設計.md#3,#4 / T77 / 未着手
 - T83_Destination_DexieRepository実装 / 10_DexieRepository実装設計.md#3,#4 / T77 / 未着手
 - T84_Response_DexieRepository実装 / 10_DexieRepository実装設計.md#4 / T77 / 未着手

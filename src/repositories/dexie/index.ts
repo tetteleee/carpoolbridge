@@ -7,5 +7,14 @@
  */
 
 import type { CarpoolRepository } from '../CarpoolRepository';
+import { playerRepository } from './playerRepository';
+import { coachRepository } from './coachRepository';
+import { familyMemberRepository } from './familyMemberRepository';
+import { familyRepository } from './familyRepository';
 
-export const dexieRepository: Partial<CarpoolRepository> = {};
+export const dexieRepository: Partial<CarpoolRepository> = {
+  ...playerRepository,
+  ...coachRepository,
+  ...familyMemberRepository,
+  ...familyRepository,
+};
