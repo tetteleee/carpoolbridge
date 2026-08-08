@@ -75,11 +75,6 @@ export interface ResponseTemporaryParticipant {
   id: string;
   /** 名前（自由入力） */
   name: string;
-  /**
-   * 集合場所ID。選手・家族と異なり、所属家庭のFamily.pickupLocationIdを
-   * 自動参照するのではなく、追加時に指定したこの値を直接使用する
-   */
-  pickupLocationId: string;
   /** イベントに参加するかどうか。選手・家族と異なりnull（未選択）を経由せず、追加した時点で常にtrue */
   isParticipating: boolean;
   /** 行きの配車が不要かどうか（現地集合、午後から参加など） */
@@ -136,8 +131,9 @@ export interface CarpoolMemberFamily {
 
 /**
  * 乗車メンバー（一時参加者。今回だけ参加する人）
- * 他の3種と異なりマスタに存在しないため、名前・集合場所は
- * events/{eventId}/responses/{familyId}のtemporaryParticipants[]から解決する
+ * 他の3種と異なりマスタに存在しないため、名前は
+ * events/{eventId}/responses/{familyId}のtemporaryParticipants[]から解決する。
+ * 集合場所は他の3種と同じく、familyIdが属するFamily.pickupLocationIdを参照する
  * （05_データ設計.md#10 type: "temporary" について）。
  */
 export interface CarpoolMemberTemporary {

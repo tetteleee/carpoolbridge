@@ -6,7 +6,7 @@ import type {
   ResponsePlayer,
   ResponseTemporaryParticipant,
 } from '../../types/event';
-import type { Player, Coach, Family, FamilyMember, PickupLocation } from '../../types/master';
+import type { Player, Coach, Family, FamilyMember } from '../../types/master';
 import { getSchoolGrade } from '../../utils/schoolGrade';
 import { computeResponseStatus, type ResponseStatus } from '../../utils/responseStatus';
 import { createResponse, updateResponse } from '../../services/event/responseService';
@@ -33,8 +33,6 @@ interface FamilyResponseCardProps {
   coachList: Coach[];
   /** この家庭に属する有効な家族一覧 */
   familyMemberList: FamilyMember[];
-  /** 集合場所の選択肢一覧（一時参加者の追加フォームで使用） */
-  pickupLocationList: PickupLocation[];
   /** 対象家庭の既存回答（未回答の場合はundefined） */
   response: Response | undefined;
   /** カードが展開表示かどうか（折りたたみ状態は呼び出し側で一括管理する） */
@@ -213,7 +211,6 @@ export function FamilyResponseCard({
   playerList,
   coachList,
   familyMemberList,
-  pickupLocationList,
   response,
   isOpen,
   onToggleOpen,
@@ -343,7 +340,6 @@ export function FamilyResponseCard({
    */
   const handleAddTemporaryParticipant = async (input: {
     name: string;
-    pickupLocationId: string;
     registerToMaster: boolean;
   }) => {
     if (input.registerToMaster) {
@@ -365,7 +361,6 @@ export function FamilyResponseCard({
       const newParticipant: ResponseTemporaryParticipant = {
         id: crypto.randomUUID(),
         name: input.name,
-        pickupLocationId: input.pickupLocationId,
         isParticipating: true,
         noOutwardRide: false,
         noReturnRide: false,
@@ -632,8 +627,6 @@ export function FamilyResponseCard({
             {isAddingTemporaryParticipant ? (
               <AddTemporaryParticipantForm
                 familyId={family.id}
-                defaultPickupLocationId={family.pickupLocationId}
-                pickupLocationList={pickupLocationList}
                 onSubmit={handleAddTemporaryParticipant}
                 onCancel={() => setIsAddingTemporaryParticipant(false)}
               />
