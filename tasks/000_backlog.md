@@ -295,3 +295,15 @@ mainマージ時に自動デプロイする。無料枠がプロジェクト単�
 独自ドメインは当面見送り、無料の`carpoolbridge-go.web.app`を使う（docs/12#3）。
 `carpoolbridge-go`プロジェクトの作成・サービスアカウントキー発行・GitHub Secrets登録は
 人間の作業であり、タスク化していない。
+
+---
+
+## Y. TWA・Google Play公開 準備（13_TWA・Google Play公開設計.md）
+
+- T96_assetlinks配信経路確保_firebase.jsonのignore修正 / 13_TWA・Google Play公開設計.md#5 / なし / done
+- T97_プライバシーポリシー静的ページ追加 / 13_TWA・Google Play公開設計.md#6 / なし / done
+
+Google Playストア公開（TWA化）に向けた、本リポジトリ内で完結する準備作業のみを対象とする。
+TWAラッパー本体の生成（Bubblewrap実行・Android Studioプロジェクト作成）・署名鍵発行・
+`assetlinks.json`本体の配置は、Android開発ツールチェーンを要するため対象外（次フェーズ）。
+経緯・対象外事項の詳細はdocs/13参照。

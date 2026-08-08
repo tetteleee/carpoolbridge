@@ -27,6 +27,9 @@ const EventInfoEditPage = lazy(() =>
 const CarpoolPage = lazy(() =>
   import('../pages/CarpoolPage').then((m) => ({ default: m.CarpoolPage }))
 );
+const PrivacyPolicyPage = lazy(() =>
+  import('../pages/PrivacyPolicyPage').then((m) => ({ default: m.PrivacyPolicyPage }))
+);
 
 /** ページ単位のコード分割チャンク読み込み中に表示するフォールバック（App.tsxの起動時ローディングと同じ見た目） */
 function RouteLoadingFallback() {
@@ -66,6 +69,7 @@ export function AppRoutes() {
         <Route path="/events/:eventId/edit" element={<EventEditPage />} />
         <Route path="/events/:eventId/edit-info" element={<EventInfoEditPage />} />
         <Route path="/events/:eventId/carpool" element={<CarpoolPage />} />
+        <Route path="/privacy" element={<PrivacyPolicyPage />} />
       </Routes>
     </Suspense>
   );
