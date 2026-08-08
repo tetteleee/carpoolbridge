@@ -272,9 +272,9 @@ UI・ビジネスロジックは自チーム版と共通コードで既存e2e16�
 
 ## W. PWA化（11_PWA化設計.md）
 
-- T91_PWAアイコン生成基盤 / 11_PWA化設計.md#4,#5 / なし / 未着手
-- T92_vite-plugin-pwa導入・manifest設定 / 11_PWA化設計.md#3,#4,#6 / T91 / 未着手
-- T93_ServiceWorker登録・自動更新配線 / 11_PWA化設計.md#7 / T92 / 未着手
+- T91_PWAアイコン生成基盤 / 11_PWA化設計.md#4,#5 / なし / done
+- T92_vite-plugin-pwa導入・manifest設定 / 11_PWA化設計.md#3,#4,#6 / T91 / done
+- T93_ServiceWorker登録・自動更新配線 / 11_PWA化設計.md#7 / T92 / done
 
 対象範囲は公開版・自チーム版の両方。公開版はフルオフライン対応（アプリシェルを
 事前キャッシュ）、自チーム版はインストール可能にするだけ（認証・Firestore通信は
