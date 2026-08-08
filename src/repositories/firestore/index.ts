@@ -11,10 +11,12 @@ import { playerRepository } from './playerRepository';
 import { coachRepository } from './coachRepository';
 import { familyMemberRepository } from './familyMemberRepository';
 import { familyRepository } from './familyRepository';
+import { pickupLocationRepository } from './pickupLocationRepository';
 
 export const firestoreRepository: Partial<CarpoolRepository> = {
   ...playerRepository,
   ...coachRepository,
   ...familyMemberRepository,
   ...familyRepository,
+  ...pickupLocationRepository,
 };
